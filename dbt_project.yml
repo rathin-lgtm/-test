@@ -1,0 +1,26 @@
+name: 'hv_edp_dbt'
+version: '1.0.0'
+
+require-dbt-version: ">=1.10.0,<1.11.0"
+
+profile: 'hv_edp_dbt'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:         
+  - "target"
+  - "dbt_packages"
+
+models:
+  hv_edp_dbt:
+    +materialized: incremental
+    silver:
+      +schema: "silver"
+    gold:
+      +schema: "gold"
+      

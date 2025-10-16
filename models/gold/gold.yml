@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: gold_funds
+    description: Funds gold data.
+    config:
+      incremental_strategy: merge
+      unique_key: type
+      meta:
+        dagster:
+          group: "dim_funds"
+    columns:
+      - name: type
+        description: Primary key
+        data_tests:
+          - unique
+          - not_null
