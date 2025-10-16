@@ -6,7 +6,7 @@ models:
     config:
       meta:
         dagster:
-          group: "dim_funds"
+          group: "DIM_FUNDS"
     columns:
       - name: fund_id
         description: Primary key

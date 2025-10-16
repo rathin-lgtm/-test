@@ -48,7 +48,9 @@ class SnowflakeConfig(ConfigurableResource):
 
 
 class JobConfig(ConfigurableResource):
-    full_reload: bool = Field(default=False, description="Whether to perform a full reload of data")
+    full_reload: bool | None = Field(
+        default=None, description="Whether to perform a full reload of data"
+    )
     use_shared_stage: bool = Field(
         default=False, description="Whether to use the shared stage (for personal_dev)"
     )

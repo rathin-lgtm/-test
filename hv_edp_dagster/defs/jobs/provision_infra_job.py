@@ -2,8 +2,13 @@ from typing import List
 
 from dagster import AssetsDefinition, asset, define_asset_job
 
-from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT, AssetTags, Environments
-from hv_edp_dagster.defs.resources import SnowflakeConfig
+from hv_edp_dagster.constants import (
+    ASSET_KINDS,
+    IS_LOCAL_ENVIRONMENT,
+    AssetTags,
+    Environments,
+)
+from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
     ALL_TABLES,
     CSV_FILE_FORMAT,
@@ -13,7 +18,6 @@ from hv_edp_dagster.snowflake_infra import (
 from hv_edp_dagster.utils import execute_sql, select_assets
 
 ASSET_GROUP_NAME = "infra"
-ASSET_KINDS = {"python", "snowflake"}
 
 
 @asset(
@@ -63,13 +67,17 @@ def generate_prepare_table_assets() -> List[AssetsDefinition]:
         @asset(
             name=f"prepare_table_{table_obj.name}",
             kinds=ASSET_KINDS,
-            deps=[prepare_schema],
+            deps=[prepare_file_format, prepare_landing_stage],
             group_name=ASSET_GROUP_NAME,
         )
-        def _table(snowflake_config: SnowflakeConfig) -> None:
+        def _table(snowflake_config: SnowflakeConfig, infra_job_config: JobConfig) -> None:
             execute_sql(
                 snowflake_config.snowflake_resource,
-                table_obj.create_sql(snowflake_config.database, snowflake_config.schema_bronze),
+                table_obj.create_sql(
+                    snowflake_config.database,
+                    snowflake_config.schema_bronze,
+                    use_shared_stage=infra_job_config.use_shared_stage,
+                ),
             )
 
         return _table

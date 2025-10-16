@@ -1,10 +1,10 @@
 from dagster import AssetSelection, asset, define_asset_job
 
+from hv_edp_dagster.constants import ASSET_KINDS
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 from hv_edp_dagster.utils import execute_sql
 
 ASSET_GROUP_NAME = "destroy_infra"
-ASSET_KINDS = {"python", "snowflake"}
 
 
 @asset(kinds=ASSET_KINDS, group_name=ASSET_GROUP_NAME)

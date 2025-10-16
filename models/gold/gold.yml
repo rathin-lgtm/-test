@@ -8,7 +8,7 @@ models:
       unique_key: type
       meta:
         dagster:
-          group: "dim_funds"
+          group: "DIM_FUNDS"
     columns:
       - name: type
         description: Primary key
