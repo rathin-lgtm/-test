@@ -1,0 +1,39 @@
+_common_snowflake: &common_snowflake
+  type: snowflake
+  account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+  user: "{{ env_var('SNOWFLAKE_USER') }}"
+  warehouse: "{{ env_var('SNOWFLAKE_WH') }}"
+  role: "{{ env_var('SNOWFLAKE_ROLE') }}"
+
+_private_key_auth: &private_key_auth
+  private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+  private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
+  
+hv_edp_dbt:    
+  target: personal_dev     
+  
+  outputs:
+    personal_dev:
+      <<: *common_snowflake
+      authenticator: "externalbrowser"
+      database: "HV_EDP_{{ env_var('SNOWFLAKE_USER').split('@')[0] }}_DEV"
+      schema: "PERSONAL_DEV"
+      threads: 1
+
+    shared_dev:
+      <<: [*common_snowflake, *private_key_auth]
+      database: "HV_EDP_DEV"
+      schema: "DEV"
+      threads: 1
+
+    uat:       
+      <<: [*common_snowflake, *private_key_auth]
+      database: "HV_EDP_UAT"
+      schema: "UAT"
+      threads: 1
+
+    prod:           
+      <<: [*common_snowflake, *private_key_auth]
+      database: "HV_EDP_PRD"
+      schema: "PRD"
+      threads: 4

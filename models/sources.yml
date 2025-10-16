@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+    - name: hv_source
+      description: Raw data uploaded from CSVs.
+      database: "{{ target.database }}"
+      schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
+      tables:
+          - name: dim_funds
+            description: dim funds data.
+            meta:
+              dagster:
+                asset_key: ['bronze_funds']
+                group: "dim_funds"

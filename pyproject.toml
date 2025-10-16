@@ -1,0 +1,57 @@
+[project]
+name = "hv_edp_dagster"
+version = "0.0.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9,<3.14"
+dependencies = [
+    "dagster",
+    "dagster-cloud",
+    "dagster-dbt",
+    "dbt-core<1.11",
+    "dbt-snowflake<1.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "dagster-webserver",
+    "mypy",
+    "types-requests",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+hv_edp_dagster = ["dbt-project/**/*"]
+
+[tool.dagster]
+module_name = "hv_edp_dagster.definitions"
+code_location_name = "hv_edp_dagster"
+
+[tool.black]
+line-length = 100
+
+[tool.flake8]
+max-line-length = 100
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Start lenient, can tighten later
+ignore_missing_imports = true
+exclude = [
+    "venv/.*",
+    "build/.*",
+    "dist/.*",
+    ".*\\.egg-info/.*",
+    "target/.*"
+]
