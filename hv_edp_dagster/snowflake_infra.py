@@ -2,6 +2,8 @@ import re
 
 from pydantic import BaseModel, field_validator
 
+from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT, SHARED_DEV_BRONZE_PATH
+
 
 def validate_snowflake_identifier(name: str) -> str:
     """
@@ -67,12 +69,17 @@ class Table(BaseModel):
     def validate_name(cls, v: str) -> str:
         return validate_snowflake_identifier(v)
 
-    def create_sql(self, db: str, schema: str, file_format: FileFormat = CSV_FILE_FORMAT) -> str:
-        # tbd: uncomment, when shared-dev stages are set up
-        # if IS_LOCAL_ENVIRONMENT:
-        #     inferred_data_location = SHARED_DEV_BRONZE_PATH
-        # else:
-        inferred_data_location = f"{db}.{schema}"
+    def create_sql(
+        self,
+        db: str,
+        schema: str,
+        file_format: FileFormat = CSV_FILE_FORMAT,
+        use_shared_stage: bool = True,
+    ) -> str:
+        if IS_LOCAL_ENVIRONMENT and use_shared_stage:
+            inferred_data_location = SHARED_DEV_BRONZE_PATH
+        else:
+            inferred_data_location = f"{db}.{schema}"
         return f"""CREATE TABLE IF NOT EXISTS {db}.{schema}.{self.name}
                         USING TEMPLATE (
                             SELECT ARRAY_CAT(
@@ -98,16 +105,24 @@ class Table(BaseModel):
                              )
                   FROM TABLE(
                     INFER_SCHEMA(
-                      LOCATION => '@{inferred_data_location}.{DATA_LANDING_STAGE.name}',
-                      FILE_FORMAT => '{file_format.name}',
-                      MAX_FILE_COUNT => 10
+                    LOCATION => '@{inferred_data_location}.{DATA_LANDING_STAGE.name}/{self.name}/',
+                    FILE_FORMAT => '{file_format.name}',
+                    MAX_FILE_COUNT => 10
                     )
                   )
                 );"""
 
 
-BRONZE_DIM_FUNDS_TABLE = Table(
-    name="DIM_FUNDS",
-)
+class BronzeTables:
+    dim_funds = Table(name="DIM_FUNDS")
+    fact_investor_transactions_monthly = Table(name="FACT_INVESTOR_TRANSACTIONS_MONTHLY")
+    fact_investor_transactions = Table(name="FACT_INVESTOR_TRANSACTIONS")
+    fact_investor_transactions_fund_hierarchy = Table(
+        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY"
+    )
+    fact_investor_transactions_fund_hierarchy_monthly = Table(
+        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY_MONTHLY"
+    )
 
-ALL_TABLES = [BRONZE_DIM_FUNDS_TABLE]
+
+ALL_TABLES = [value for value in BronzeTables.__dict__.values() if isinstance(value, Table)]

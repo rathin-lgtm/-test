@@ -23,7 +23,7 @@ from hv_edp_dagster.defs.jobs.provision_infra_job import (
 )
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.defs.sensors import new_file_sensors
-from hv_edp_dagster.project import dbt_project_project
+from hv_edp_dagster.project import dbt_project
 
 
 def get_snowflake_config():
@@ -52,10 +52,13 @@ def get_snowflake_config():
 
 def get_resources():
     return {
-        "dbt": DbtCliResource(project_dir=dbt_project_project, target=ENVIRONMENT),
+        "dbt": DbtCliResource(project_dir=dbt_project, target=ENVIRONMENT),
         "snowflake_config": get_snowflake_config(),
-        "job_config": JobConfig(
+        "etl_job_config": JobConfig(
             full_reload=False,
+            use_shared_stage=IS_LOCAL_ENVIRONMENT,
+        ),
+        "infra_job_config": JobConfig(
             use_shared_stage=IS_LOCAL_ENVIRONMENT,
         ),
     }

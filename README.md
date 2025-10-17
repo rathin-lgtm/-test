@@ -46,7 +46,10 @@ Dagster will run locally on http://127.0.0.1:3000/
 2) Open Dagster UI
 3) Trigger Provision infra job (Jobs -> provision_infra -> Materialize all). A database HV_EDP_{username}_DEV will be created in Snowflake, together with resources, required by the Bronze layer (schema, landing stage, tables, file format).
 
-Note: bronze tables creation requires raw data file to be uploaded to the file landing stage, to be used as a template. The file should be uploaded in a folder {table_name}/YYYY/MM/DD (i.e. DIM_FUNDS/2025/10/15/edw_dim_fund.csv). For the personal dev environments, the shared dev's landing stage will be used.
+Job settings:
+- **Use shared stage**: true/false (true by default. If set to false, personal dev landing stage will be used for source files template instead of shared dev landing stage).
+
+Note: bronze tables creation requires raw data file to be uploaded to the file landing stage, to be used as a template. The file should be uploaded in a folder {table_name}/YYYY/MM/DD (i.e. DIM_FUNDS/2025/10/15/edw_dim_fund.csv). For the personal dev environments, the shared dev's landing stage will be used by default, unless Use shared stage is set to True.
 
 ### Running ETL jobs on the personal development environment
 

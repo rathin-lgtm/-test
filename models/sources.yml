@@ -10,5 +10,5 @@ sources:
             description: dim funds data.
             meta:
               dagster:
-                asset_key: ['bronze_funds']
-                group: "dim_funds"
+                asset_key: ['bronze_dim_funds']
+                group: "DIM_FUNDS"

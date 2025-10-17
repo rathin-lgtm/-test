@@ -1,5 +1,7 @@
 import os
 
+ASSET_KINDS = {"python", "snowflake"}
+
 
 class Environments:
     PERSONAL_DEV = "personal_dev"
@@ -11,10 +13,6 @@ class Environments:
 class DbtArguments:
     build = "build"
     full_reload = "--full-refresh"
-
-
-class AssetGroups:
-    funds = "dim_funds"
 
 
 class AssetTags:
