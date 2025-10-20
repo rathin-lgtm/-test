@@ -10,7 +10,7 @@ ASSET_GROUP_NAME = "destroy_infra"
 @asset(kinds=ASSET_KINDS, group_name=ASSET_GROUP_NAME)
 def destroy_db(snowflake_config: SnowflakeConfig) -> None:
     execute_sql(
-        snowflake_config.snowflake_resource,
+        snowflake_config,
         f"DROP DATABASE {snowflake_config.database};",
     )
 

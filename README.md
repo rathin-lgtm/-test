@@ -7,6 +7,7 @@ SNOWFLAKE_ACCOUNT=HVPLP-ACCTKURTOSYSNP
 SNOWFLAKE_WH=KRTSYSNP_WAREHOUSE
 SNOWFLAKE_ROLE=_OKTA-SF_JAMLABS_DEV
 ENVIRONMENT=personal_dev
+DAGSTER_HOME=full path to the root directory (i.e.  C:\Users\panisova\Source\repo\Hvp.Dna.EntRpt.Snowflake), used to store Dagster run information.
 ```
 2) Install Python 3.12 from Software Center
 3) Open a command prompt and navigate to code directory (make sure, that the code directory is located in ThreatLocker Thrusted path).

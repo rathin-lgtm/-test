@@ -1,8 +1,37 @@
-from typing import Self
+from contextlib import contextmanager
+from typing import Generator, Self
 
 from dagster import ConfigurableResource
-from dagster_snowflake import SnowflakeResource
-from pydantic import Field, ValidationInfo, field_validator, model_validator
+from dagster_snowflake import SnowflakeConnection, SnowflakeResource
+from pydantic import (
+    Field,
+    PrivateAttr,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
+
+
+class SnowflakeConnectionManager:
+    """Manages Snowflake connections with support for both shared and per-asset connections."""
+
+    def __init__(self):
+        self._shared_connection = None
+
+    def setup_shared_connection(self, snowflake_resource: SnowflakeResource) -> None:
+        conn = snowflake_resource.get_connection().__enter__()
+        self._shared_connection = conn
+
+    def get_shared_connection(self) -> SnowflakeConnection:
+        return self._shared_connection
+
+    def clear_shared_connection(self) -> None:
+        if self._shared_connection:
+            try:
+                self._shared_connection.close()
+            except Exception:
+                pass
+            self._shared_connection = None
 
 
 class SnowflakeConfig(ConfigurableResource):
@@ -15,6 +44,12 @@ class SnowflakeConfig(ConfigurableResource):
     private_key_path: str | None = Field(description="Snowflake private key path")
     private_key_password: str | None = Field(description="Snowflake private key passphrase")
     authenticator: str | None = Field(description="Snowflake authenticator")
+    use_shared_connection: bool = Field(
+        default=False, description="Whether to use shared connection across assets"
+    )
+    _connection_manager: SnowflakeConnectionManager = PrivateAttr(
+        default=SnowflakeConnectionManager()
+    )
 
     @field_validator("account", "user", "warehouse", "database", "schema_bronze", "role")
     @classmethod
@@ -33,7 +68,7 @@ class SnowflakeConfig(ConfigurableResource):
         return self
 
     @property
-    def snowflake_resource(self) -> SnowflakeResource:
+    def _snowflake_resource(self) -> SnowflakeResource:
         return SnowflakeResource(
             account=self.account,
             user=self.user,
@@ -45,6 +80,22 @@ class SnowflakeConfig(ConfigurableResource):
             schema=self.schema_bronze,
             role=self.role,
         )
+
+    @contextmanager
+    def get_connection(self) -> Generator[SnowflakeConnection, None, None]:
+        if self.use_shared_connection:
+            shared_conn = self._connection_manager.get_shared_connection()
+            if shared_conn:
+                yield shared_conn
+            else:
+                self._connection_manager.setup_shared_connection(self._snowflake_resource)
+                yield self._connection_manager.get_shared_connection()
+        else:
+            with self._snowflake_resource.get_connection() as conn:
+                yield conn
+
+    def clear_shared_connection(self):
+        self._connection_manager.clear_shared_connection()
 
 
 class JobConfig(ConfigurableResource):

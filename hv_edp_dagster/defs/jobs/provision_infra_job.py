@@ -27,7 +27,7 @@ ASSET_GROUP_NAME = "infra"
 )
 def prepare_db(snowflake_config: SnowflakeConfig) -> None:
     execute_sql(
-        snowflake_config.snowflake_resource,
+        snowflake_config,
         f"CREATE DATABASE IF NOT EXISTS {snowflake_config.database};",
     )
 
@@ -39,14 +39,14 @@ def prepare_db(snowflake_config: SnowflakeConfig) -> None:
 )
 def prepare_schema(snowflake_config: SnowflakeConfig) -> None:
     execute_sql(
-        snowflake_config.snowflake_resource,
+        snowflake_config,
         f"CREATE SCHEMA IF NOT EXISTS {snowflake_config.schema_bronze};",
     )
 
 
 @asset(kinds=ASSET_KINDS, deps=[prepare_schema], group_name=ASSET_GROUP_NAME)
 def prepare_file_format(snowflake_config: SnowflakeConfig) -> None:
-    execute_sql(snowflake_config.snowflake_resource, CSV_FILE_FORMAT.create_sql())
+    execute_sql(snowflake_config, CSV_FILE_FORMAT.create_sql())
 
 
 @asset(
@@ -57,7 +57,7 @@ def prepare_file_format(snowflake_config: SnowflakeConfig) -> None:
 )
 def prepare_landing_stage(snowflake_config: SnowflakeConfig) -> None:
     execute_sql(
-        snowflake_config.snowflake_resource,
+        snowflake_config,
         DATA_LANDING_STAGE.create_sql(snowflake_config.database, snowflake_config.schema_bronze),
     )
 
@@ -72,7 +72,7 @@ def generate_prepare_table_assets() -> List[AssetsDefinition]:
         )
         def _table(snowflake_config: SnowflakeConfig, infra_job_config: JobConfig) -> None:
             execute_sql(
-                snowflake_config.snowflake_resource,
+                snowflake_config,
                 table_obj.create_sql(
                     snowflake_config.database,
                     snowflake_config.schema_bronze,

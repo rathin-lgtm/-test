@@ -2,9 +2,9 @@ from pathlib import Path
 from typing import Any
 
 from dagster import AssetSelection, get_dagster_logger
-from dagster_snowflake import SnowflakeResource
 
 from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT, AssetTags, Environments
+from hv_edp_dagster.defs.resources import SnowflakeConfig
 
 
 def get_project_root() -> Path:
@@ -12,14 +12,14 @@ def get_project_root() -> Path:
 
 
 def execute_sql(
-    snowflake_resource: SnowflakeResource, sql: str, fetch_results: bool = False
+    snowflake_config: SnowflakeConfig, sql: str, fetch_results: bool = False
 ) -> list[tuple[Any, ...]] | list[dict[Any, Any]] | Any:
     logger = get_dagster_logger()
     if not sql.strip():
         raise ValueError("SQL statement cannot be empty")
     try:
         logger.info(f"Executing SQL: '{sql}'")
-        with snowflake_resource.get_connection() as connection:
+        with snowflake_config.get_connection() as connection:
             cursor = connection.cursor()
             cursor.execute(sql)
             if fetch_results:
