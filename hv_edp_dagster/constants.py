@@ -19,6 +19,10 @@ class AssetTags:
     environment = "environment"
 
 
+class Sources:
+    harbourview_edw = "HARBOURVIEW_EDW"
+
+
 ENVIRONMENT = os.getenv("ENVIRONMENT")
 IS_LOCAL_ENVIRONMENT = ENVIRONMENT == Environments.PERSONAL_DEV
 

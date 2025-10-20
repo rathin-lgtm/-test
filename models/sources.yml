@@ -6,9 +6,9 @@ sources:
       database: "{{ target.database }}"
       schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
       tables:
-          - name: dim_funds
+          - name: dim_fund
             description: dim funds data.
             meta:
               dagster:
-                asset_key: ['bronze_dim_funds']
-                group: "DIM_FUNDS"
+                asset_key: ['bronze_dim_fund']
+                group: "DIM_FUND"
