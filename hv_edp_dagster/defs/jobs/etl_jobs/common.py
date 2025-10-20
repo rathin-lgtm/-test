@@ -29,7 +29,7 @@ def copy_from_stage_sql(
         else f"{snowflake_config.database}.{snowflake_config.schema_bronze}"
     )
     return f"""COPY INTO {table.name}
-        FROM @{location}.{DATA_LANDING_STAGE.name}/{table.name}/
+        FROM @{location}.{DATA_LANDING_STAGE.name}/{table.source}/{table.name}/
         FILE_FORMAT = (FORMAT_NAME = {file_format.name}, ERROR_ON_COLUMN_COUNT_MISMATCH = False)
         MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
         INCLUDE_METADATA = (

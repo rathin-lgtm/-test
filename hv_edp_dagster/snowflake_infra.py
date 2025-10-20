@@ -2,7 +2,11 @@ import re
 
 from pydantic import BaseModel, field_validator
 
-from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT, SHARED_DEV_BRONZE_PATH
+from hv_edp_dagster.constants import (
+    IS_LOCAL_ENVIRONMENT,
+    SHARED_DEV_BRONZE_PATH,
+    Sources,
+)
 
 
 def validate_snowflake_identifier(name: str) -> str:
@@ -63,6 +67,7 @@ CSV_FILE_FORMAT = FileFormat(name="csv_file")
 
 class Table(BaseModel):
     name: str
+    source: str
 
     @field_validator("name")
     @classmethod
@@ -80,6 +85,9 @@ class Table(BaseModel):
             inferred_data_location = SHARED_DEV_BRONZE_PATH
         else:
             inferred_data_location = f"{db}.{schema}"
+        full_file_path = (
+            f"{inferred_data_location}.{DATA_LANDING_STAGE.name}/{self.source}/{self.name}/"
+        )
         return f"""CREATE TABLE IF NOT EXISTS {db}.{schema}.{self.name}
                         USING TEMPLATE (
                             SELECT ARRAY_CAT(
@@ -105,7 +113,7 @@ class Table(BaseModel):
                              )
                   FROM TABLE(
                     INFER_SCHEMA(
-                    LOCATION => '@{inferred_data_location}.{DATA_LANDING_STAGE.name}/{self.name}/',
+                    LOCATION => '@{full_file_path}',
                     FILE_FORMAT => '{file_format.name}',
                     MAX_FILE_COUNT => 10
                     )
@@ -114,14 +122,20 @@ class Table(BaseModel):
 
 
 class BronzeTables:
-    dim_funds = Table(name="DIM_FUNDS")
-    fact_investor_transactions_monthly = Table(name="FACT_INVESTOR_TRANSACTIONS_MONTHLY")
-    fact_investor_transactions = Table(name="FACT_INVESTOR_TRANSACTIONS")
-    fact_investor_transactions_fund_hierarchy = Table(
-        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY"
+    country = Table(name="COUNTRY", source=Sources.harbourview_edw)
+    currency = Table(name="CURRENCY", source=Sources.harbourview_edw)
+    dim_fund = Table(name="DIM_FUND", source=Sources.harbourview_edw)
+    fact_investment_transactions_fund_hierarchy_monthly = Table(
+        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY", source=Sources.harbourview_edw
     )
-    fact_investor_transactions_fund_hierarchy_monthly = Table(
-        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY_MONTHLY"
+    fact_investor_transactions_fund_hierarchy = Table(
+        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY", source=Sources.harbourview_edw
+    )
+    fact_investor_transactions_monthly = Table(
+        name="FACT_INVESTOR_TRANSACTIONS_MONTHLY", source=Sources.harbourview_edw
+    )
+    fact_investor_transactions = Table(
+        name="FACT_INVESTOR_TRANSACTIONS", source=Sources.harbourview_edw
     )
 
 
