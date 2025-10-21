@@ -10,9 +10,10 @@ from hv_edp_dagster.constants import (
 )
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
+    ALL_FILE_FORMATS,
     ALL_TABLES,
-    CSV_FILE_FORMAT,
     DATA_LANDING_STAGE,
+    FileFormat,
     Table,
 )
 from hv_edp_dagster.utils import execute_sql, select_assets
@@ -44,9 +45,20 @@ def prepare_schema(snowflake_config: SnowflakeConfig) -> None:
     )
 
 
-@asset(kinds=ASSET_KINDS, deps=[prepare_schema], group_name=ASSET_GROUP_NAME)
-def prepare_file_format(snowflake_config: SnowflakeConfig) -> None:
-    execute_sql(snowflake_config, CSV_FILE_FORMAT.create_sql())
+def generate_prepare_file_format_assets() -> List[AssetsDefinition]:
+    def prepare_file_format(file_format: FileFormat) -> AssetsDefinition:
+        @asset(
+            kinds=ASSET_KINDS,
+            deps=[prepare_schema],
+            group_name=ASSET_GROUP_NAME,
+            name=f"prepare_file_format_{file_format.name}",
+        )
+        def _file_format(snowflake_config: SnowflakeConfig) -> None:
+            execute_sql(snowflake_config, file_format.create_sql())
+
+        return _file_format
+
+    return [prepare_file_format(file_format) for file_format in ALL_FILE_FORMATS]
 
 
 @asset(
@@ -62,12 +74,14 @@ def prepare_landing_stage(snowflake_config: SnowflakeConfig) -> None:
     )
 
 
-def generate_prepare_table_assets() -> List[AssetsDefinition]:
+def generate_prepare_table_assets(
+    file_format_assets: List[AssetsDefinition],
+) -> List[AssetsDefinition]:
     def create_table_asset(table_obj: Table) -> AssetsDefinition:
         @asset(
             name=f"prepare_table_{table_obj.name}",
             kinds=ASSET_KINDS,
-            deps=[prepare_file_format, prepare_landing_stage],
+            deps=[*file_format_assets, prepare_landing_stage],
             group_name=ASSET_GROUP_NAME,
         )
         def _table(snowflake_config: SnowflakeConfig, infra_job_config: JobConfig) -> None:
@@ -85,7 +99,10 @@ def generate_prepare_table_assets() -> List[AssetsDefinition]:
     return [create_table_asset(table) for table in ALL_TABLES]
 
 
-prepare_table_assets: List[AssetsDefinition] = generate_prepare_table_assets()
+prepare_file_format_assets: List[AssetsDefinition] = generate_prepare_file_format_assets()
+prepare_table_assets: List[AssetsDefinition] = generate_prepare_table_assets(
+    prepare_file_format_assets
+)
 
 provision_infra_job = define_asset_job(
     "provision_infra", selection=select_assets(group_name=ASSET_GROUP_NAME)

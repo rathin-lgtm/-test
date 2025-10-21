@@ -23,6 +23,11 @@ class Sources:
     harbourview_edw = "HARBOURVIEW_EDW"
 
 
+class FileTypes:
+    csv = "CSV"
+    parquet = "PARQUET"
+
+
 ENVIRONMENT = os.getenv("ENVIRONMENT")
 IS_LOCAL_ENVIRONMENT = ENVIRONMENT == Environments.PERSONAL_DEV
 

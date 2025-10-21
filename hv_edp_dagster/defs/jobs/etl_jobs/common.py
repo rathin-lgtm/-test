@@ -1,12 +1,11 @@
 from hv_edp_dagster.constants import (
     IS_LOCAL_ENVIRONMENT,
     SHARED_DEV_BRONZE_PATH,
+    FileTypes,
 )
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
-    CSV_FILE_FORMAT,
     DATA_LANDING_STAGE,
-    FileFormat,
     Table,
 )
 from hv_edp_dagster.utils import execute_sql
@@ -21,16 +20,20 @@ def copy_from_stage_sql(
     snowflake_config: SnowflakeConfig,
     full_reload: bool | None = False,
     use_shared_stage: bool = True,
-    file_format: FileFormat = CSV_FILE_FORMAT,
 ) -> str:
     location = (
         SHARED_DEV_BRONZE_PATH
         if use_shared_stage and IS_LOCAL_ENVIRONMENT
         else f"{snowflake_config.database}.{snowflake_config.schema_bronze}"
     )
+    error_parameter = (
+        ", ERROR_ON_COLUMN_COUNT_MISMATCH = False"
+        if table.file_format.file_type == FileTypes.csv
+        else ""
+    )
     return f"""COPY INTO {table.name}
         FROM @{location}.{DATA_LANDING_STAGE.name}/{table.source}/{table.name}/
-        FILE_FORMAT = (FORMAT_NAME = {file_format.name}, ERROR_ON_COLUMN_COUNT_MISMATCH = False)
+        FILE_FORMAT = (FORMAT_NAME = {table.file_format.name} {error_parameter})
         MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
         INCLUDE_METADATA = (
           INGEST_TIME = METADATA$START_SCAN_TIME,
