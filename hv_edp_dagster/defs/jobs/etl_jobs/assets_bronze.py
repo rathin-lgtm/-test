@@ -18,7 +18,7 @@ def get_clean_table_asset(table: Table) -> AssetsDefinition:
     )
     def _clean_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:
         if etl_job_config.full_reload:
-            execute_sql(snowflake_config.snowflake_resource, clean_table_sql(table))
+            execute_sql(snowflake_config, clean_table_sql(table))
 
     return _clean_table
 

@@ -56,7 +56,7 @@ def copy_data_from_stage(
     )
     update_file_date_sql = add_file_date_sql(table)
     for sql in (sql, update_file_date_sql):
-        execute_sql(snowflake_config.snowflake_resource, sql)
+        execute_sql(snowflake_config, sql)
 
 
 def clean_table_sql(table: Table) -> str:

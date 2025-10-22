@@ -83,3 +83,8 @@ dbt_packages/
 dbt_internal_packages/
 .user.yml
 .tmp*
+history/
+schedules/
+.telemetry/
+storage/
+.logs_queue/

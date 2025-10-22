@@ -1,9 +1,11 @@
 from datetime import datetime
 
 from dagster import (
+    DagsterRunStatus,
     DefaultSensorStatus,
     RunRequest,
     SkipReason,
+    run_status_sensor,
     sensor,
 )
 
@@ -22,7 +24,7 @@ def get_files_from_folder(snowflake_config: SnowflakeConfig, table_name: str) ->
         f"{snowflake_config.database}.{snowflake_config.schema_bronze}.{DATA_LANDING_STAGE.name}"
     )
     list_sql = f"LIST @{table_name}/{full_stage_path}/{get_todays_folder_path()};"
-    results = execute_sql(snowflake_config.snowflake_resource, list_sql, fetch_results=True)
+    results = execute_sql(snowflake_config, list_sql, fetch_results=True)
     if results is None:
         return []
     return [str(row[0].removeprefix(f"{DATA_LANDING_STAGE.name.lower()}/")) for row in results]
@@ -32,7 +34,7 @@ def get_processed_files(snowflake_config: SnowflakeConfig, table_name: str) -> l
     sql = f"""SELECT FILE_NAME FROM
     {snowflake_config.database}.{snowflake_config.schema_bronze}.{table_name}
     where FILE_DATE=TO_DATE('{get_todays_folder_path()}', 'YYYY/MM/DD');"""
-    results = execute_sql(snowflake_config.snowflake_resource, sql, fetch_results=True)
+    results = execute_sql(snowflake_config, sql, fetch_results=True)
     if results is None:
         return []
     return [str(row[0]) for row in results]
@@ -75,4 +77,25 @@ def create_file_sensor_for_table(tables: list[Table]):
     return sensors
 
 
+def create_cleanup_connection_sensors():
+    sensors = []
+    if IS_LOCAL_ENVIRONMENT:
+        for status in DagsterRunStatus.FAILURE, DagsterRunStatus.SUCCESS:
+
+            @run_status_sensor(
+                name=f"on_any_job_{status.value}_connection_cleanup",
+                minimum_interval_seconds=30,
+                default_status=DefaultSensorStatus.RUNNING,
+                monitor_all_code_locations=True,
+                run_status=status,
+            )
+            def _run_status_sensor(snowflake_config: SnowflakeConfig):
+                if snowflake_config.use_shared_connection:
+                    snowflake_config.clear_shared_connection()
+
+            sensors.append(_run_status_sensor)
+    return sensors
+
+
 new_file_sensors = create_file_sensor_for_table(ALL_TABLES)
+connection_cleanup_sensors = create_cleanup_connection_sensors()
