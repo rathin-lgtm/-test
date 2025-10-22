@@ -18,6 +18,7 @@ hv_edp_dbt:
       authenticator: "externalbrowser"
       database: "HV_EDP_{{ env_var('SNOWFLAKE_USER').split('@')[0] }}_DEV"
       schema: "PERSONAL_DEV"
+      reuse_connections: True
       threads: 1
 
     shared_dev:

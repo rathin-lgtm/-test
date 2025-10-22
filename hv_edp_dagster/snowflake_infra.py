@@ -5,6 +5,7 @@ from pydantic import BaseModel, field_validator
 from hv_edp_dagster.constants import (
     IS_LOCAL_ENVIRONMENT,
     SHARED_DEV_BRONZE_PATH,
+    FileTypes,
     Sources,
 )
 
@@ -30,7 +31,7 @@ def validate_snowflake_identifier(name: str) -> str:
     return name
 
 
-class Stage(BaseModel):
+class SnowflakeResource(BaseModel):
     name: str
 
     @field_validator("name")
@@ -38,6 +39,8 @@ class Stage(BaseModel):
     def validate_name(cls, v: str) -> str:
         return validate_snowflake_identifier(v)
 
+
+class Stage(SnowflakeResource):
     def create_sql(self, db: str, schema: str) -> str:
         return (
             f"CREATE STAGE IF NOT EXISTS {db}.{schema}.{self.name} DIRECTORY = ( ENABLE = TRUE );"
@@ -47,38 +50,29 @@ class Stage(BaseModel):
 DATA_LANDING_STAGE = Stage(name="landing")
 
 
-class FileFormat(BaseModel):
-    name: str
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        return validate_snowflake_identifier(v)
+class FileFormat(SnowflakeResource):
+    file_type: str
 
     def create_sql(self) -> str:
-        return f"""CREATE OR REPLACE FILE FORMAT {self.name} TYPE = CSV,
-            PARSE_HEADER = True, FIELD_DELIMITER = ",",
-            FIELD_OPTIONALLY_ENCLOSED_BY = '"'
-            """
+        sql = f"CREATE OR REPLACE FILE FORMAT {self.name} TYPE = {self.file_type}"
+        if self.file_type == FileTypes.csv:
+            sql += """, PARSE_HEADER = True, FIELD_DELIMITER = ",",
+            FIELD_OPTIONALLY_ENCLOSED_BY = '"'"""
+        return sql
 
 
-CSV_FILE_FORMAT = FileFormat(name="csv_file")
+CSV_FILE_FORMAT = FileFormat(name="csv_file", file_type=FileTypes.csv)
+PARQUET_FILE_FORMAT = FileFormat(name="parquet_file", file_type=FileTypes.parquet)
 
 
-class Table(BaseModel):
-    name: str
+class Table(SnowflakeResource):
     source: str
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        return validate_snowflake_identifier(v)
+    file_format: FileFormat
 
     def create_sql(
         self,
         db: str,
         schema: str,
-        file_format: FileFormat = CSV_FILE_FORMAT,
         use_shared_stage: bool = True,
     ) -> str:
         if IS_LOCAL_ENVIRONMENT and use_shared_stage:
@@ -114,7 +108,7 @@ class Table(BaseModel):
                   FROM TABLE(
                     INFER_SCHEMA(
                     LOCATION => '@{full_file_path}',
-                    FILE_FORMAT => '{file_format.name}',
+                    FILE_FORMAT => '{self.file_format.name}',
                     MAX_FILE_COUNT => 10
                     )
                   )
@@ -122,21 +116,33 @@ class Table(BaseModel):
 
 
 class BronzeTables:
-    country = Table(name="COUNTRY", source=Sources.harbourview_edw)
-    currency = Table(name="CURRENCY", source=Sources.harbourview_edw)
-    dim_fund = Table(name="DIM_FUND", source=Sources.harbourview_edw)
+    country = Table(name="COUNTRY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
+    currency = Table(name="CURRENCY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
+    dim_fund = Table(name="DIM_FUND", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
     fact_investment_transactions_fund_hierarchy_monthly = Table(
-        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY", source=Sources.harbourview_edw
+        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
     fact_investor_transactions_fund_hierarchy = Table(
-        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY", source=Sources.harbourview_edw
+        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
     fact_investor_transactions_monthly = Table(
-        name="FACT_INVESTOR_TRANSACTIONS_MONTHLY", source=Sources.harbourview_edw
+        name="FACT_INVESTOR_TRANSACTIONS_MONTHLY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
     fact_investor_transactions = Table(
-        name="FACT_INVESTOR_TRANSACTIONS", source=Sources.harbourview_edw
+        name="FACT_INVESTOR_TRANSACTIONS",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    global_edw_key_to_iqid = Table(
+        name="GLOBAL_EDW_KEY_TO_IQID", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
     )
 
 
 ALL_TABLES = [value for value in BronzeTables.__dict__.values() if isinstance(value, Table)]
+ALL_FILE_FORMATS = [CSV_FILE_FORMAT, PARQUET_FILE_FORMAT]
