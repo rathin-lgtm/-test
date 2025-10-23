@@ -120,11 +120,14 @@ models:
       tags: ["silver","sat","metrics"]
     columns:
       - name: skey
-        description: "hashdiff over link + metric fields"
+        description: "sha256(as_of_date || metric_currency_code || total_value || nav || tvpi || dpi || irr_gross || irr_net || distributions || contributions || commitments || capital_called || gain_loss || pme_irr_1 || pme_irr_2 || pme_irr_msciaw )"
         tests: [not_null, unique]
+      - name: hk_fund
+        tests:
+          - not_null
+          - relationships: {to: ref('hub_fund'), field: hk_fund}
       - name: as_of_date
       - name: metric_currency_code
-      - name: total_value
       - name: nav
       - name: tvpi
       - name: dpi
@@ -132,6 +135,7 @@ models:
       - name: irr_net
       - name: distributions
       - name: contributions
+      - name: total_value
       - name: commitments
       - name: capital_called
       - name: gain_loss
