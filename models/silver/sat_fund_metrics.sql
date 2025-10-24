@@ -57,7 +57,7 @@ SELECT
         PARTITION BY hk_fund, currency_code
         ORDER BY as_of_date
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as nav,
+    ) as lp_nav,
     tvpi,
     irr_gross,
     irr_net,
@@ -65,19 +65,19 @@ SELECT
         PARTITION BY hk_fund, currency_code
         ORDER BY as_of_date
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as distributions,
+    ) as lp_distributions,
     SUM(contributions) OVER (
         PARTITION BY hk_fund, currency_code
         ORDER BY as_of_date
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as contributions,
+    ) as lp_contributions,
     SUM(total_value) OVER (
         PARTITION BY hk_fund, currency_code
         ORDER BY as_of_date
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as total_value,
-    commitments,
-    capital_called,
+    ) as lp_total_value,
+    commitments as lp_commitments,
+    capital_called as lp_capital_called,
     gain_loss,
     pme_irr_1,
     pme_irr_2,

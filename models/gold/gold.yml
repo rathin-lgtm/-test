@@ -1,0 +1,17 @@
+version: 2
+
+models:
+# ================
+# KURTOSYS GOLD MODELS
+# ================
+  - name: gold_fund_metrics
+    description: "Gold Fund Metrics"
+    config:
+      meta:
+        dagster:
+          group: "gold"
+      materialized: table
+      tags: ["gold","kurtosys"]
+    columns:
+      - name: as_of_date
+        tests: [not_null]

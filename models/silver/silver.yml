@@ -122,16 +122,16 @@ models:
           - relationships: {to: ref('hub_fund'), field: hk_fund}
       - name: as_of_date
       - name: metric_currency_code
-      - name: nav
+      - name: lp_nav
       - name: tvpi
       - name: dpi
       - name: irr_gross
       - name: irr_net
-      - name: distributions
-      - name: contributions
-      - name: total_value
-      - name: commitments
-      - name: capital_called
+      - name: lp_distributions
+      - name: lp_contributions
+      - name: lp_total_value
+      - name: lp_commitments
+      - name: lp_capital_called
       - name: gain_loss
       - name: pme_irr_1
       - name: pme_irr_2
