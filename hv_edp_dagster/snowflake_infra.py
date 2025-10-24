@@ -142,6 +142,9 @@ class BronzeTables:
     global_edw_key_to_iqid = Table(
         name="GLOBAL_EDW_KEY_TO_IQID", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
     )
+    dim_fund_sub_perspective = Table(
+        name="DIM_FUND_SUB_PERSPECTIVE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
 
 
 ALL_TABLES = [value for value in BronzeTables.__dict__.values() if isinstance(value, Table)]
