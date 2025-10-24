@@ -28,6 +28,10 @@ class FileTypes:
     parquet = "PARQUET"
 
 
+class GoldAssets:
+    funds = "gold_funds"
+
+
 ENVIRONMENT = os.getenv("ENVIRONMENT")
 IS_LOCAL_ENVIRONMENT = ENVIRONMENT == Environments.PERSONAL_DEV
 

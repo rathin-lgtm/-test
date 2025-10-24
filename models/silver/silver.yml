@@ -3,10 +3,6 @@ version: 2
 models:
   - name: silver_funds
     description: Funds silver data.
-    config:
-      meta:
-        dagster:
-          group: "DIM_FUND"
     columns:
       - name: fund_id
         description: Primary key

@@ -1,10 +1,10 @@
 from dagster import define_asset_job
 
-from hv_edp_dagster.snowflake_infra import BronzeTables
-from hv_edp_dagster.utils import select_assets
+from hv_edp_dagster.constants import GoldAssets
+from hv_edp_dagster.utils import select_gold_asset_with_upstream
 
 JOB_NAME = "dim_fund_etl"
 
 etl_job = define_asset_job(
-    name=JOB_NAME, selection=select_assets(group_name=BronzeTables.dim_fund.name)
+    name=JOB_NAME, selection=select_gold_asset_with_upstream(GoldAssets.funds)
 )

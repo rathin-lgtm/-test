@@ -16,7 +16,7 @@ from hv_edp_dagster.snowflake_infra import (
     FileFormat,
     Table,
 )
-from hv_edp_dagster.utils import execute_sql, select_assets
+from hv_edp_dagster.utils import execute_sql, select_assets_by_group
 
 ASSET_GROUP_NAME = "infra"
 
@@ -105,5 +105,5 @@ prepare_table_assets: List[AssetsDefinition] = generate_prepare_table_assets(
 )
 
 provision_infra_job = define_asset_job(
-    "provision_infra", selection=select_assets(group_name=ASSET_GROUP_NAME)
+    "provision_infra", selection=select_assets_by_group(group_name=ASSET_GROUP_NAME)
 )
