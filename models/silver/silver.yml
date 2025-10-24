@@ -85,30 +85,21 @@ models:
       tags: ["silver","sat"]
     columns:
       - name: skey
-        description: "sha256(hk_fund || fund_name || sub_fund_name || program_name || region_name || vintage_range || focus || fund_currency_code || report_currency_code)"
+        description: "sha256(hk_fund || fund_name || fund_currency || fund_investor_presentation_aiv || fund_investor_presentation_aiv_lock_date || fund_investor_presentation_aiv_type_efront || fund_efront_iqid || fund_lock_date)"
         tests: [not_null, unique]
       - name: hk_fund
         tests:
           - not_null
           - relationships: {to: ref('hub_fund'), field: hk_fund}
       - name: fund_name
-      - name: sub_fund_name
-      - name: program_name
-      - name: region_name
-      - name: vintage_range
-      - name: focus
-      - name: fund_currency_code
-      - name: report_currency_code
-      - name: effective_from
-      - name: effective_to
-      - name: is_active
+      - name: fund_currency
+      - name: fund_investor_presentation_aiv
+      - name: fund_investor_presentation_aiv_lock_date
+      - name: fund_investor_presentation_aiv_type_efront
+      - name: fund_efront_iqid
+      - name: fund_lock_date
       - name: load_dt
       - name: record_source
-    tests:
-      - dbt_utils.expression_is_true:
-          name: valid_region_values
-          expression: "region_name is null or region_name in ('US','Global')"
-          config: {severity: warn}
 
   - name: sat_fund_metrics
     description: "Snapshot metrics per fund & as_of_date"
