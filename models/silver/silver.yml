@@ -31,9 +31,9 @@ models:
       tags: ["silver","hub"]
     columns:
       - name: hk_investor
-        description: "sha256(upper(trim(investor_id)))"
+        description: "sha256(upper(trim(efront_investor_id)))"
         tests: [not_null, unique]
-      - name: investor_id
+      - name: efront_investor_id
         tests: [not_null, unique]
       - name: load_dt
       - name: record_source
