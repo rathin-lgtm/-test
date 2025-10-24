@@ -1,4 +1,4 @@
-daily_metrics as (
+with daily_metrics as (
     SELECT
     DATE(date_id, 'YYYYMMDD') as as_of_date,
     sha2(upper(trim(fid.source_table_col_val))) as hk_fund,
@@ -38,13 +38,13 @@ daily_metrics as (
     t.file_name as record_source
 
     FROM (
-        SELECT * FROM {{ source('hv_source', 'bronze_fact_investor_transactions') }} WHERE investor_type = 'LP'
+        SELECT * FROM {{ source('hv_source', 'fact_investor_transactions') }} WHERE investor_type = 'LP'
     ) t
-    JOIN {{ source('hv_source', 'bronze_currency') }} c
+    JOIN {{ source('hv_source', 'currency') }} c
         ON t.currency_id = c.currency_id
-    JOIN {{ source('hv_source', 'bronze_global_edw_key_to_iqid') }} fid
+    JOIN {{ source('hv_source', 'global_edw_key_to_iqid') }} fid
         ON t.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
-    JOIN {{ source('hv_source', 'bronze_dim_fund') }} f
+    JOIN {{ source('hv_source', 'dim_fund') }} f
         ON t.fund_id = f.fund_id
     GROUP BY as_of_date, hk_fund, currency_code, t.file_name
 )
@@ -82,7 +82,8 @@ SELECT
     pme_irr_1,
     pme_irr_2,
     pme_irr_msciaw,
+    HEX_ENCODE(HASH(as_of_date, hk_fund, currency_code, nav, tvpi, irr_gross, irr_net, distributions, contributions, total_value, commitments, capital_called, gain_loss, pme_irr_1, pme_irr_2, pme_irr_msciaw)) as skey,
     load_dt,
     record_source
 FROM (daily_metrics)
-ORDER BY as_of_date;
+ORDER BY as_of_date

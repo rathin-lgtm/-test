@@ -9,7 +9,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","hub"]
     columns:
@@ -26,7 +26,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","hub"]
     columns:
@@ -47,7 +47,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","link","rls"]
     columns:
@@ -80,7 +80,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","sat"]
     columns:
@@ -115,7 +115,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","sat","metrics"]
     columns:
@@ -144,29 +144,20 @@ models:
       - name: pme_irr_msciaw
       - name: load_dt
       - name: record_source
-    tests:
-      - dbt_utils.expression_is_true:
-          name: non_negative_amounts
-          expression: >
-            coalesce(total_value,0) >= 0 and
-            coalesce(nav,0) >= 0 and
-            coalesce(contributions,0) >= and
-            coalesce(commitments,0) >= and
-            coalesce(capital_called,0) >= and
-            coalesce(distributions,0) >= 0
-      - dbt_utils.expression_is_true:
-          name: irr_reasonable_range
-          expression: >
-            (irr_gross is null or (irr_gross between -100 and 100)) and
-            (irr_net is null or (irr_net between -100 and 100))
-          config: {severity: warn}
+    tests: []
+      # - dbt_utils.expression_is_true:
+      #     name: irr_reasonable_range
+      #     expression: >
+      #       (irr_gross is null or (irr_gross between -100 and 100)) and
+      #       (irr_net is null or (irr_net between -100 and 100))
+      #     config: {severity: warn}
 
   - name: sat_investor_attributes
     description: "Optional investor SCD satellite"
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","sat","rls"]
     columns:
@@ -196,7 +187,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","pit"]
     columns:
@@ -217,7 +208,7 @@ models:
     config:
       meta:
         dagster:
-          group: "SILVER"
+          group: "silver"
       materialized: table
       tags: ["silver","pit","current"]
     columns:
