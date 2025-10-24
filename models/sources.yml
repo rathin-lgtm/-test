@@ -7,8 +7,26 @@ sources:
       schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
       tables:
           - name: dim_fund
-            description: dim funds data.
+            description: DIM_FUND loaded from Harbourview EDW
             meta:
               dagster:
                 asset_key: ['bronze_dim_fund']
-                group: "DIM_FUND"
+                group: "BRONZE"
+          - name: fact_investor_transactions
+            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_investor_transactions']
+                group: "BRONZE"
+          - name: currency
+            description: CURRENCY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_currency']
+                group: "BRONZE"
+          - name: global_edw_key_to_iqid
+            description: GLOBAL_EDW_KEY_TO_IQID loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_global_edw_key_to_iqid']
+                group: "BRONZE"

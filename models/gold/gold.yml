@@ -1,14 +1,17 @@
 version: 2
 
 models:
-  - name: gold_funds
-    description: Funds gold data.
+# ================
+# KURTOSYS GOLD MODELS
+# ================
+  - name: gold_fund_metrics
+    description: "Gold Fund Metrics"
     config:
-      incremental_strategy: merge
-      unique_key: type
+      meta:
+        dagster:
+          group: "gold"
+      materialized: table
+      tags: ["gold","kurtosys"]
     columns:
-      - name: type
-        description: Primary key
-        data_tests:
-          - unique
-          - not_null
+      - name: as_of_date
+        tests: [not_null]
