@@ -9,11 +9,13 @@ from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import ALL_TABLES, Table
 from hv_edp_dagster.utils import execute_sql
 
+BRONZE_GROUP_NAME = "bronze"
+
 
 def get_clean_table_asset(table: Table) -> AssetsDefinition:
     @asset(
         kinds=ASSET_KINDS,
-        group_name="BRONZE",
+        group_name=BRONZE_GROUP_NAME,
         name=f"clean_{table.name.lower()}",
     )
     def _clean_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:
@@ -27,7 +29,7 @@ def get_bronze_table_asset(clean_table_asset: AssetsDefinition, table: Table) ->
     @asset(
         kinds=ASSET_KINDS,
         deps=[clean_table_asset],
-        group_name="BRONZE",
+        group_name=BRONZE_GROUP_NAME,
         name=f"bronze_{table.name.lower()}",
     )
     def _bronze_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:

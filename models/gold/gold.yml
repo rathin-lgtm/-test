@@ -6,9 +6,6 @@ models:
     config:
       incremental_strategy: merge
       unique_key: type
-      meta:
-        dagster:
-          group: "DIM_FUND"
     columns:
       - name: type
         description: Primary key

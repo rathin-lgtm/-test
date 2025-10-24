@@ -11,4 +11,16 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_dim_fund']
-                group: "DIM_FUND"
+                group: "BRONZE"
+          - name: fact_investor_transactions
+            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_investor_transactions']
+                group: "BRONZE"
+          - name: fact_investor_transactions
+            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_currency']
+                group: "BRONZE"

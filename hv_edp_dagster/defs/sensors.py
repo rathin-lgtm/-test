@@ -12,7 +12,7 @@ from dagster import (
 from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import ALL_TABLES, DATA_LANDING_STAGE, Table
-from hv_edp_dagster.utils import execute_sql, select_assets
+from hv_edp_dagster.utils import execute_sql, select_assets_by_group
 
 
 def get_todays_folder_path() -> str:
@@ -54,7 +54,7 @@ def create_file_sensor_for_table(tables: list[Table]):
             default_status=(
                 DefaultSensorStatus.STOPPED if IS_LOCAL_ENVIRONMENT else DefaultSensorStatus.RUNNING
             ),
-            asset_selection=select_assets(table.name),
+            asset_selection=select_assets_by_group(table.name),
         )
         def table_file_sensor(snowflake_config: SnowflakeConfig):
             all_stage_files = get_files_from_folder(snowflake_config, table.name)

@@ -6,6 +6,8 @@ from dagster import AssetSelection, get_dagster_logger
 from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT, AssetTags, Environments
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 
+GOLD_ASSET_KEY = "gold"
+
 
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
@@ -30,10 +32,19 @@ def execute_sql(
         raise type(e)(f"Failed executing SQL: '{sql}': {str(e)}") from e
 
 
-def select_assets(group_name: str) -> AssetSelection:
-    asset_selection = AssetSelection.groups(group_name)
+def get_environment_specific_assets(asset_selection: AssetSelection) -> AssetSelection:
     if IS_LOCAL_ENVIRONMENT:
         return asset_selection
     return asset_selection - AssetSelection.tag(
         key=AssetTags.environment, value=Environments.PERSONAL_DEV
     )
+
+
+def select_assets_by_group(group_name: str) -> AssetSelection:
+    asset_selection = AssetSelection.groups(group_name)
+    return get_environment_specific_assets(asset_selection)
+
+
+def select_gold_asset_with_upstream(key: str) -> AssetSelection:
+    asset_selection = AssetSelection.keys([GOLD_ASSET_KEY, key]).upstream()
+    return get_environment_specific_assets(asset_selection)
