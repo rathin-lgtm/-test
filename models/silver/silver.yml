@@ -98,6 +98,9 @@ models:
       - name: fund_investor_presentation_aiv_type_efront
       - name: fund_efront_iqid
       - name: fund_lock_date
+      - name: effective_from
+      - name: effective_to
+      - name: is_active
       - name: load_dt
       - name: record_source
 
