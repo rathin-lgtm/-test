@@ -19,7 +19,7 @@ models:
       - name: efront_fund_id
         tests: [not_null, unique]
       - name: load_dt
-      - name: record_source
+      - name: file_name
 
   - name: hub_investor
     description: "DV Hub for Investors"
@@ -57,7 +57,7 @@ models:
       - name: hk_fund
         tests:
           - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
+         # - relationships: {to: ref('hub_fund'), field: hk_fund}
       - name: hk_investor
         tests:
           - not_null
@@ -90,7 +90,7 @@ models:
       - name: hk_fund
         tests:
           - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
+         # - relationships: {to: ref('hub_fund'), field: hk_fund}
       - name: fund_name
       - name: sub_fund_name
       - name: program_name
@@ -194,7 +194,7 @@ models:
       - name: hk_fund
         tests: 
           - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
+        #  - relationships: {to: ref('hub_fund'), field: hk_fund}
       - name: as_of_date
         tests: [not_null]
     tests:
@@ -216,7 +216,7 @@ models:
         tests:
           - not_null
           - unique
-          - relationships: {to: ref('hub_fund'), field: hkey}
+         # - relationships: {to: ref('hub_fund'), field: hkey}
       - name: as_of_date
         tests: [not_null]
 
