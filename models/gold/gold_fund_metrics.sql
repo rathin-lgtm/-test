@@ -3,6 +3,7 @@ SELECT
     efront_fund_id,
     fund_name,
     fund_currency,
+    metric_currency_code as metric_currency,
     fund_lock_date,
     fund_investor_presentation_aiv,
     fund_investor_presentation_aiv_type_efront,

@@ -64,7 +64,7 @@ with daily_metrics as (
 SELECT 
     as_of_date,
     hk_fund,
-    currency_code,
+    currency_code as metric_currency_code,
     SUM(nav) OVER (
         PARTITION BY hk_fund, currency_code
         ORDER BY as_of_date
