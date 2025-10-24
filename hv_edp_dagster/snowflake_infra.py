@@ -145,6 +145,9 @@ class BronzeTables:
     dim_fund_sub_perspective = Table(
         name="DIM_FUND_SUB_PERSPECTIVE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
     )
+    fact_fund_sub_perpective_funds = Table(
+        name="FACT_FUND_SUB_PERSPECTIVE_FUNDS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
 
 
 ALL_TABLES = [value for value in BronzeTables.__dict__.values() if isinstance(value, Table)]
