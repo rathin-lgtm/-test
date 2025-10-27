@@ -28,8 +28,8 @@ class FileTypes:
     parquet = "PARQUET"
 
 
-class GoldAssets:
-    funds = "gold_funds"
+class GoldModels:
+    fund_metrics = "gold_fund_metrics"
 
 
 ENVIRONMENT = os.getenv("ENVIRONMENT")
