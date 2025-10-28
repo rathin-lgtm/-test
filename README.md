@@ -33,6 +33,13 @@ py -3.12 -m venv venv
 pre-commit install
 ```
 
+9) Install dbt deps:
+
+```
+dbt deps
+```
+
+
 ## Local runs
 
 ### Running Dagster
