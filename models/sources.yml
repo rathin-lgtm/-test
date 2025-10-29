@@ -11,28 +11,23 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_dim_fund']
-                group: "bronze"
           - name: fact_investor_transactions
             description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
             meta:
               dagster:
                 asset_key: ['bronze_fact_investor_transactions']
-                group: "bronze"
           - name: currency
             description: CURRENCY loaded from Harbourview EDW
             meta:
               dagster:
                 asset_key: ['bronze_currency']
-                group: "bronze"
           - name: global_edw_key_to_iqid
             description: GLOBAL_EDW_KEY_TO_IQID loaded from Harbourview EDW
             meta:
               dagster:
                 asset_key: ['bronze_global_edw_key_to_iqid']
-                group: "bronze"
           - name: dim_fund_sub_perspective
             description: DIM_FUND_SUB_PERSPECTIVE loaded from Harbourview EDW
             meta:
               dagster:
                 asset_key: ['bronze_dim_fund_sub_perspective']
-                group: "bronze"
