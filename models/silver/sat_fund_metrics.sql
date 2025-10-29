@@ -3,46 +3,23 @@ with daily_metrics as (
     DATE(date_id, 'YYYYMMDD') as as_of_date,
     sha2(upper(trim(fid.source_table_col_val))) as hk_fund,
     c.currency_code,
-    SUM(
-        CASE
-            WHEN t.metric_id in (12, 13, 14, 15, 16, 17, 18, 185, 214, 215) THEN t.amount /* Fund_inception_Contribution_Cap_withoutInterest_Paid_at_Closing_Fund_Currency */
-            WHEN t.metric_id in (40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63) THEN -1*t.amount /* Fund_inception_dist_Cap_In_Fund_currency */
-            WHEN t.metric_id in (83, 86, 87, 88, 89, 90, 91, 92, 93, 94, 96, 103, 104, 105, 106, 107, 110, 111, 120, 108, 109, 164, 119, 95, 85, 98, 100, 102, 121, 122, 123, 124, 125, 126, 127, 128, 129, 131, 133, 84, 97, 99, 101, 112, 113, 114, 115, 116, 117, 118, 130, 132, 233, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 234, 235, 236, 237, 238, 239, 240, 241, 245, 246, 247, 248, 249, 347, 366, 367, 368, 369, 372, 375, 371, 374, 377, 370, 373, 376, 378, 379, 380, 382, 384, 386, 381, 383, 385, 398, 399, 400, 346, 85, 514, 94, 510, 96, 515, 347, 485, 108, 460, 111, 120, 517, 459, 460, 461, 462, 463, 464, 465) 
-                AND DATE(date_id, 'YYYYMMDD') <= DATE(f.lock_date, 'YYYYMMDD') THEN t.amount /* Fund_Inception_Income_Expense_In_Fund_Currency */
-            ELSE 0
-        END
-    ) as nav,
-    0 as tvpi,
+    {{ nav('date_id', 't.metric_id', 'f.lock_date', 't.amount') }} as nav,
     0 as irr_gross,
     0 as irr_net,
-    SUM(
-        CASE
-            WHEN t.metric_id in (42, 40, 41, 46, 43, 45, 47, 48, 44, 49, 54, 55, 56, 57, 58, 59, 61, 60, 50, 51, 52, 53, 62, 63, 323, 324, 325, 326, 327, 328) THEN t.amount
-            ELSE 0
-        END
-    ) as distributions,
-    SUM(
-        CASE
-            WHEN t.metric_id in (12, 13, 14, 15, 16, 17, 18, 185, 214, 215) THEN t.amount
-            ELSE 0
-        END
-    ) as contributions,
+    {{ distributions('t.metric_id', 't.amount') }} as distributions,
+    {{ contributions('t.metric_id', 't.amount') }} as contributions,
     nav + distributions as total_value,
-    SUM(
-        CASE
-            /* HVW formula has contributions in this calc but since we are partitioning on currency they should cancel out */
-            WHEN t.metric_id in (319,320,321) THEN t.amount /* Fund_level_contribution_cap_component_adjustment */
-            WHEN t.metric_id in (6) THEN t.amount /* cumulative_commitment */
-            ELSE 0
-        END
-    ) as commitments,
-    contributions + SUM(
-        CASE
-            WHEN t.metric_id in (8) THEN t.amount
-            ELSE 0
-        END
-    ) as capital_called,
-    0 as gain_loss,
+    CASE 
+        WHEN contributions = 0 THEN 0
+        ELSE total_value / contributions
+    END as tvpi,
+    CASE 
+        WHEN contributions = 0 THEN 0
+        ELSE distributions / contributions
+    END as dpi,
+    {{ commitments('t.metric_id', 't.amount') }} as commitments,
+    contributions + {{ capital_called_add_term('t.metric_id', 't.amount') }} as capital_called,
+    total_value - contributions as gain_loss,
     0 as pme_irr_1,
     0 as pme_irr_2,
     0 as pme_irr_msciaw,
@@ -65,40 +42,17 @@ SELECT
     as_of_date,
     hk_fund,
     currency_code as metric_currency_code,
-    SUM(nav) OVER (
-        PARTITION BY hk_fund, currency_code
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as lp_nav,
-    tvpi,
+    {{ rollup('nav') }} as lp_nav,
+    {{ rollup('tvpi') }} as tvpi,
+    {{ rollup('dpi') }} as dpi,
     irr_gross,
     irr_net,
-    SUM(distributions) OVER (
-        PARTITION BY hk_fund, currency_code
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as lp_distributions,
-    SUM(contributions) OVER (
-        PARTITION BY hk_fund, currency_code
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as lp_contributions,
-    SUM(total_value) OVER (
-        PARTITION BY hk_fund, currency_code
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as lp_total_value,
-    SUM(commitments) OVER (
-        PARTITION BY hk_fund, currency_code
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as lp_commitments,
-    SUM(capital_called) OVER (
-        PARTITION BY hk_fund, currency_code
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) as lp_capital_called,
-    gain_loss,
+    {{ rollup('distributions') }} as lp_distributions,
+    {{ rollup('contributions') }} as lp_contributions,
+    {{ rollup('total_value') }} as lp_total_value,
+    {{ rollup('commitments') }} as lp_commitments,
+    {{ rollup('capital_called') }} as lp_capital_called,
+    {{ rollup('gain_loss') }} as gain_loss,
     pme_irr_1,
     pme_irr_2,
     pme_irr_msciaw,
