@@ -1,19 +1,4 @@
-{% macro create_xirr_udf() %}
-    CREATE OR REPLACE FUNCTION {{ target.database }}.{{ target.schema }}.xirr(
-        cashflows ARRAY,
-        dates ARRAY,
-        guess FLOAT DEFAULT -0.01
-    )
-    RETURNS FLOAT
-    LANGUAGE PYTHON
-    RUNTIME_VERSION = '3.12'
-    PACKAGES = ('pyxirr')
-    HANDLER = 'compute_xirr'
-    AS
-    $$
-    from pyxirr import xirr
-
-    def compute_xirr(cashflows, dates, guess=-0.01):
+def compute_xirr(cashflows, dates, guess=-0.01):
     """
     Compute XIRR for given cashflows and dates.
     Args:
@@ -23,12 +8,11 @@
     Returns:
         float: The XIRR value (annualized rate) or None.
     """
+    from pyxirr import xirr
+
     if not cashflows or not dates or len(cashflows) != len(dates):
         return None
-
     try:
         return float(xirr(dates, cashflows, guess=guess))
     except Exception:
         return None
-    $$;
-{% endmacro %}

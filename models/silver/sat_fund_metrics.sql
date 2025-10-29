@@ -1,7 +1,3 @@
-{{ config(
-    materialized='table',
-    pre_hook="{{ create_xirr_udf() }}"
-) }}
 with daily_metrics as (
     SELECT
     DATE(date_id, 'YYYYMMDD') as as_of_date,

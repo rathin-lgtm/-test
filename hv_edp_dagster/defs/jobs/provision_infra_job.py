@@ -11,9 +11,11 @@ from hv_edp_dagster.constants import (
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
     ALL_FILE_FORMATS,
+    ALL_FUNCTIONS,
     ALL_TABLES,
     DATA_LANDING_STAGE,
     FileFormat,
+    PythonFunction,
     Table,
 )
 from hv_edp_dagster.utils import execute_sql, select_assets_by_group
@@ -43,6 +45,25 @@ def prepare_schema(snowflake_config: SnowflakeConfig) -> None:
         snowflake_config,
         f"CREATE SCHEMA IF NOT EXISTS {snowflake_config.schema_bronze};",
     )
+
+
+def generate_prepare_functions_assets() -> List[AssetsDefinition]:
+    def prepare_function(function: PythonFunction) -> AssetsDefinition:
+        @asset(
+            kinds=ASSET_KINDS,
+            deps=[prepare_schema],
+            group_name=ASSET_GROUP_NAME,
+            name=f"prepare_function_{function.name}",
+        )
+        def _function(snowflake_config: SnowflakeConfig) -> None:
+            execute_sql(
+                snowflake_config,
+                function.create_sql(snowflake_config.database, snowflake_config.schema_bronze),
+            )
+
+        return _function
+
+    return [prepare_function(function) for function in ALL_FUNCTIONS]
 
 
 def generate_prepare_file_format_assets() -> List[AssetsDefinition]:
@@ -103,6 +124,7 @@ prepare_file_format_assets: List[AssetsDefinition] = generate_prepare_file_forma
 prepare_table_assets: List[AssetsDefinition] = generate_prepare_table_assets(
     prepare_file_format_assets
 )
+prepare_function_assets: List[AssetsDefinition] = generate_prepare_functions_assets()
 
 provision_infra_job = define_asset_job(
     "provision_infra", selection=select_assets_by_group(group_name=ASSET_GROUP_NAME)
