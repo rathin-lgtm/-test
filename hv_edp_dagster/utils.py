@@ -12,6 +12,8 @@ GOLD_ASSET_KEY = "gold"
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
+def get_dbt_project_dir() -> Path:
+    return Path(str(get_project_root()) + "\\hv_edp_dbt")
 
 def execute_sql(
     snowflake_config: SnowflakeConfig, sql: str, fetch_results: bool = False

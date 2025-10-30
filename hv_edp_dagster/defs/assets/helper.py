@@ -1,6 +1,5 @@
 from hv_edp_dagster.constants import (
-    IS_LOCAL_ENVIRONMENT,
-    SHARED_DEV_BRONZE_PATH,
+    SnowflakeEnv,
     FileTypes,
 )
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
@@ -15,15 +14,15 @@ ASSET_KINDS = {"python", "snowflake"}
 DATE_REGEX = r"(\\d{4}/\\d{2}/\\d{2})"
 
 
-def copy_from_stage_sql(
+def generate_copy_from_stage_sql(
     table: Table,
     snowflake_config: SnowflakeConfig,
     full_reload: bool | None = False,
     use_shared_stage: bool = True,
 ) -> str:
     location = (
-        SHARED_DEV_BRONZE_PATH
-        if use_shared_stage and IS_LOCAL_ENVIRONMENT
+        SnowflakeEnv.SHARED_DEV_BRONZE_PATH
+        if use_shared_stage and SnowflakeEnv.IS_LOCAL_ENVIRONMENT
         else f"{snowflake_config.database}.{snowflake_config.schema_bronze}"
     )
     error_parameter = (
@@ -42,25 +41,25 @@ def copy_from_stage_sql(
         FORCE={full_reload};"""
 
 
-def add_file_date_sql(table: Table) -> str:
+def generate_add_file_date_sql(table: Table) -> str:
     return f"""UPDATE {table.name}
             SET FILE_DATE = TO_DATE(REGEXP_SUBSTR(FILE_NAME, '{DATE_REGEX}'), 'YYYY/MM/DD')
             WHERE FILE_DATE IS NULL"""
 
 
-def copy_data_from_stage(
+def copy_data_from_stage_sql(
     snowflake_config: SnowflakeConfig, etl_job_config: JobConfig, table: Table
 ) -> None:
-    sql = copy_from_stage_sql(
+    copy_sql = generate_copy_from_stage_sql(
         table,
         snowflake_config=snowflake_config,
         full_reload=etl_job_config.full_reload,
         use_shared_stage=etl_job_config.use_shared_stage,
     )
-    update_file_date_sql = add_file_date_sql(table)
-    for sql in (sql, update_file_date_sql):
+    update_file_date_sql = generate_add_file_date_sql(table)
+    for sql in (copy_sql, update_file_date_sql):
         execute_sql(snowflake_config, sql)
 
 
-def clean_table_sql(table: Table) -> str:
+def clear_table_sql(table: Table) -> str:
     return f"delete from {table.name}"
