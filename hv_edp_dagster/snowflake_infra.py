@@ -1,7 +1,4 @@
-import inspect
 import re
-import textwrap
-from typing import Any, Callable
 
 from pydantic import BaseModel, field_validator
 
@@ -11,7 +8,6 @@ from hv_edp_dagster.constants import (
     FileTypes,
     Sources,
 )
-from hv_edp_dagster.snowflake_udfs import compute_xirr
 
 
 def validate_snowflake_identifier(name: str) -> str:
@@ -119,36 +115,6 @@ class Table(SnowflakeResource):
                 );"""
 
 
-class PythonFunction(SnowflakeResource):
-    arguments: str
-    returns: str
-    function: Callable[..., Any]
-    packages: list[str]
-
-    def create_sql(
-        self,
-        db: str,
-        schema: str,
-    ) -> str:
-        return f"""CREATE OR REPLACE FUNCTION {db}.{schema}.{self.name}( {self.arguments} )
-                        RETURNS {self.returns}
-                        LANGUAGE PYTHON
-                        RUNTIME_VERSION = '3.12'
-                        PACKAGES = ('{"', '".join(self.packages)}')
-                        HANDLER = '{self.function.__name__}'
-                        AS
-                        $${textwrap.dedent(inspect.getsource(self.function))}$$"""
-
-
-XIRR_FUNCTION = PythonFunction(
-    arguments="cashflows ARRAY, dates ARRAY, guess FLOAT DEFAULT -0.01",
-    returns="FLOAT",
-    function=compute_xirr,
-    name="xirr",
-    packages=["pyxirr"],
-)
-
-
 class BronzeTables:
     country = Table(name="COUNTRY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
     currency = Table(name="CURRENCY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
@@ -191,6 +157,5 @@ class BronzeTables:
     )
 
 
-ALL_FUNCTIONS = [XIRR_FUNCTION]
 ALL_TABLES = [value for value in BronzeTables.__dict__.values() if isinstance(value, Table)]
 ALL_FILE_FORMATS = [CSV_FILE_FORMAT, PARQUET_FILE_FORMAT]
