@@ -146,10 +146,14 @@ class BronzeTables:
         name="DIM_FUND_SUB_PERSPECTIVE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
     )
     fact_fund_sub_perpective_funds = Table(
-        name="FACT_FUND_SUB_PERSPECTIVE_FUNDS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+        name="FACT_FUND_SUB_PERSPECTIVE_FUNDS",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
     fact_fund_sub_perpective_fund_network_paths = Table(
-        name="FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+        name="FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
 
 
