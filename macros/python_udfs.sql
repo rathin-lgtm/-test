@@ -46,24 +46,5 @@ class XirrAggregator:
     @property
     def aggregate_state(self):
         return self._state
-
-    @staticmethod
-    def merge_states(state1, state2):
-        return {
-            "cashflows": state1["cashflows"] + state2["cashflows"],
-            "dates": state1["dates"] + state2["dates"],
-            "guess": state2["guess"] if state2.get("guess") is not None else state1["guess"]
-        }
-
-    @staticmethod
-    def finish_state(state):
-        if not state["cashflows"] or not state["dates"]:
-            return None
-
-        try:
-            return float(xirr(state["dates"], state["cashflows"], guess=state["guess"]))
-        except Exception:
-            return None
-
     $$;
 {% endmacro %}
