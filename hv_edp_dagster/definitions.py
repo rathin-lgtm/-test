@@ -2,7 +2,7 @@ from dagster import (
     Definitions,
     in_process_executor,
     load_assets_from_package_module,
-    multiprocess_executor
+    multiprocess_executor,
 )
 from dagster_dbt import DbtCliResource
 
@@ -60,6 +60,7 @@ def get_resources():
 defs = Definitions(
     assets=load_assets_from_package_module(package_module=assets),
     resources=get_resources(),
+    jobs=[provision_infra_job,destroy_infra_job,fund_metrics_etl_job],
+    sensors=[*new_file_sensors, *connection_cleanup_sensors],
     executor=in_process_executor if sf.IS_LOCAL_ENVIRONMENT else multiprocess_executor,
-    jobs=[provision_infra_job,destroy_infra_job,fund_metrics_etl_job]
 )

@@ -4,7 +4,7 @@ from enum import Enum
 ASSET_KINDS = {"python", "snowflake"}
 
 
-class Environments():
+class Environments:
     PERSONAL_DEV = "personal_dev"
     SHARED_DEV = "shared_dev"
     UAT = "uat"
@@ -20,17 +20,17 @@ class AssetTags:
     environment = "environment"
 
 
-class Sources(Enum):
+class Sources:
     harbourview_edw = "HARBOURVIEW_EDW"
 
 
-class FileTypes():
+class FileTypes:
     csv = "CSV"
     parquet = "PARQUET"
 
 
-class GoldAssets:
-    funds = "gold_fund_metrics"
+class GoldModels:
+    fund_metrics = "gold_fund_metrics"
 
 class SnowflakeEnv:
     ENVIRONMENT = os.getenv("ENVIRONMENT")
