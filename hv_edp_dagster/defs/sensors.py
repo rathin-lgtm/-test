@@ -9,7 +9,7 @@ from dagster import (
     sensor,
 )
 
-from hv_edp_dagster.constants import IS_LOCAL_ENVIRONMENT
+from hv_edp_dagster.constants import SnowflakeEnv
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import ALL_TABLES, DATA_LANDING_STAGE, Table
 from hv_edp_dagster.utils import execute_sql, select_assets_by_group
@@ -52,7 +52,7 @@ def create_file_sensor_for_table(tables: list[Table]):
             name=f"{table.name.lower()}_file_sensor",
             minimum_interval_seconds=30,
             default_status=(
-                DefaultSensorStatus.STOPPED if IS_LOCAL_ENVIRONMENT else DefaultSensorStatus.RUNNING
+                DefaultSensorStatus.STOPPED if SnowflakeEnv.IS_LOCAL_ENVIRONMENT else DefaultSensorStatus.RUNNING
             ),
             asset_selection=select_assets_by_group(table.name),
         )
@@ -79,7 +79,7 @@ def create_file_sensor_for_table(tables: list[Table]):
 
 def create_cleanup_connection_sensors():
     sensors = []
-    if IS_LOCAL_ENVIRONMENT:
+    if SnowflakeEnv.IS_LOCAL_ENVIRONMENT:
         for status in DagsterRunStatus.FAILURE, DagsterRunStatus.SUCCESS:
 
             @run_status_sensor(
