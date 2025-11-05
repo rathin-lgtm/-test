@@ -145,13 +145,33 @@ class BronzeTables:
     dim_fund_sub_perspective = Table(
         name="DIM_FUND_SUB_PERSPECTIVE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
     )
-    fact_fund_sub_perpective_funds = Table(
+    fact_fund_sub_perspective_funds = Table(
         name="FACT_FUND_SUB_PERSPECTIVE_FUNDS",
         source=Sources.harbourview_edw,
         file_format=CSV_FILE_FORMAT,
     )
     fact_fund_sub_perpective_fund_network_paths = Table(
         name="FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    fact_irr_investor = Table(
+        name="FACT_IRR_INVESTOR",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    calendar = Table(
+        name="CALENDAR",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    calendar_month = Table(
+        name="CALENDAR_MONTH",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    calendar_quarter = Table(
+        name="CALENDAR_QUARTER",
         source=Sources.harbourview_edw,
         file_format=CSV_FILE_FORMAT,
     )

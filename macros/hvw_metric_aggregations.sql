@@ -1,4 +1,7 @@
 
+/* HVW_METRIC_AGGREGATIONS
+   This file is largely macros containing legacy behaviour specific to Harbourview. Strategic goal is to eventually delete this as we change to pulling data direct from source systems.
+ */
 {% macro rollup(col) %}
     SUM({{ col }}) OVER (
         PARTITION BY hk_fund, currency_code
@@ -55,4 +58,85 @@
             ELSE 0
         END
     )
+{% endmacro %}
+
+{% macro irr_calendar() %}
+/* IRR calcs in HVW have a pattern of mapping to a rollback calendar. This is used for both fund and portfolio IRRs.
+This data sources from a system called HV reference -- in the future we should replace this by self-generating a calendar with date functions or design queries to not require it.
+ */
+SELECT 
+    txn.date_id as rollup_date_id, 
+    rd.date_id as rollup_to_date_id,
+    DATEADD(year, 0, DATE(case when txn.date_id = -1 then NULL else txn.date_id end, 'YYYYMMDD')) as Date_fact,
+    DATEADD(year, 0, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD')) as Date_Dim,
+    LAST_DAY(DATEADD(year, -1, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_1_Year,
+    LAST_DAY(DATEADD(year, -2, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_2_Year,
+    LAST_DAY(DATEADD(year, -3, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_3_Year,
+    LAST_DAY(DATEADD(year, -4, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_4_Year,
+    LAST_DAY(DATEADD(year, -5, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_5_Year,
+    LAST_DAY(DATEADD(year, -7, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_7_Year,
+    LAST_DAY(DATEADD(year, -10, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_10_Year,
+    LAST_DAY(DATEADD(year, -15, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_15_Year
+FROM {{ source('hv_source', 'calendar') }} txn
+JOIN  (
+    SELECT * 
+    FROM {{ source('hv_source', 'calendar') }} 
+    WHERE DATE_ID IN (
+        SELECT month_end_date 
+        FROM {{ source('hv_source', 'calendar_month') }} 
+        WHERE month_id <> -1
+    ) OR Date_ID IN (
+        SELECT quarter_id 
+        FROM {{ source('hv_source', 'calendar_quarter') }} 
+        WHERE quarter_counter = 1
+    )) rd
+ON txn.date_id <= rd.date_id
+UNION
+SELECT 
+    cal.date_id as rollup_date_id,
+    cal.date_id as rollup_to_date_id,
+    DATEADD(year, 0, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD')) as Date_fact,
+    DATEADD(year, 0, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD')) as Date_Dim,
+    LAST_DAY(DATEADD(year, -1, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_1_Year,
+    LAST_DAY(DATEADD(year, -2, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_2_Year,
+    LAST_DAY(DATEADD(year, -3, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_3_Year,
+    LAST_DAY(DATEADD(year, -4, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_4_Year,
+    LAST_DAY(DATEADD(year, -5, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_5_Year,
+    LAST_DAY(DATEADD(year, -7, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_7_Year,
+    LAST_DAY(DATEADD(year, -10, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_10_Year,
+    LAST_DAY(DATEADD(year, -15, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_15_Year
+FROM {{ source('hv_source', 'calendar') }} cal 
+WHERE DATE_ID in (
+    SELECT month_end_date
+    FROM {{ source('hv_source', 'calendar_month') }}
+    WHERE month_id <> -1
+) OR Date_ID in (
+    SELECT quarter_id 
+    FROM {{ source('hv_source', 'calendar_quarter') }}
+    WHERE quarter_counter = 1
+)                         
+{% endmacro %}
+
+{% macro fund_irr_amount_filter_limited(metric_col, fact_date_col, cal_date_dim_col, cal_date_col, amount_col) %}
+    CASE
+        WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_col }} THEN -1*{{ amount_col }}
+        WHEN {{ metric_col }} = 217 AND {{ fact_date_col }} > {{ cal_date_col }} THEN -1*{{ amount_col }}
+        WHEN {{ metric_col }} = 218 AND {{ fact_date_col }} > {{ cal_date_col }} THEN {{ amount_col }}
+        WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}
+    END
+{% endmacro %}
+
+{% macro fund_irr_amount_filter_inception(metric_col, fact_date_col, cal_date_dim_col, amount_col) %}
+    CASE
+        WHEN {{ metric_col }} = 217 THEN -1*{{ amount_col }}
+        WHEN {{ metric_col }} = 218 THEN {{ amount_col }}
+        WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}
+    END
+{% endmacro %}
+
+{% macro fund_irr_cashflow_indicator_filter(years, date_id_col, rollup_date_id_col, metric_id_col) %}
+    CASE
+        WHEN {{ date_id_col }} <= {{ rollup_date_id_col }} - ({{ years }}*10000) AND {{ metric_id_col }} IN (217,218) THEN 1 
+        ELSE 0
+    END
 {% endmacro %}

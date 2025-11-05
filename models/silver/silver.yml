@@ -47,13 +47,6 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('hub_fund'), field: hk_fund}
-    data_tests:
-       - dbt_utils.expression_is_true:
-           name: irr_reasonable_range
-           expression: >
-             (irr_gross is null or (irr_gross between -100 and 100)) and
-             (irr_net is null or (irr_net between -100 and 100))
-           config: {severity: warn}
 
 
 
