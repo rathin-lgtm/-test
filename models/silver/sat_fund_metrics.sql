@@ -64,7 +64,7 @@ cashflows as (
         FROM {{ source('hv_source', 'fact_irr_investor') }} fii
         JOIN ({{ irr_calendar() }}) cal ON
             (fii.date_id = cal.rollup_date_id)
-        WHERE fii.active_ind = 1 AND fii.currency_id IN (8, 10) AND fii.metric_id IN (217, 218, 227)
+        WHERE fii.active_ind = 1 AND fii.currency_id IN ({{ irr_currency_ids() }}) AND fii.metric_id IN ({{ irr_cashflow_metric_ids() }})
     ) WHERE COALESCE(amount_1_year, amount_2_year, amount_3_year, amount_4_year, amount_5_year, amount_7_year ,amount_10_year, amount_15_year, amount_inception) IS NOT NULL AND investor_type = 'LP'
 ),
 xirrs as (
