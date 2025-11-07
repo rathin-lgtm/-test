@@ -11,9 +11,9 @@ daily_metrics as (
     t.date_id,
     t.fund_id,
     t.currency_id,
-    {{ nav('t.date_id', 't.metric_id', 'f.lock_date', 't.amount') }} as nav,
-    {{ distributions('t.metric_id', 't.amount') }} as distributions,
-    {{ contributions('t.metric_id', 't.amount') }} as contributions,
+    {{ fund_nav('t.date_id', 't.metric_id', 'f.lock_date', 't.amount') }} as nav,
+    {{ fund_distributions('t.metric_id', 't.amount') }} as distributions,
+    {{ fund_contributions('t.metric_id', 't.amount') }} as contributions,
     nav + distributions as total_value,
     CASE 
         WHEN contributions = 0 THEN 0
@@ -23,7 +23,7 @@ daily_metrics as (
         WHEN contributions = 0 THEN 0
         ELSE distributions / contributions
     END as dpi,
-    {{ commitments('t.metric_id', 't.amount') }} as commitments,
+    {{ fund_commitments('t.metric_id', 't.amount') }} as commitments,
     contributions + {{ capital_called_add_term('t.metric_id', 't.amount') }} as capital_called,
     total_value - contributions as gain_loss,
     CURRENT_TIMESTAMP() as load_dt,
@@ -81,18 +81,18 @@ xirrs as (
     GROUP BY fund_id, currency_id, date_id
 )
 SELECT 
-    DATE(d.date_id, 'YYYYMMDD') as as_of_date,
+    {{ to_date('d.date_id') }} as as_of_date,
     sha2(upper(trim(fid.source_table_col_val))) as hk_fund,
     c.currency_code as metric_currency_code,
-    {{ rollup('nav') }} as lp_nav,
-    {{ rollup('tvpi') }} as tvpi,
-    {{ rollup('dpi') }} as dpi,
-    {{ rollup('distributions') }} as lp_distributions,
-    {{ rollup('contributions') }} as lp_contributions,
-    {{ rollup('total_value') }} as lp_total_value,
-    {{ rollup('commitments') }} as lp_commitments,
-    {{ rollup('capital_called') }} as lp_capital_called,
-    {{ rollup('gain_loss') }} as gain_loss,
+    {{ fund_rollup('nav') }} as lp_nav,
+    {{ fund_rollup('tvpi') }} as tvpi,
+    {{ fund_rollup('dpi') }} as dpi,
+    {{ fund_rollup('distributions') }} as lp_distributions,
+    {{ fund_rollup('contributions') }} as lp_contributions,
+    {{ fund_rollup('total_value') }} as lp_total_value,
+    {{ fund_rollup('commitments') }} as lp_commitments,
+    {{ fund_rollup('capital_called') }} as lp_capital_called,
+    {{ fund_rollup('gain_loss') }} as gain_loss,
     LAST_VALUE(x.irr_inception) IGNORE NULLS OVER (
         PARTITION BY d.fund_id, d.currency_id
         ORDER BY d.date_id
@@ -118,7 +118,7 @@ SELECT
         ORDER BY d.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) as irr_10_year,
-    HEX_ENCODE(HASH(as_of_date, hk_fund, currency_code, nav, tvpi, distributions, contributions, total_value, commitments, capital_called, gain_loss)) as skey,
+    HEX_ENCODE(HASH(as_of_date, hk_fund, currency_code, nav, tvpi, distributions, contributions, total_value, commitments, capital_called, gain_loss, irr, irr_1_year, irr_3_year, irr_5_year, irr_10_year)) as skey,
     load_dt,
     record_source
 FROM (daily_metrics) d

@@ -124,6 +124,11 @@ class BronzeTables:
         source=Sources.harbourview_edw,
         file_format=CSV_FILE_FORMAT,
     )
+    fact_investment_transactions_fund_hierarchy = Table(
+        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
     fact_investor_transactions_fund_hierarchy = Table(
         name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY",
         source=Sources.harbourview_edw,
@@ -155,6 +160,29 @@ class BronzeTables:
         source=Sources.harbourview_edw,
         file_format=CSV_FILE_FORMAT,
     )
+    dim_portfolios = Table(
+        name="DIM_PORTFOLIOS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    dim_type_broad = Table(
+        name="DIM_TYPE_BROAD", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    dim_hv_geography_hierarchy = Table(
+        name="DIM_HV_GEOGRAPHY_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    dim_company_industry_hierarchy = Table(
+        name="DIM_COMPANY_INDUSTRY_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    dim_manager = Table(
+        name="DIM_MANAGER", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    dim_fund_hierarchy = Table(
+        name="DIM_FUND_HIERARCHY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    stage = Table(name="STAGE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
     fact_irr_investor = Table(
         name="FACT_IRR_INVESTOR",
         source=Sources.harbourview_edw,
@@ -172,6 +200,11 @@ class BronzeTables:
     )
     calendar_quarter = Table(
         name="CALENDAR_QUARTER",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    fact_irr_investment_fund_hierarchy = Table(
+        name="FACT_IRR_INVESTMENT_FUND_HIERARCHY",
         source=Sources.harbourview_edw,
         file_format=CSV_FILE_FORMAT,
     )

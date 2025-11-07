@@ -9,3 +9,8 @@ models:
     columns:
       - name: as_of_date
         tests: [not_null]
+  - name: gold_portfolio_metrics
+    description: "Gold Portfolio Metrics"
+    columns:
+      - name: as_of_date
+        tests: [not_null]

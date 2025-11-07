@@ -89,3 +89,4 @@ schedules/
 .telemetry/
 storage/
 .logs_queue/
+.nux/

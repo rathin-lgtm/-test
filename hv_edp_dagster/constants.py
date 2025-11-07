@@ -30,6 +30,7 @@ class FileTypes:
 
 class GoldModels:
     fund_metrics = "gold_fund_metrics"
+    portfolio_metrics = "gold_portfolio_metrics"
 
 
 ENVIRONMENT = os.getenv("ENVIRONMENT")

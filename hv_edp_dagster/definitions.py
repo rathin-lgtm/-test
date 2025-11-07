@@ -23,6 +23,9 @@ from hv_edp_dagster.defs.jobs.destroy_infra_job import destroy_infra_job
 from hv_edp_dagster.defs.jobs.etl_jobs.fund_metrics_etl_job import (
     fund_metrics_etl_job,
 )
+from hv_edp_dagster.defs.jobs.etl_jobs.portfolio_metrics_etl_job import (
+    portfolio_metrics_etl_job,
+)
 from hv_edp_dagster.defs.jobs.provision_infra_job import (
     provision_infra_job,
 )
@@ -74,7 +77,7 @@ def get_resources():
 defs = Definitions(
     assets=load_assets_from_package_module(package_module=jobs),
     resources=get_resources(),
-    jobs=[provision_infra_job, destroy_infra_job, fund_metrics_etl_job],
+    jobs=[provision_infra_job, destroy_infra_job, fund_metrics_etl_job, portfolio_metrics_etl_job],
     sensors=[*new_file_sensors, *connection_cleanup_sensors],
     executor=in_process_executor if IS_LOCAL_ENVIRONMENT else multiprocess_executor,
 )

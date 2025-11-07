@@ -31,6 +31,56 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_dim_fund_sub_perspective']
+          - name: dim_portfolios
+            description: DIM_PORTFOLIOS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_portfolios']
+          - name: fact_investment_transactions_fund_hierarchy_monthly
+            description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_investment_transactions_fund_hierarchy_monthly']
+          - name: fact_investment_transactions_fund_hierarchy
+            description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_investment_transactions_fund_hierarchy']
+          - name: dim_fund_hierarchy
+            description: DIM_FUND_HIERARCY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_fund_hierarchy']
+          - name: fact_investor_transactions_fund_hierarchy
+            description: FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_investor_transactions_fund_hierarchy']
+          - name: dim_type_broad
+            description: DIM_TYPE_BROAD loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_type_broad']
+          - name: dim_hv_geography_hierarchy
+            description: DIM_HV_GEOGRAPHY_HIERARCHY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_hv_geography_hierarchy']
+          - name: dim_company_industry_hierarchy
+            description: DIM_COMPANY_INDUSTRY_HIERARCHY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_company_industry_hierarchy']
+          - name: dim_manager
+            description: DIM_MANAGER loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_manager']
+          - name: stage
+            description: STAGE loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_stage']
           - name: fact_irr_investor
             description: FACT_IRR_INVESTOR loaded from Harbourview EDW
             meta:
@@ -56,3 +106,8 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_fact_fund_sub_perspective_funds']
+          - name: fact_irr_investment_fund_hierarchy
+            description: FACT_IRR_INVESTMENT_FUND_HIERARCHY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_irr_investment_fund_hierarchy']
