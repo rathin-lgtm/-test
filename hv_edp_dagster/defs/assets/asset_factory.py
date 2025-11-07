@@ -16,7 +16,7 @@ class AssetFactory:
         self.asset_kinds = asset_kinds
 
     def generate_snowflake_file_format_assets(
-        self, file_formats: List[FileFormat], depends_on: list[AssetsDefinition] | None
+        self, file_formats: List[FileFormat], depends_on: list[AssetsDefinition]
     ) -> List[AssetsDefinition]:
 
         def snowflake_file_format(file_format: FileFormat) -> AssetsDefinition:
@@ -34,7 +34,7 @@ class AssetFactory:
         return [snowflake_file_format(file_format) for file_format in file_formats]
 
     def generate_snowflake_table_assets(
-        self, tables: list[Table], depends_on: List[AssetsDefinition] | None
+        self, tables: list[Table], depends_on: List[AssetsDefinition]
     ) -> List[AssetsDefinition]:
         def create_table_asset(table_obj: Table) -> AssetsDefinition:
             @asset(
@@ -57,15 +57,12 @@ class AssetFactory:
 
         return [create_table_asset(table) for table in tables]
 
-    def generate_clear_table_assets(
-        self, tables: list[Table], depends_on: List[AssetsDefinition] | None = None
-    ) -> List[AssetsDefinition]:
+    def generate_clear_table_assets(self, tables: list[Table]) -> List[AssetsDefinition]:
 
         def clear_table_assets(table: Table) -> AssetsDefinition:
             @asset(
                 name=f"clear_{table.name.lower()}",
                 kinds=self.asset_kinds,
-                deps=depends_on,
                 group_name=self.asset_group,
             )
             def _clear_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:
@@ -77,13 +74,13 @@ class AssetFactory:
         return [clear_table_assets(table) for table in tables]
 
     def generate_bronze_table_assets(
-        self, tables: list[Table], depends_on: List[AssetsDefinition] | None
+        self, tables: list[Table], depends_on: List[AssetsDefinition]
     ) -> List[AssetsDefinition]:
-        def bronze_table_asset(table: Table) -> AssetsDefinition:
+        def bronze_table_asset(table: Table, dependancy: AssetsDefinition) -> AssetsDefinition:
             @asset(
                 name=f"bronze_{table.name.lower()}",
                 kinds=self.asset_kinds,
-                deps=depends_on,
+                deps=[dependancy],
                 group_name=self.asset_group,
             )
             def _bronze_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:
@@ -91,4 +88,6 @@ class AssetFactory:
 
             return _bronze_table
 
-        return [bronze_table_asset(table) for table in tables]
+        return [
+            bronze_table_asset(table, dependancy) for table, dependancy in zip(tables, depends_on)
+        ]
