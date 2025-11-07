@@ -20,7 +20,7 @@ class AssetFactory:
         def snowflake_file_format(file_format: FileFormat) -> AssetsDefinition:
             @asset(
                 kinds=self.asset_kinds,
-                deps=[*depends_on],
+                deps=depends_on,
                 group_name=self.asset_group,
                 name=f"snowflake_file_format_{file_format.name}",
             )
@@ -40,7 +40,7 @@ class AssetFactory:
             @asset(
                 name=f"snowflake_table_{table_obj.name}",
                 kinds=self.asset_kinds,
-                deps=[*depends_on],
+                deps=depends_on,
                 group_name=self.asset_group,
             )
             def _table(snowflake_config: SnowflakeConfig, infra_job_config: JobConfig) -> None:
@@ -59,14 +59,14 @@ class AssetFactory:
     def generate_clear_table_assets(
                 self,
                 tables: list[Table], 
-                depends_on: List[AssetsDefinition]|None
+                depends_on : List[AssetsDefinition]|None = []
             ) -> List[AssetsDefinition]:
 
         def clear_table_assets(table: Table) -> AssetsDefinition:
             @asset(
                 name=f"clear_{table.name.lower()}",
                 kinds=self.asset_kinds,
-                deps=[*depends_on],
+                deps=depends_on,
                 group_name=self.asset_group,
             )
             def _clear_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:
@@ -87,7 +87,7 @@ class AssetFactory:
             @asset(
                 name=f"bronze_{table.name.lower()}",
                 kinds=self.asset_kinds,
-                deps=[*depends_on],
+                deps=depends_on,
                 group_name=self.asset_group,
             )
             def _bronze_table(snowflake_config: SnowflakeConfig, etl_job_config: JobConfig) -> None:
