@@ -13,6 +13,7 @@ class Environments:
 class DbtArguments:
     build = "build"
     full_reload = "--full-refresh"
+    project_dir = "hv_edp_dbt"
 
 
 class AssetTags:
@@ -33,19 +34,31 @@ class GoldModels:
     portfolio_metrics = "gold_portfolio_metrics"
 
 
-ENVIRONMENT = os.getenv("ENVIRONMENT")
-IS_LOCAL_ENVIRONMENT = ENVIRONMENT == Environments.PERSONAL_DEV
+class ETLJobs:
+    fund_metrics = "fund_metrics_etl"
+    portfolio_metrics = "portfolio_metrics_etl"
 
-SNOWFLAKE_ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
-SNOWFLAKE_WAREHOUSE = os.getenv("SNOWFLAKE_WH")
-SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
-SNOWFLAKE_USER = os.getenv("SNOWFLAKE_USER", "")
-SNOWFLAKE_PRIVATE_KEY_PATH = os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
-SNOWFLAKE_PRIVATE_KEY_PASSPHRASE = os.getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
+
+class AssetGroups:
+    provision_infra = "provision_infra"
+    destroy_infra = "destroy_infra"
+    bronze = "bronze"
+
+
+class SnowflakeEnv:
+    ENVIRONMENT = os.getenv("ENVIRONMENT")
+    IS_LOCAL_ENVIRONMENT = ENVIRONMENT == Environments.PERSONAL_DEV
+    SNOWFLAKE_ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
+    SNOWFLAKE_WAREHOUSE = os.getenv("SNOWFLAKE_WH")
+    SNOWFLAKE_ROLE = os.getenv("SNOWFLAKE_ROLE")
+    SNOWFLAKE_USER = os.getenv("SNOWFLAKE_USER", "")
+    SNOWFLAKE_PRIVATE_KEY_PATH = os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
+    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE = os.getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
+
 
 SNOWFLAKE_CONFIG_DATA = {
     Environments.PERSONAL_DEV: {
-        "database": f"HV_EDP_{SNOWFLAKE_USER.split('@')[0]}_DEV",
+        "database": f"HV_EDP_{SnowflakeEnv.SNOWFLAKE_USER.split('@')[0]}_DEV",
         "schema_bronze": "PERSONAL_DEV_BRONZE",
     },
     Environments.SHARED_DEV: {

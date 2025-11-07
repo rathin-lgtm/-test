@@ -3,9 +3,9 @@ import re
 from pydantic import BaseModel, field_validator
 
 from hv_edp_dagster.constants import (
-    IS_LOCAL_ENVIRONMENT,
     SHARED_DEV_BRONZE_PATH,
     FileTypes,
+    SnowflakeEnv,
     Sources,
 )
 
@@ -47,20 +47,18 @@ class Stage(SnowflakeResource):
         )
 
 
-DATA_LANDING_STAGE = Stage(name="landing")
-
-
 class FileFormat(SnowflakeResource):
     file_type: str
 
-    def create_sql(self) -> str:
+    def create_sql(self, header: bool = True, delimiter: str = ",", enclosed_by: str = '"') -> str:
         sql = f"CREATE OR REPLACE FILE FORMAT {self.name} TYPE = {self.file_type}"
         if self.file_type == FileTypes.csv:
-            sql += """, PARSE_HEADER = True, FIELD_DELIMITER = ",",
-            FIELD_OPTIONALLY_ENCLOSED_BY = '"'"""
+            sql += f""", PARSE_HEADER = {header}, FIELD_DELIMITER = "{delimiter}",
+            FIELD_OPTIONALLY_ENCLOSED_BY = '{enclosed_by}'"""
         return sql
 
 
+DATA_LANDING_STAGE = Stage(name="landing")
 CSV_FILE_FORMAT = FileFormat(name="csv_file", file_type=FileTypes.csv)
 PARQUET_FILE_FORMAT = FileFormat(name="parquet_file", file_type=FileTypes.parquet)
 
@@ -75,7 +73,7 @@ class Table(SnowflakeResource):
         schema: str,
         use_shared_stage: bool = True,
     ) -> str:
-        if IS_LOCAL_ENVIRONMENT and use_shared_stage:
+        if SnowflakeEnv.IS_LOCAL_ENVIRONMENT and use_shared_stage:
             inferred_data_location = SHARED_DEV_BRONZE_PATH
         else:
             inferred_data_location = f"{db}.{schema}"
