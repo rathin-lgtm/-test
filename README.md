@@ -10,7 +10,7 @@ ENVIRONMENT=personal_dev
 DAGSTER_HOME=full path to the root directory (i.e.  C:\Users\panisova\Source\repo\Hvp.Dna.EntRpt.Snowflake), used to store Dagster run information.
 ```
 2) Install Python 3.12 from Software Center
-3) Open a command prompt and navigate to code directory (make sure, that the code directory is located in ThreatLocker Thrusted path).
+3) Open a Powershell and navigate to code directory (make sure, that the code directory is located in ThreatLocker Thrusted path).
 4) Create a virtual environment:
 ```
 py -3.12 -m venv venv
@@ -36,13 +36,14 @@ pre-commit install
 9) Install dbt deps:
 
 ```
-dbt deps
+dbt deps --project-dir hv_edp_dbt
 ```
 
 
 ## Local runs
 
 ### Running Dagster
+In the root directory, run: 
 
 ```dagster dev```
 

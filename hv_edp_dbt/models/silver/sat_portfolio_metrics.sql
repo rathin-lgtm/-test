@@ -1,3 +1,4 @@
+{{ config(pre_hook="{{ create_xirr_udf(this.schema) }}")}}
 with monthly_metrics as (
     SELECT
     {{ to_date('transactions_monthly.date_id') }} as as_of_date,
@@ -106,27 +107,30 @@ xirrs as (
 combined as (
 SELECT 
     monthly.as_of_date,
-    sha2(upper(trim(monthly.portfolio_id))) as hk_portfolio,
+    hk_portfolio,
+    hk_link,
     monthly.currency_code as metric_currency_code,
-    monthly.fund_id,
     distributions,
     calls,
     dpi,
     commitments,
     debt_balance_no_directs + COALESCE(nav, 0) as nav,
-    distributions + nav as total_value,
+    COALESCE(distributions + nav, 0) as total_value,
     CASE 
         WHEN calls = 0 THEN 0
         ELSE total_value / calls
     END as tvpi,
-    total_value - calls as gain_loss,
-    xirrs.irr,
+    COALESCE(total_value - calls, 0) as gain_loss,
+    COALESCE(xirrs.irr, 0) as irr,
     CURRENT_TIMESTAMP() as load_dt,
     FROM monthly_metrics monthly
     LEFT JOIN daily_metrics daily 
-    ON daily.portfolio_id = monthly.portfolio_id and daily.as_of_date = monthly.as_of_date and daily.currency_code = monthly.currency_code and daily.fund_id = monthly.fund_id
-    JOIN xirrs
-    ON monthly.portfolio_id = xirrs.portfolio_id AND xirrs.as_of_date = monthly.as_of_date and xirrs.currency_code = monthly.currency_code and xirrs.fund_id = monthly.fund_id
+        ON daily.portfolio_id = monthly.portfolio_id and daily.as_of_date = monthly.as_of_date and daily.currency_code = monthly.currency_code and daily.fund_id = monthly.fund_id
+    LEFT JOIN xirrs
+        ON monthly.portfolio_id = xirrs.portfolio_id AND xirrs.as_of_date = monthly.as_of_date and xirrs.currency_code = monthly.currency_code and xirrs.fund_id = monthly.fund_id
+    JOIN {{ ref('link_portfolio_fund') }} link
+        ON sha2(upper(trim(monthly.portfolio_id))) = link.hk_portfolio
+        AND sha2(upper(trim(monthly.fund_id))) = link.hk_fund
     ORDER BY as_of_date
 )
 

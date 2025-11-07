@@ -75,7 +75,14 @@ models:
           - not_null
           - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
 
+# ================
+# LINKS
+# ================
 
 
-
-
+  - name: link_portfolio_fund
+    description: "DV Link for Portfolios and Funds"
+    columns:
+      - name: hk_link
+        description: "sha256(upper(trim(portfolio_id+fund_id)))"
+        data_tests: [not_null, unique]

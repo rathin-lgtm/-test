@@ -3,6 +3,7 @@ with portfolios as (
 )
 
 select sha2(upper(trim(portfolio_id))) as hk_portfolio,
+       sha2(upper(trim(portfolio_id))) as hk_portfolio,
        CURRENT_TIMESTAMP() as load_dt,
        portfolios.file_name as record_source
        from portfolios

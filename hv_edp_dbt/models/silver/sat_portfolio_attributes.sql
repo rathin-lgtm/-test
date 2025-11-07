@@ -1,7 +1,7 @@
 with attributes as (
     SELECT 
-        sha2(upper(trim(portfolio.portfolio_id))) as hk_portfolio,
-        portfolio.fund_id,
+        hk_portfolio,
+        hk_link,
         currency.name as portfolio_currency,
         portfolio.portfolio_close_year,
         portfolio.portfolio_name,
@@ -45,15 +45,18 @@ with attributes as (
         ON portfolio.project_manager_id = manager.manager_id
     JOIN {{ source('hv_source', 'currency') }} currency
         ON portfolio.portfolio_currency_id = currency.currency_id
+    JOIN {{ ref('link_portfolio_fund') }} link
+        ON sha2(upper(trim(portfolio.portfolio_id))) = link.hk_portfolio
+        AND sha2(upper(trim(portfolio.fund_id))) = link.hk_fund
     WHERE portfolio.portfolio_id <> -1 
 )
 
 SELECT
     hk_portfolio,
+    hk_link,
     portfolio_name,
     portfolio_entity_status,
     portfolio_currency,
-    fund_id,
     portfolio_close_year,
     portfolio_commitment_year,
     portfolio_disclosure_level,
