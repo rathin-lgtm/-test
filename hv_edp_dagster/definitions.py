@@ -6,12 +6,14 @@ from dagster import (
 )
 from dagster_dbt import DbtCliResource
 
-from hv_edp_dagster.constants import SnowflakeEnv as sf, Environments
-
+from hv_edp_dagster.constants import SNOWFLAKE_CONFIG_DATA, Environments
+from hv_edp_dagster.constants import SnowflakeEnv as sf
 from hv_edp_dagster.defs import assets
-from hv_edp_dagster.defs.jobs.infra_jobs import (provision_infra_job,destroy_infra_job)
-
-from hv_edp_dagster.defs.jobs.etl_jobs import fund_metrics_etl_job
+from hv_edp_dagster.defs.jobs.etl_jobs import (
+    fund_metrics_etl_job,
+    portfolio_metrics_etl_job,
+)
+from hv_edp_dagster.defs.jobs.infra_jobs import destroy_infra_job, provision_infra_job
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.defs.sensors import connection_cleanup_sensors, new_file_sensors
 from hv_edp_dagster.project import dbt_project
@@ -26,7 +28,7 @@ def get_snowflake_config():
             role=sf.SNOWFLAKE_ROLE,
             authenticator="externalbrowser",
             use_shared_connection=True,
-            **sf.SNOWFLAKE_CONFIG_DATA[sf.ENVIRONMENT],
+            **SNOWFLAKE_CONFIG_DATA[sf.ENVIRONMENT],
         )
     elif sf.ENVIRONMENT in [Environments.SHARED_DEV, Environments.UAT, Environments.PROD]:
         return SnowflakeConfig(
@@ -37,7 +39,7 @@ def get_snowflake_config():
             private_key_path=sf.SNOWFLAKE_PRIVATE_KEY_PATH,
             private_key_password=sf.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE,
             use_shared_connection=False,
-            **sf.SNOWFLAKE_CONFIG_DATA[sf.ENVIRONMENT],
+            **SNOWFLAKE_CONFIG_DATA[sf.ENVIRONMENT],
         )
     else:
         raise ValueError(f"Invalid environment: {sf.ENVIRONMENT}")
@@ -60,7 +62,7 @@ def get_resources():
 defs = Definitions(
     assets=load_assets_from_package_module(package_module=assets),
     resources=get_resources(),
-    jobs=[provision_infra_job,destroy_infra_job,fund_metrics_etl_job],
+    jobs=[provision_infra_job, destroy_infra_job, fund_metrics_etl_job, portfolio_metrics_etl_job],
     sensors=[*new_file_sensors, *connection_cleanup_sensors],
     executor=in_process_executor if sf.IS_LOCAL_ENVIRONMENT else multiprocess_executor,
 )

@@ -1,5 +1,4 @@
 import os
-from enum import Enum
 
 ASSET_KINDS = {"python", "snowflake"}
 
@@ -16,6 +15,7 @@ class DbtArguments:
     full_reload = "--full-refresh"
     project_dir = "hv_edp_dbt"
 
+
 class AssetTags:
     environment = "environment"
 
@@ -31,6 +31,19 @@ class FileTypes:
 
 class GoldModels:
     fund_metrics = "gold_fund_metrics"
+    portfolio_metrics = "gold_portfolio_metrics"
+
+
+class ETLJobs:
+    fund_metrics = "fund_metrics_etl"
+    portfolio_metrics = "portfolio_metrics_etl"
+
+
+class AssetGroups:
+    provision_infra = "provision_infra"
+    destroy_infra = "destroy_infra"
+    bronze = "bronze"
+
 
 class SnowflakeEnv:
     ENVIRONMENT = os.getenv("ENVIRONMENT")
@@ -42,27 +55,27 @@ class SnowflakeEnv:
     SNOWFLAKE_PRIVATE_KEY_PATH = os.getenv("SNOWFLAKE_PRIVATE_KEY_PATH")
     SNOWFLAKE_PRIVATE_KEY_PASSPHRASE = os.getenv("SNOWFLAKE_PRIVATE_KEY_PASSPHRASE")
 
-    SNOWFLAKE_CONFIG_DATA = {
-        Environments.PERSONAL_DEV: {
-            "database": f"HV_EDP_{SNOWFLAKE_USER.split('@')[0]}_DEV",
-            "schema_bronze": "PERSONAL_DEV_BRONZE",
-        },
-        Environments.SHARED_DEV: {
-            "database": "HV_EDP_DEV",
-            "schema_bronze": "DEV_BRONZE",
-        },
-        Environments.UAT: {
-            "database": "HV_EDP_UAT",
-            "schema_bronze": "UAT_BRONZE",
-        },
-        Environments.PROD: {
-            "database": "HV_EDP_PRD",
-            "schema_bronze": "PRD_BRONZE",
-        },
-    }
 
-    SHARED_DEV_BRONZE_PATH = (
-        f'{SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]["database"]}.'
-        f'{SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]["schema_bronze"]}'
-    )
+SNOWFLAKE_CONFIG_DATA = {
+    Environments.PERSONAL_DEV: {
+        "database": f"HV_EDP_{SnowflakeEnv.SNOWFLAKE_USER.split('@')[0]}_DEV",
+        "schema_bronze": "PERSONAL_DEV_BRONZE",
+    },
+    Environments.SHARED_DEV: {
+        "database": "HV_EDP_DEV",
+        "schema_bronze": "DEV_BRONZE",
+    },
+    Environments.UAT: {
+        "database": "HV_EDP_UAT",
+        "schema_bronze": "UAT_BRONZE",
+    },
+    Environments.PROD: {
+        "database": "HV_EDP_PRD",
+        "schema_bronze": "PRD_BRONZE",
+    },
+}
 
+SHARED_DEV_BRONZE_PATH = (
+    f'{SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]["database"]}.'
+    f'{SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]["schema_bronze"]}'
+)

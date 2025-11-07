@@ -6,70 +6,28 @@ models:
 # ================
   - name: hub_fund
     description: "DV Hub for Funds"
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","hub"]
     columns:
       - name: hk_fund
         description: "sha256(upper(trim(efront_fund_id)))"
-        tests: [not_null, unique]
+        data_tests: [not_null, unique]
       - name: efront_fund_id
-        tests: [not_null, unique]
-      - name: load_dt
-      - name: file_name
+        data_tests: [not_null, unique]
 
   - name: hub_investor
     description: "DV Hub for Investors"
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","hub"]
     columns:
       - name: hk_investor
         description: "sha256(upper(trim(efront_investor_id)))"
-        tests: [not_null, unique]
+        data_tests: [not_null, unique]
       - name: efront_investor_id
-        tests: [not_null, unique]
-      - name: load_dt
-      - name: record_source
+        data_tests: [not_null, unique]
 
-# ================
-# LINKS
-# ================  
-
-  - name: lnk_fund_investor
-    description: "DV Link: Fund <-> Investor (RLS Mapping)"
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","link","rls"]
+  - name: hub_portfolio
+    description: "DV Hub for Portfolios"
     columns:
-      - name: hkey
-        description: "sha256(hk_fund || hk_investor)"
-        tests: [not_null, unique]
-      - name: hk_fund
-        tests:
-          - not_null
-         # - relationships: {to: ref('hub_fund'), field: hk_fund}
-      - name: hk_investor
-        tests:
-          - not_null
-          - relationships: {to: ref('hub_investor'), field: hk_investor}
-      - name: effective_from
-      - name: effective_to
-      - name: is_active
-      - name: load_dt
-      - name: record_source
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [hk_fund, hk_investor]
+      - name: hk_portfolio
+        description: "sha256(upper(trim(portfolio_id)))"
+        data_tests: [not_null, unique]
 
 # ================
 # SATELLITES
@@ -77,142 +35,47 @@ models:
 
   - name: sat_fund_attributes
     description: "Slowly changing descriptive attributes at fund level"
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","sat"]
     columns:
       - name: skey
         description: "sha256(hk_fund || fund_name || fund_currency || fund_investor_presentation_aiv || fund_investor_presentation_aiv_lock_date || fund_investor_presentation_aiv_type_efront || fund_efront_iqid || fund_lock_date)"
-        tests: [not_null, unique]
+        data_tests: [not_null, unique]
       - name: hk_fund
-        tests:
+        data_tests:
           - not_null
-         # - relationships: {to: ref('hub_fund'), field: hk_fund}
-      - name: fund_name
-      - name: fund_currency
-      - name: fund_investor_presentation_aiv
-      - name: fund_investor_presentation_aiv_lock_date
-      - name: fund_investor_presentation_aiv_type_efront
-      - name: fund_efront_iqid
-      - name: fund_lock_date
-      - name: effective_from
-      - name: effective_to
-      - name: is_active
-      - name: load_dt
-      - name: record_source
+          - relationships: {to: ref('hub_fund'), field: hk_fund}
 
   - name: sat_fund_metrics
     description: "Snapshot metrics per fund & as_of_date"
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","sat","metrics"]
     columns:
       - name: skey
         description: "sha256(as_of_date || metric_currency_code || total_value || nav || tvpi || dpi || irr_gross || irr_net || distributions || contributions || commitments || capital_called || gain_loss || pme_irr_1 || pme_irr_2 || pme_irr_msciaw )"
-        tests: [not_null, unique]
+        data_tests: [not_null, unique]
       - name: hk_fund
-        tests:
+        data_tests:
           - not_null
           - relationships: {to: ref('hub_fund'), field: hk_fund}
-      - name: as_of_date
-      - name: metric_currency_code
-      - name: lp_nav
-      - name: tvpi
-      - name: dpi
-      - name: irr_gross
-      - name: irr_net
-      - name: lp_distributions
-      - name: lp_contributions
-      - name: lp_total_value
-      - name: lp_commitments
-      - name: lp_capital_called
-      - name: gain_loss
-      - name: pme_irr_1
-      - name: pme_irr_2
-      - name: pme_irr_msciaw
-      - name: load_dt
-      - name: record_source
-    tests: []
-      # - dbt_utils.expression_is_true:
-      #     name: irr_reasonable_range
-      #     expression: >
-      #       (irr_gross is null or (irr_gross between -100 and 100)) and
-      #       (irr_net is null or (irr_net between -100 and 100))
-      #     config: {severity: warn}
 
-  - name: sat_investor_attributes
-    description: "Optional investor SCD satellite"
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","sat","rls"]
+  - name: sat_portfolio_metrics
+    description: "Snapshot metrics per portfolio & as_of_date"
     columns:
       - name: skey
-        description: "sha256(hk_investor || investor_name || investor_email_domain)"
-        tests: [not_null, unique]
-      - name: hk_investor
-        tests:
+        data_tests: [not_null, unique]
+      - name: hk_portfolio
+        data_tests:
           - not_null
-          - relationships: {to: ref('hub_investor'), field: hk_investor}
-      - name: investor_name
-      - name: investor_email_domain
-      - name: effective_from
-      - name: effective_to
-      - name: is_active
-      - name: load_dt
-      - name: record_source
+          - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
 
-# ================
-# Point-in-Time Tables/Views
-# ================
+  - name: sat_portfolio_attributes
+    description: "Slowly changing descriptive attributes at portfolio level"
+    columns:
+      - name: skey
+        data_tests: [not_null, unique]
+      - name: hk_portfolio
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
 
-  - name: pit_fund_daily
-    description: >
-      PIT by day: one row per fund per as_of_date, pointing to latest
-      sat_fund_metrics record at or before that date. Supports time-series queries.
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","pit"]
-    columns:
-      - name: hk_fund
-        tests: 
-          - not_null
-        #  - relationships: {to: ref('hub_fund'), field: hk_fund}
-      - name: as_of_date
-        tests: [not_null]
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [hk_fund, as_of_date]
-  
-  - name: pit_fund_current
-    description: >
-      Current PIT: one row per fund pointing to the latest as_of_date.
-      Used for "current view" tiles in the portal.
-    config:
-      meta:
-        dagster:
-          group: "silver"
-      materialized: table
-      tags: ["silver","pit","current"]
-    columns:
-      - name: hk_fund
-        tests:
-          - not_null
-          - unique
-         # - relationships: {to: ref('hub_fund'), field: hkey}
-      - name: as_of_date
-        tests: [not_null]
+
 
 
 

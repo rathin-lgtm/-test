@@ -1,11 +1,11 @@
 import re
-from xmlrpc.client import Boolean
 
 from pydantic import BaseModel, field_validator
 
 from hv_edp_dagster.constants import (
-    SnowflakeEnv,
+    SHARED_DEV_BRONZE_PATH,
     FileTypes,
+    SnowflakeEnv,
     Sources,
 )
 
@@ -50,7 +50,7 @@ class Stage(SnowflakeResource):
 class FileFormat(SnowflakeResource):
     file_type: str
 
-    def create_sql(self,header:str=True,delimiter:str=",",enclosed_by:str='"') -> str:
+    def create_sql(self, header: bool = True, delimiter: str = ",", enclosed_by: str = '"') -> str:
         sql = f"CREATE OR REPLACE FILE FORMAT {self.name} TYPE = {self.file_type}"
         if self.file_type == FileTypes.csv:
             sql += f""", PARSE_HEADER = {header}, FIELD_DELIMITER = "{delimiter}",
@@ -74,7 +74,7 @@ class Table(SnowflakeResource):
         use_shared_stage: bool = True,
     ) -> str:
         if SnowflakeEnv.IS_LOCAL_ENVIRONMENT and use_shared_stage:
-            inferred_data_location = SnowflakeEnv.SHARED_DEV_BRONZE_PATH
+            inferred_data_location = SHARED_DEV_BRONZE_PATH
         else:
             inferred_data_location = f"{db}.{schema}"
         full_file_path = (
@@ -122,6 +122,11 @@ class BronzeTables:
         source=Sources.harbourview_edw,
         file_format=CSV_FILE_FORMAT,
     )
+    fact_investment_transactions_fund_hierarchy = Table(
+        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
     fact_investor_transactions_fund_hierarchy = Table(
         name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY",
         source=Sources.harbourview_edw,
@@ -143,11 +148,63 @@ class BronzeTables:
     dim_fund_sub_perspective = Table(
         name="DIM_FUND_SUB_PERSPECTIVE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
     )
-    fact_fund_sub_perpective_funds = Table(
-        name="FACT_FUND_SUB_PERSPECTIVE_FUNDS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    fact_fund_sub_perspective_funds = Table(
+        name="FACT_FUND_SUB_PERSPECTIVE_FUNDS",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
     fact_fund_sub_perpective_fund_network_paths = Table(
-        name="FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+        name="FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    dim_portfolios = Table(
+        name="DIM_PORTFOLIOS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    dim_type_broad = Table(
+        name="DIM_TYPE_BROAD", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    dim_hv_geography_hierarchy = Table(
+        name="DIM_HV_GEOGRAPHY_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    dim_company_industry_hierarchy = Table(
+        name="DIM_COMPANY_INDUSTRY_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    dim_manager = Table(
+        name="DIM_MANAGER", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    dim_fund_hierarchy = Table(
+        name="DIM_FUND_HIERARCHY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
+    )
+    stage = Table(name="STAGE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
+    fact_irr_investor = Table(
+        name="FACT_IRR_INVESTOR",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    calendar = Table(
+        name="CALENDAR",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    calendar_month = Table(
+        name="CALENDAR_MONTH",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    calendar_quarter = Table(
+        name="CALENDAR_QUARTER",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
+    )
+    fact_irr_investment_fund_hierarchy = Table(
+        name="FACT_IRR_INVESTMENT_FUND_HIERARCHY",
+        source=Sources.harbourview_edw,
+        file_format=CSV_FILE_FORMAT,
     )
 
 

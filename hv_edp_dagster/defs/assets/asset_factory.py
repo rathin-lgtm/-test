@@ -1,21 +1,23 @@
-from dagster import AssetsDefinition, asset
 from typing import List
+
+from dagster import AssetsDefinition, asset
+
+from hv_edp_dagster.constants import ASSET_KINDS
+from hv_edp_dagster.defs.assets.helper import clear_table_sql, copy_data_from_stage_sql
+from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import FileFormat, Table
-from hv_edp_dagster.defs.resources import SnowflakeConfig,JobConfig
 from hv_edp_dagster.utils import execute_sql
-from hv_edp_dagster.defs.assets.helper import clear_table_sql,copy_data_from_stage_sql
+
 
 class AssetFactory:
 
-    def __init__(self,asset_group:str,asset_kinds:list[str]) -> None:
+    def __init__(self, asset_group: str, asset_kinds: set[str] = ASSET_KINDS) -> None:
         self.asset_group = asset_group
         self.asset_kinds = asset_kinds
 
     def generate_snowflake_file_format_assets(
-                self,
-                file_formats: List[FileFormat], 
-                depends_on: list[AssetsDefinition]|None
-            ) -> List[AssetsDefinition]:
+        self, file_formats: List[FileFormat], depends_on: list[AssetsDefinition] | None
+    ) -> List[AssetsDefinition]:
 
         def snowflake_file_format(file_format: FileFormat) -> AssetsDefinition:
             @asset(
@@ -30,12 +32,10 @@ class AssetFactory:
             return _file_format
 
         return [snowflake_file_format(file_format) for file_format in file_formats]
-    
+
     def generate_snowflake_table_assets(
-                self,
-                tables: list[Table], 
-                depends_on: List[AssetsDefinition]|None
-            ) -> List[AssetsDefinition]:
+        self, tables: list[Table], depends_on: List[AssetsDefinition] | None
+    ) -> List[AssetsDefinition]:
         def create_table_asset(table_obj: Table) -> AssetsDefinition:
             @asset(
                 name=f"snowflake_table_{table_obj.name}",
@@ -52,15 +52,14 @@ class AssetFactory:
                         use_shared_stage=infra_job_config.use_shared_stage,
                     ),
                 )
+
             return _table
 
         return [create_table_asset(table) for table in tables]
 
     def generate_clear_table_assets(
-                self,
-                tables: list[Table], 
-                depends_on : List[AssetsDefinition]|None = []
-            ) -> List[AssetsDefinition]:
+        self, tables: list[Table], depends_on: List[AssetsDefinition] | None = None
+    ) -> List[AssetsDefinition]:
 
         def clear_table_assets(table: Table) -> AssetsDefinition:
             @asset(
@@ -75,14 +74,11 @@ class AssetFactory:
 
             return _clear_table
 
-        return [clear_table_assets(table) for table in tables]        
-
+        return [clear_table_assets(table) for table in tables]
 
     def generate_bronze_table_assets(
-                self,
-                tables: list[Table], 
-                depends_on: List[AssetsDefinition]|None
-            ) -> List[AssetsDefinition]:
+        self, tables: list[Table], depends_on: List[AssetsDefinition] | None
+    ) -> List[AssetsDefinition]:
         def bronze_table_asset(table: Table) -> AssetsDefinition:
             @asset(
                 name=f"bronze_{table.name.lower()}",
@@ -95,5 +91,4 @@ class AssetFactory:
 
             return _bronze_table
 
-        return [bronze_table_asset(table) for table in tables]        
-
+        return [bronze_table_asset(table) for table in tables]

@@ -1,7 +1,4 @@
-from hv_edp_dagster.constants import (
-    SnowflakeEnv,
-    FileTypes,
-)
+from hv_edp_dagster.constants import SHARED_DEV_BRONZE_PATH, FileTypes, SnowflakeEnv
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
     DATA_LANDING_STAGE,
@@ -21,7 +18,7 @@ def generate_copy_from_stage_sql(
     use_shared_stage: bool = True,
 ) -> str:
     location = (
-        SnowflakeEnv.SHARED_DEV_BRONZE_PATH
+        SHARED_DEV_BRONZE_PATH
         if use_shared_stage and SnowflakeEnv.IS_LOCAL_ENVIRONMENT
         else f"{snowflake_config.database}.{snowflake_config.schema_bronze}"
     )
