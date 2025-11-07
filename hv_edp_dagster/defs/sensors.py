@@ -52,7 +52,9 @@ def create_file_sensor_for_table(tables: list[Table]):
             name=f"{table.name.lower()}_file_sensor",
             minimum_interval_seconds=30,
             default_status=(
-                DefaultSensorStatus.STOPPED if SnowflakeEnv.IS_LOCAL_ENVIRONMENT else DefaultSensorStatus.RUNNING
+                DefaultSensorStatus.STOPPED
+                if SnowflakeEnv.IS_LOCAL_ENVIRONMENT
+                else DefaultSensorStatus.RUNNING
             ),
             asset_selection=select_assets_by_group(table.name),
         )

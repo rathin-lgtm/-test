@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-from typing import Generator, Self
+from typing import Generator, Optional, Self
 
 from dagster import ConfigurableResource
-from dagster_snowflake import SnowflakeConnection, SnowflakeResource
+from dagster_snowflake import SnowflakeResource
 from pydantic import (
     Field,
     PrivateAttr,
@@ -10,19 +10,20 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from snowflake.connector.connection import SnowflakeConnection
 
 
 class SnowflakeConnectionManager:
     """Manages Snowflake connections with support for both shared and per-asset connections."""
 
-    def __init__(self):
-        self._shared_connection = None
+    def __init__(self) -> None:
+        self._shared_connection: SnowflakeConnection | None = None
 
     def setup_shared_connection(self, snowflake_resource: SnowflakeResource) -> None:
         conn = snowflake_resource.get_connection().__enter__()
         self._shared_connection = conn
 
-    def get_shared_connection(self) -> SnowflakeConnection:
+    def get_shared_connection(self) -> Optional[SnowflakeConnection]:
         return self._shared_connection
 
     def clear_shared_connection(self) -> None:
@@ -89,7 +90,11 @@ class SnowflakeConfig(ConfigurableResource):
                 yield shared_conn
             else:
                 self._connection_manager.setup_shared_connection(self._snowflake_resource)
-                yield self._connection_manager.get_shared_connection()
+                connection = self._connection_manager.get_shared_connection()
+                if connection:
+                    yield connection
+                else:
+                    raise Exception("Unable to get the connection")
         else:
             with self._snowflake_resource.get_connection() as conn:
                 yield conn

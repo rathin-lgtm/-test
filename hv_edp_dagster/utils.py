@@ -3,7 +3,7 @@ from typing import Any
 
 from dagster import AssetSelection, get_dagster_logger
 
-from hv_edp_dagster.constants import SnowflakeEnv, AssetTags, Environments
+from hv_edp_dagster.constants import AssetTags, Environments, SnowflakeEnv
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 
 GOLD_ASSET_KEY = "gold"
@@ -12,8 +12,10 @@ GOLD_ASSET_KEY = "gold"
 def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
+
 def get_dbt_project_dir() -> Path:
-    return Path(str(get_project_root()) + "\\hv_edp_dbt")
+    return Path(str(get_project_root()), "hv_edp_dbt")
+
 
 def execute_sql(
     snowflake_config: SnowflakeConfig, sql: str, fetch_results: bool = False

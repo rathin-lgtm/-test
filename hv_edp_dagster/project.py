@@ -2,7 +2,7 @@ import os
 
 from dagster_dbt import DbtProject
 
-from hv_edp_dagster.utils import get_project_root,get_dbt_project_dir
+from hv_edp_dagster.utils import get_dbt_project_dir
 
 dbt_project = DbtProject(
     project_dir=get_dbt_project_dir(),
