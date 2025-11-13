@@ -5,6 +5,7 @@ SELECT
     portfolio_commitment_year,
     metric_currency_code as metric_currency,
     portfolio_currency,
+    metric_currency_code as metric_currency,
     portfolio_manager,
     portfolio_geography,
     portfolio_geography_broad,

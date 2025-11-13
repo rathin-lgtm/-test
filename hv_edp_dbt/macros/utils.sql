@@ -7,3 +7,15 @@
 {% macro encoded_hashed_row() %}
     HEX_ENCODE(TO_CHAR(HASH(OBJECT_CONSTRUCT_KEEP_NULL(* EXCLUDE (load_dt)))))
 {% endmacro %}
+
+{% macro indicator_yes_no(indicator_col) %}
+    CASE 
+        WHEN {{ indicator_col }} = 1 THEN 'Yes'
+        WHEN {{ indicator_col }} = -1 THEN 'No'
+        ELSE 'Unknown'
+    END
+{% endmacro %}
+
+{% macro hk(column) %}
+    sha2(upper(trim({{ column }})))
+{% endmacro %}

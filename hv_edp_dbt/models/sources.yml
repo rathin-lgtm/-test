@@ -114,3 +114,19 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_fact_irr_investment_fund_hierarchy']
+          - name: company
+            description: COMPANY loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_company']
+          - name: company_broad
+            description: COMPANY_BROAD loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_company_broad']
+          - name: fact_company_valuation
+            description: COMPANY_STATUS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_company_valuation']
+

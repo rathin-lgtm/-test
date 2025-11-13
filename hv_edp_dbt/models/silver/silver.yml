@@ -74,6 +74,16 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
+  
+  - name: sat_company_attributes
+    description: "Slowly changing descriptive attributes at company level"
+    columns:
+      - name: skey
+        data_tests: [not_null, unique]
+      - name: hk_company
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_company'), field: hk_company}
 
 # ================
 # LINKS
