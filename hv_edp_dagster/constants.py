@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 ASSET_KINDS = {"python", "snowflake"}
 
@@ -20,13 +21,13 @@ class AssetTags:
     environment = "environment"
 
 
-class Sources:
-    harbourview_edw = "HARBOURVIEW_EDW"
+class Sources(Enum):
+    HARBOURVIEW_EDW = "HARBOURVIEW_EDW"
 
 
 class FileTypes:
-    csv = "CSV"
-    parquet = "PARQUET"
+    CSV = "CSV"
+    PARQUET = "PARQUET"
 
 
 class GoldModels:

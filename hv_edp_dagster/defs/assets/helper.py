@@ -24,7 +24,7 @@ def generate_copy_from_stage_sql(
     )
     error_parameter = (
         ", ERROR_ON_COLUMN_COUNT_MISMATCH = False"
-        if table.file_format.file_type == FileTypes.csv
+        if table.file_format.file_type == FileTypes.CSV
         else ""
     )
     return f"""COPY INTO {table.name}

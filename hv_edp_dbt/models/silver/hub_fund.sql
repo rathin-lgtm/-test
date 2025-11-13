@@ -1,9 +1,9 @@
 with funds as (
-    select * from {{ source('hv_source', 'dim_fund') }}
+    select * from {{ source('bronze_from_harborview_edw', 'dim_fund') }}
 ),
 
 keys as (
- select * from {{ source('hv_source', 'global_edw_key_to_iqid') }}
+ select * from {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }}
 )
 
 select sha2(upper(trim(keys.source_table_col_val))) as hk_fund,

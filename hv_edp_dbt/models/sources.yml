@@ -1,10 +1,13 @@
 version: 2
 
 sources:
-    - name: hv_source
+    - name: bronze_from_harborview_edw
       description: Raw data uploaded from CSVs.
       database: "{{ target.database }}"
       schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
+      meta:
+        source_db: HARBOURVIEW_EDW
+        source_file_format: CSV
       tables:
           - name: dim_fund
             description: DIM_FUND loaded from Harbourview EDW

@@ -1,5 +1,5 @@
 with portfolios as (
-    select * from {{ source('hv_source', 'dim_portfolios') }}
+    select * from {{ source('bronze_from_harborview_edw', 'dim_portfolios') }}
 )
 
 select sha2(upper(trim(portfolio_id))) as hk_portfolio,

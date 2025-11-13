@@ -1,6 +1,6 @@
 with distinct_investor_ids as (
     SELECT distinct(investor_id), file_name
-    FROM {{ source('hv_source', 'fact_investor_transactions') }}
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }}
 )
 
 SELECT 
@@ -9,5 +9,5 @@ SELECT
     CURRENT_TIMESTAMP() as load_dt,
     i.file_name as record_source
 FROM distinct_investor_ids i
-JOIN {{ source('hv_source', 'global_edw_key_to_iqid') }} iid
+JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} iid
         ON investor_id = iid.edw_key AND iid.source_table = 'investors'

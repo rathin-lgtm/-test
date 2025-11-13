@@ -4,7 +4,7 @@
 ) }}
 
 with lp_investor_txns as (
-    SELECT * FROM {{ source('hv_source', 'fact_investor_transactions') }} WHERE investor_type = 'LP'
+    SELECT * FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} WHERE investor_type = 'LP'
 ),
 daily_metrics as (
     SELECT
@@ -29,7 +29,7 @@ daily_metrics as (
     CURRENT_TIMESTAMP() as load_dt,
     t.file_name as record_source
     FROM lp_investor_txns t
-    JOIN {{ source('hv_source', 'dim_fund') }} f
+    JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} f
         ON t.fund_id = f.fund_id
     GROUP BY t.date_id, t.fund_id, t.currency_id, t.file_name
 ),
@@ -61,7 +61,7 @@ cashflows as (
             cal.Date_Fact as cashflow_date,
             fii.date_id as cashflow_date_id,
             rollup_to_date_id as date_id
-        FROM {{ source('hv_source', 'fact_irr_investor') }} fii
+        FROM {{ source('bronze_from_harborview_edw', 'fact_irr_investor') }} fii
         JOIN ({{ irr_calendar() }}) cal ON
             (fii.date_id = cal.rollup_date_id)
         WHERE fii.active_ind = 1 AND fii.currency_id IN ({{ irr_currency_ids() }}) AND fii.metric_id IN ({{ irr_cashflow_metric_ids() }})
@@ -122,9 +122,9 @@ SELECT
     load_dt,
     record_source
 FROM (daily_metrics) d
-JOIN {{ source('hv_source', 'currency') }} c
+JOIN {{ source('bronze_from_harborview_edw', 'currency') }} c
     ON d.currency_id = c.currency_id
-JOIN {{ source('hv_source', 'global_edw_key_to_iqid') }} fid
+JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
     ON d.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
 LEFT OUTER JOIN xirrs x
     ON x.fund_id = d.fund_id AND d.date_id = x.date_id AND d.currency_id = x.currency_id
