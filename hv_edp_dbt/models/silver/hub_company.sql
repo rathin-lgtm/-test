@@ -1,5 +1,5 @@
 with companies as (
-    select * from {{ source('hv_source', 'company') }}
+    select * from {{ source('bronze_from_harborview_edw', 'company') }}
 )
 
 select sha2(upper(trim(company_id))) as hk_company,

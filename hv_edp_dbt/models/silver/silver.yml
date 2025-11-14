@@ -85,6 +85,16 @@ models:
           - not_null
           - relationships: {to: ref('hub_company'), field: hk_company}
 
+  - name: sat_fund_company_investment_attributes
+    description: "Slowly changing descriptive attributes at company fund level"
+    columns:
+      - name: skey
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
+
 # ================
 # LINKS
 # ================
@@ -94,5 +104,12 @@ models:
     description: "DV Link for Portfolios and Funds"
     columns:
       - name: hk_link
-        description: "sha256(upper(trim(portfolio_id+fund_id)))"
+        description: "sha2(hk_portfolio || hk_fund) "
+        data_tests: [not_null, unique]
+
+  - name: link_fund_company
+    description: "DV Link for Funds and Companies"
+    columns:
+      - name: hk_link
+        description: "sha2(hk_company || hk_fund) "
         data_tests: [not_null, unique]
