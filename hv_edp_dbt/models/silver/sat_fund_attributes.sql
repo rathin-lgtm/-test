@@ -13,12 +13,12 @@ with attributes as (
         fund.end_eff_date,
         fund.active_ind
     FROM 
-        {{ source('hv_source', 'dim_fund') }} fund
-    JOIN {{ source('hv_source', 'currency') }} c
+        {{ source('bronze_from_harborview_edw', 'dim_fund') }} fund
+    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} c
         ON fund.currency_id = c.currency_id
-    JOIN {{ source('hv_source', 'global_edw_key_to_iqid') }} fid
+    JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
         ON fund.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
-    LEFT JOIN {{ source('hv_source', 'dim_fund') }} aiv_fund
+    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} aiv_fund
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
 )
 

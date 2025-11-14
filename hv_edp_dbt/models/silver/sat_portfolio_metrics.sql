@@ -17,13 +17,13 @@ with monthly_metrics as (
     {{ portfolio_unfunded_unlevered('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount') }} as commitments,
     {{ portfolio_debt_balance_no_directs('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount', 'dim_portfolios.type_broad_id') }} as debt_balance_no_directs,
     FROM (
-        SELECT * FROM {{ source('hv_source', 'fact_investment_transactions_fund_hierarchy_monthly') }} WHERE date_flag in ('B', 'E') and portfolio_id != -1
+        SELECT * FROM {{ source('bronze_from_harborview_edw', 'fact_investment_transactions_fund_hierarchy_monthly') }} WHERE date_flag in ('B', 'E') and portfolio_id != -1
     ) transactions_monthly
-    JOIN {{ source('hv_source', 'currency') }} currency
+    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON transactions_monthly.currency_id = currency.currency_id
-    JOIN {{ source('hv_source', 'dim_portfolios') }} dim_portfolios
+    JOIN {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} dim_portfolios
         ON transactions_monthly.portfolio_id = dim_portfolios.portfolio_id
-    JOIN {{ source('hv_source', 'dim_fund_hierarchy') }} dim_hierarchy
+    JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_hierarchy') }} dim_hierarchy
         ON transactions_monthly.fund_hier_id = dim_hierarchy.fund_hier_id and is_excluded = 0
     GROUP BY as_of_date, transactions_monthly.portfolio_id, currency_code, transactions_monthly.fund_id
 ),
@@ -35,13 +35,13 @@ daily_metrics as (
     transactions.portfolio_id,
     transactions.fund_id,
     {{ portfolio_nav('transactions.metric_id', 'transactions.amount', 'dim_portfolios.asset_type_id') }} as nav,
-    FROM (SELECT * FROM {{ source('hv_source', 'fact_investment_transactions_fund_hierarchy') }} 
+    FROM (SELECT * FROM {{ source('bronze_from_harborview_edw', 'fact_investment_transactions_fund_hierarchy') }} 
     WHERE gl_date_flag in ('M', 'MB') and portfolio_id != -1 ) transactions
-    JOIN {{ source('hv_source', 'currency') }} currency
+    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON transactions.currency_id = currency.currency_id
-    JOIN {{ source('hv_source', 'dim_portfolios') }} dim_portfolios
+    JOIN {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} dim_portfolios
         ON transactions.portfolio_id = dim_portfolios.portfolio_id
-    JOIN {{ source('hv_source', 'dim_fund_hierarchy') }} dim_hierarchy
+    JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_hierarchy') }} dim_hierarchy
         ON transactions.fund_hier_id = dim_hierarchy.fund_hier_id and is_excluded = 0
     GROUP BY as_of_date, transactions.portfolio_id, currency_code, transactions.fund_id
 ),
@@ -74,10 +74,10 @@ cashflows as (
             cal.Date_Fact as cashflow_date,
             fii.date_id as cashflow_date_id,
             rollup_to_date_id as date_id
-        FROM {{ source('hv_source', 'fact_irr_investment_fund_hierarchy') }} fii
+        FROM {{ source('bronze_from_harborview_edw', 'fact_irr_investment_fund_hierarchy') }} fii
         JOIN ({{ irr_calendar() }}) cal ON
             (fii.date_id = cal.rollup_date_id)
-        JOIN {{ source('hv_source', 'dim_fund_hierarchy') }} dfh ON
+        JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_hierarchy') }} dfh ON
             (fii.fund_hier = dfh.fund_hier)
         WHERE fii.gl_date_flag in ('M', 'MB') AND fii.portfolio_id <> -1 AND fii.metric_id in ({{ portfolio_irr_cashflow_metric_ids() }})
     ) WHERE is_excluded = 0
@@ -100,7 +100,7 @@ xirrs as (
         FROM cashflows
         GROUP BY portfolio_id, currency_id, date_id, fund_id
     ) irrs
-    JOIN {{ source('hv_source', 'currency') }} currency
+    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON irrs.currency_id = currency.currency_id
 ),
 

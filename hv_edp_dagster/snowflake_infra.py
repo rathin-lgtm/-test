@@ -1,5 +1,8 @@
 import re
+from enum import Enum
+from pathlib import Path
 
+import yaml
 from pydantic import BaseModel, field_validator
 
 from hv_edp_dagster.constants import (
@@ -8,6 +11,7 @@ from hv_edp_dagster.constants import (
     SnowflakeEnv,
     Sources,
 )
+from hv_edp_dagster.utils import get_dbt_project_dir
 
 
 def validate_snowflake_identifier(name: str) -> str:
@@ -52,15 +56,13 @@ class FileFormat(SnowflakeResource):
 
     def create_sql(self, header: bool = True, delimiter: str = ",", enclosed_by: str = '"') -> str:
         sql = f"CREATE OR REPLACE FILE FORMAT {self.name} TYPE = {self.file_type}"
-        if self.file_type == FileTypes.csv:
+        if self.file_type == FileTypes.CSV:
             sql += f""", PARSE_HEADER = {header}, FIELD_DELIMITER = "{delimiter}",
             FIELD_OPTIONALLY_ENCLOSED_BY = '{enclosed_by}'"""
         return sql
 
 
 DATA_LANDING_STAGE = Stage(name="landing")
-CSV_FILE_FORMAT = FileFormat(name="csv_file", file_type=FileTypes.csv)
-PARQUET_FILE_FORMAT = FileFormat(name="parquet_file", file_type=FileTypes.parquet)
 
 
 class Table(SnowflakeResource):
@@ -113,100 +115,32 @@ class Table(SnowflakeResource):
                 );"""
 
 
-class BronzeTables:
-    country = Table(name="COUNTRY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
-    currency = Table(name="CURRENCY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
-    dim_fund = Table(name="DIM_FUND", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
-    fact_investment_transactions_fund_hierarchy_monthly = Table(
-        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    fact_investment_transactions_fund_hierarchy = Table(
-        name="FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    fact_investor_transactions_fund_hierarchy = Table(
-        name="FACT_INVESTOR_TRANSACTIONS_FUND_HIERARCHY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    fact_investor_transactions_monthly = Table(
-        name="FACT_INVESTOR_TRANSACTIONS_MONTHLY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    fact_investor_transactions = Table(
-        name="FACT_INVESTOR_TRANSACTIONS",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    global_edw_key_to_iqid = Table(
-        name="GLOBAL_EDW_KEY_TO_IQID", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
-    )
-    dim_fund_sub_perspective = Table(
-        name="DIM_FUND_SUB_PERSPECTIVE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
-    )
-    fact_fund_sub_perspective_funds = Table(
-        name="FACT_FUND_SUB_PERSPECTIVE_FUNDS",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    fact_fund_sub_perpective_fund_network_paths = Table(
-        name="FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    dim_portfolios = Table(
-        name="DIM_PORTFOLIOS", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
-    )
-    dim_type_broad = Table(
-        name="DIM_TYPE_BROAD", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
-    )
-    dim_hv_geography_hierarchy = Table(
-        name="DIM_HV_GEOGRAPHY_HIERARCHY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    dim_company_industry_hierarchy = Table(
-        name="DIM_COMPANY_INDUSTRY_HIERARCHY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    dim_manager = Table(
-        name="DIM_MANAGER", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
-    )
-    dim_fund_hierarchy = Table(
-        name="DIM_FUND_HIERARCHY", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT
-    )
-    stage = Table(name="STAGE", source=Sources.harbourview_edw, file_format=CSV_FILE_FORMAT)
-    fact_irr_investor = Table(
-        name="FACT_IRR_INVESTOR",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    calendar = Table(
-        name="CALENDAR",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    calendar_month = Table(
-        name="CALENDAR_MONTH",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    calendar_quarter = Table(
-        name="CALENDAR_QUARTER",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
-    fact_irr_investment_fund_hierarchy = Table(
-        name="FACT_IRR_INVESTMENT_FUND_HIERARCHY",
-        source=Sources.harbourview_edw,
-        file_format=CSV_FILE_FORMAT,
-    )
+class FileFormats(Enum):
+    CSV = FileFormat(name="csv_file", file_type=FileTypes.CSV)
+    PARQUET = FileFormat(name="parquet_file", file_type=FileTypes.PARQUET)
 
 
-ALL_TABLES = [value for value in BronzeTables.__dict__.values() if isinstance(value, Table)]
-ALL_FILE_FORMATS = [CSV_FILE_FORMAT, PARQUET_FILE_FORMAT]
+ALL_FILE_FORMATS = [file_format.value for file_format in FileFormats]
+
+
+def load_bronze_table_definition_fron_dbt() -> list[Table]:
+    try:
+        config_path = Path(get_dbt_project_dir(), "models", "sources.yml")
+        with open(config_path) as f:
+            config_data = yaml.safe_load(f)
+        table_definitions = []
+        for source in config_data["sources"]:
+            for table in source["tables"]:
+                table_definitions.append(
+                    Table(
+                        name=table["name"].upper(),
+                        source=Sources[source["meta"]["source_db"]].value,
+                        file_format=FileFormats[source["meta"]["source_file_format"]].value,
+                    )
+                )
+        return table_definitions
+    except Exception:
+        raise Exception("Error loading sources.yml occured, make sure it has valid data.")
+
+
+ALL_TABLES = load_bronze_table_definition_fron_dbt()
