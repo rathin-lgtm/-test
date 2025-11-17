@@ -34,7 +34,7 @@ daily_metrics as (
     LAST_DAY({{ to_date('transactions.date_id') }}) as as_of_date,
     transactions.portfolio_id,
     transactions.fund_id,
-    {{ portfolio_nav('transactions.metric_id', 'transactions.amount', 'dim_portfolios.asset_type_id') }} as nav,
+    {{ portfolio_nav_no_deb_balance('transactions.metric_id', 'transactions.amount', 'dim_portfolios.asset_type_id') }} as nav_no_deb_balance,
     FROM (SELECT * FROM {{ source('bronze_from_harborview_edw', 'fact_investment_transactions_fund_hierarchy') }} 
     WHERE gl_date_flag in ('M', 'MB') and portfolio_id != -1 ) transactions
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
@@ -114,7 +114,7 @@ SELECT
     calls,
     dpi,
     commitments,
-    debt_balance_no_directs + COALESCE(nav, 0) as nav,
+    debt_balance_no_directs + COALESCE(nav_no_deb_balance, 0) as nav,
     COALESCE(distributions + nav, 0) as total_value,
     CASE 
         WHEN calls = 0 THEN 0

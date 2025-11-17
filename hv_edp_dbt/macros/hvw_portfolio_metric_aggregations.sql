@@ -53,7 +53,7 @@
     )
 {% endmacro %}
 
-{% macro portfolio_nav(metric_col, amount_col, asset_type_id_col) %}
+{% macro portfolio_nav_no_deb_balance(metric_col, amount_col, asset_type_id_col) %}
     SUM(
         CASE
             WHEN {{ metric_col }} in (257, 263, 262, 261, 453, 452, 466, 468, 472) THEN {{ amount_col }} /*CALCPORTFOLIONAVCURRENTVALUEOFDEAL, CALCPORTFOLIONAVCURRENTVALUEOFDEALROLLFORWARDPORTION, calcportfolioofficialnavcurrerntvalueofdeal, calcportfolioHGPSMonthlynavcurrentvalueofdeal, calcportfolioNAVdebtbalance */
