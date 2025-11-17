@@ -114,3 +114,19 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_fact_irr_investment_fund_hierarchy']
+          - name: fund_hiers_pct_hist
+            description: FUND_HIERS_PCT_HIST loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fund_hiers_pct_hist']
+          - name: fact_company_valuation
+            description: FACT_COMPANY_VALUATION loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_company_valuation']
+          - name: fact_fund_sub_perspective_fund_network_paths
+            description: FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_fund_sub_perspective_fund_network_paths']
+

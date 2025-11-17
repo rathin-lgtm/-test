@@ -75,6 +75,12 @@ models:
           - not_null
           - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
 
+  - name: sat_company_metrics
+    description: "Snapshot metrics per portfolio & as_of_date"
+    columns:
+      - name: skey
+        data_tests: [not_null, unique]
+
 # ================
 # LINKS
 # ================
