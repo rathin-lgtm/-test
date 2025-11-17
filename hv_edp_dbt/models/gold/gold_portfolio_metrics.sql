@@ -3,6 +3,7 @@ SELECT
     portfolio_name,
     portfolio_close_year,
     portfolio_commitment_year,
+    metric_currency_code as metric_currency,
     portfolio_currency,
     portfolio_manager,
     portfolio_geography,
