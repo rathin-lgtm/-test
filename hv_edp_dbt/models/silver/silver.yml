@@ -95,6 +95,12 @@ models:
           - not_null
           - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
 
+  - name: sat_company_metrics
+    description: "Snapshot metrics per portfolio & as_of_date"
+    columns:
+      - name: hk_company_metric
+        data_tests: [not_null, unique]
+
 # ================
 # LINKS
 # ================
