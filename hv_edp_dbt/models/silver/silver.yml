@@ -78,7 +78,7 @@ models:
   - name: sat_company_metrics
     description: "Snapshot metrics per portfolio & as_of_date"
     columns:
-      - name: skey
+      - name: hk_company_metric
         data_tests: [not_null, unique]
 
 # ================

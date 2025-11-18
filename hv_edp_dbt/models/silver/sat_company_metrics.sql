@@ -51,19 +51,34 @@ company_metrics as (
     FROM fund_hier_ownership fh
     JOIN {{ source('bronze_from_harborview_edw', 'fact_company_valuation') }} cv ON
         fh.L29_id = cv.fund_id
+),
+daily_metrics as (
+    SELECT
+        company_id,
+        date_id,
+        {{ company_realized_value('metric_id', 'hier_amount') }} as company_realized_value,
+        {{ company_current_value('metric_id', 'hier_amount') }} as company_current_value,
+        (company_current_value - company_realized_value) as company_total_value,
+        {{ company_realized_cost('metric_id', 'hier_amount') }} as company_realized_cost,
+        {{ company_current_cost('metric_id', 'hier_amount') }} as company_current_cost,
+        (company_current_cost - company_realized_cost) as company_total_cost,
+        CURRENT_TIMESTAMP() as load_dt
+    FROM company_metrics
+    GROUP BY date_id, company_id
 )
 SELECT
-    company_id,
-    date_id,
-    {{ company_realized_value('metric_id', 'hier_amount') }} as company_realized_value,
-    {{ company_current_value('metric_id', 'hier_amount') }} as company_current_value,
-    (company_current_value - company_realized_value) as company_total_value,
-    {{ company_realized_cost('metric_id', 'hier_amount') }} as company_realized_cost,
-    {{ company_current_cost('metric_id', 'hier_amount') }} as company_current_cost,
-    (company_current_cost - company_realized_cost) as company_total_cost,
+    {{ to_date('d.date_id') }} as as_of_date,
+    sha2(upper(trim(company_id))) as hk_company,
+    {{ encoded_hashed_row() }} as hk_company_metric,
+    {{ company_rollup('company_realized_value') }} as realized_value,
+    {{ company_rollup('company_current_value') }} as current_value,
+    {{ company_rollup('company_total_value') }} as total_value,
+    {{ company_rollup('company_realized_cost') }} as realized_cost,
+    {{ company_rollup('company_current_cost') }} as current_cost,
+    {{ company_rollup('company_total_cost') }} as total_cost,
     CASE 
-        WHEN company_total_cost = 0 THEN 0
-        ELSE company_total_value / company_total_cost
-    END as company_tvtc
-FROM company_metrics
-GROUP BY date_id, company_id
+        WHEN total_cost = 0 THEN 0
+        ELSE total_value / total_cost
+    END as tvtc,
+    load_dt
+FROM daily_metrics d
