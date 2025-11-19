@@ -30,18 +30,6 @@ class FileTypes:
     PARQUET = "PARQUET"
 
 
-class GoldModels:
-    fund_metrics = "gold_fund_metrics"
-    portfolio_metrics = "gold_portfolio_metrics"
-    company_metrics = "gold_company_metrics"
-
-
-class ETLJobs:
-    fund_metrics = "fund_metrics_etl"
-    portfolio_metrics = "portfolio_metrics_etl"
-    company_metrics = "company_metrics_etl"
-
-
 class AssetGroups:
     provision_infra = "provision_infra"
     destroy_infra = "destroy_infra"
