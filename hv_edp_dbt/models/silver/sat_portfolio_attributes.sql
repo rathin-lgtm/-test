@@ -6,7 +6,7 @@ with attributes as (
         portfolio.portfolio_close_year,
         portfolio.portfolio_name,
         portfolio.portfolio_entity_status,
-        YEAR(to_date('portfolio.portfolio_commitment_date') }}) as portfolio_commitment_year,
+        YEAR({{ to_date('portfolio.portfolio_commitment_date') }}) as portfolio_commitment_year,
         portfolio.portfolio_disclosure_level,
         portfolio.type_broad_id,
         type_broad.type_broad_desc,

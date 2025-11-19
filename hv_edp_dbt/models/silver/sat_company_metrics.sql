@@ -13,48 +13,20 @@ WITH fund_hier_ownership as (
 ),
 company_metrics as (
     SELECT
-        cv.fund_id,
-        fh.fund_sub_perspective_id,
+        cv.date_id,
         cv.company_id,
         cv.original_company_id,
-        cv.direct_company_id,
-        cv.date_id,
         cv.currency_id,
         cv.metric_id,
-        cv.investment_id,
-        cv.position_id,
-        cv.project_id,
-        cv.loan_id, cv.stage_id, 
-        cv.investment_type_id,
-        cv.asset_type_id, 
-        cv.investment_year, 
-        cv.vintage_year, 
-        cv.public_status, 
-        cv.state_id, 
-        cv.year_of_initial_investment, 
-        cv.original_company_geography_id, 
-        cv.company_geography_code,
-        cv.industry_id, 
-        cv.original_industry_id, 
-        cv.amount, 
-        fh.hier_percentage, 
-        cv.amount * fh.hier_percentage hier_amount, 
-        cv.hv_share, 
-        cv.portfolio_id, 
-        cv.portfolio_date, 
-        cv.portfolio_status, 
-        cv.is_realized_ind, 
-        fh.fund_hier_id, 
-        fh.fund_hier, 
-        cv.investment_relation, 
-        cv.percent_owned
+        cv.amount * fh.hier_percentage hier_amount
     FROM fund_hier_ownership fh
     JOIN {{ source('bronze_from_harborview_edw', 'fact_company_valuation') }} cv ON
         fh.L29_id = cv.fund_id
 ),
 daily_metrics as (
     SELECT
-        company_id,
+        hub.hk_company,
+        hub_original.hk_company as hk_company_original,
         date_id,
         {{ company_realized_value('metric_id', 'hier_amount') }} as company_realized_value,
         {{ company_current_value('metric_id', 'hier_amount') }} as company_current_value,
@@ -62,23 +34,29 @@ daily_metrics as (
         {{ company_realized_cost('metric_id', 'hier_amount') }} as company_realized_cost,
         {{ company_current_cost('metric_id', 'hier_amount') }} as company_current_cost,
         (company_current_cost - company_realized_cost) as company_total_cost,
+        company_total_value - company_total_cost as company_gain_loss,
         CURRENT_TIMESTAMP() as load_dt
-    FROM company_metrics
-    GROUP BY date_id, company_id
+    FROM company_metrics metrics
+    JOIN {{ ref('hub_company') }} hub
+        ON metrics.company_id = hub.company_id 
+    JOIN {{ ref('hub_company') }} hub_original
+        ON metrics.original_company_id = hub_original.company_id 
+    GROUP BY date_id, hub.hk_company, hub_original.hk_company
 )
 SELECT
-    {{ to_date('d.date_id') }} as as_of_date,
-    sha2(upper(trim(company_id))) as hk_company,
+    {{ to_date('date_id') }} as as_of_date,
+    hk_company,
+    hk_company_original,
     {{ encoded_hashed_row() }} as hk_company_metric,
-    {{ company_rollup('company_realized_value') }} as realized_value,
-    {{ company_rollup('company_current_value') }} as current_value,
-    {{ company_rollup('company_total_value') }} as total_value,
+    {{ company_rollup('company_realized_value') }} as realized_value, 
+    {{ company_rollup('company_current_value') }} as current_value, 
+    {{ company_rollup('company_total_value') }} as total_value, 
     {{ company_rollup('company_realized_cost') }} as realized_cost,
     {{ company_rollup('company_current_cost') }} as current_cost,
-    {{ company_rollup('company_total_cost') }} as total_cost,
+    {{ company_rollup('company_total_cost') }} as total_cost, 
+    {{ company_rollup('company_gain_loss') }} as gain_loss,
     CASE 
         WHEN total_cost = 0 THEN 0
         ELSE total_value / total_cost
     END as tvtc,
-    load_dt
-FROM daily_metrics d
+FROM daily_metrics

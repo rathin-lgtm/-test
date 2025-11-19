@@ -1,7 +1,7 @@
 with attributes as (
     SELECT 
-        company.company_id,
-        company_broad.short_name as company_name,
+        hub.hk_company,
+        REPLACE(TRIM(company_broad.short_name), '"', '''') as company_name,
         currency.name as company_currency,
         CASE WHEN company_broad.is_public = 1 THEN 'PUBLIC' ELSE 'PRIVATE' END as company_status,
         company.business_desc as company_business_description,
@@ -21,10 +21,12 @@ with attributes as (
         ON dim_geo.code = company.investment_geography_id
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_company_industry_hierarchy') }} company_hier
         ON company.industry_fine_code = company_hier.industry_fine_code
+    JOIN {{ ref('hub_company') }} hub
+        ON company.company_id = hub.company_id 
 )
 
 SELECT
-{{ hk('company_id') }} as hk_company,
+hk_company,
 company_name,
 company_currency,
 company_status,

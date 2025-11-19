@@ -11,7 +11,7 @@
 {% macro indicator_yes_no(indicator_col) %}
     CASE 
         WHEN {{ indicator_col }} = 1 THEN 'Yes'
-        WHEN {{ indicator_col }} = -1 THEN 'No'
+        WHEN {{ indicator_col }} = 0 THEN 'No'
         ELSE 'Unknown'
     END
 {% endmacro %}

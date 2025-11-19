@@ -8,6 +8,7 @@ keys as (
 
 select sha2(upper(trim(keys.source_table_col_val))) as hk_fund,
        keys.source_table_col_val as efront_fund_id,
+       funds.fund_id,
        CURRENT_TIMESTAMP() as load_dt,
        funds.file_name as record_source
        from funds

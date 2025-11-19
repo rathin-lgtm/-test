@@ -11,3 +11,8 @@ portfolio_metrics_etl_job = define_asset_job(
     name=ETLJobs.portfolio_metrics,
     selection=select_gold_asset_with_upstream(GoldModels.portfolio_metrics),
 )
+
+company_metrics_etl_job = define_asset_job(
+    name=ETLJobs.company_metrics,
+    selection=select_gold_asset_with_upstream(GoldModels.company_metrics),
+)

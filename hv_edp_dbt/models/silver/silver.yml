@@ -30,6 +30,25 @@ models:
         data_tests: [not_null, unique]
 
 # ================
+# LINKS
+# ================
+
+
+  - name: link_portfolio_fund
+    description: "DV Link for Portfolios and Funds"
+    columns:
+      - name: hk_link
+        description: "sha2(hk_portfolio || hk_fund) "
+        data_tests: [not_null, unique]
+
+  - name: link_fund_company
+    description: "DV Link for Funds and Companies"
+    columns:
+      - name: hk_link
+        description: "sha2(hk_company || hk_fund) "
+        data_tests: [not_null, unique]
+
+# ================
 # SATELLITES
 # ================
 
@@ -93,29 +112,10 @@ models:
       - name: hk_link
         data_tests:
           - not_null
-          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
+          - relationships: {to: ref('link_fund_company'), field: hk_link}
 
   - name: sat_company_metrics
     description: "Snapshot metrics per portfolio & as_of_date"
     columns:
       - name: hk_company_metric
-        data_tests: [not_null, unique]
-
-# ================
-# LINKS
-# ================
-
-
-  - name: link_portfolio_fund
-    description: "DV Link for Portfolios and Funds"
-    columns:
-      - name: hk_link
-        description: "sha2(hk_portfolio || hk_fund) "
-        data_tests: [not_null, unique]
-
-  - name: link_fund_company
-    description: "DV Link for Funds and Companies"
-    columns:
-      - name: hk_link
-        description: "sha2(hk_company || hk_fund) "
         data_tests: [not_null, unique]
