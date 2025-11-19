@@ -30,7 +30,7 @@ SELECT
     fund_investor_presentation_aiv_lock_date,
     fund_investor_presentation_aiv_type_efront,
     fund_lock_date,
-    HEX_ENCODE(HASH(hk_fund, fund_name, fund_currency, fund_investor_presentation_aiv, fund_investor_presentation_aiv_lock_date, fund_investor_presentation_aiv_type_efront, fund_lock_date)) as skey,
+    HEX_ENCODE(HASH(hk_fund, fund_name, fund_currency, fund_investor_presentation_aiv, fund_investor_presentation_aiv_lock_date, fund_investor_presentation_aiv_type_efront, fund_lock_date)) as hk_key,
     load_dt,
     record_source
 FROM attributes

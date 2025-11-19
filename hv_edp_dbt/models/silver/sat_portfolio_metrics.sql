@@ -134,5 +134,5 @@ SELECT
     ORDER BY as_of_date
 )
 
-SELECT *, {{ encoded_hashed_row() }} as skey,  from combined
+SELECT *, {{ encoded_hashed_row() }} as hk_key,  from combined
 ORDER BY as_of_date

@@ -118,7 +118,7 @@ SELECT
         ORDER BY d.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) as irr_10_year,
-    HEX_ENCODE(HASH(as_of_date, hk_fund, currency_code, nav, tvpi, distributions, contributions, total_value, commitments, capital_called, gain_loss, irr, irr_1_year, irr_3_year, irr_5_year, irr_10_year)) as skey,
+    HEX_ENCODE(HASH(as_of_date, hk_fund, currency_code, nav, tvpi, distributions, contributions, total_value, commitments, capital_called, gain_loss, irr, irr_1_year, irr_3_year, irr_5_year, irr_10_year)) as hk_key,
     load_dt,
     record_source
 FROM (daily_metrics) d

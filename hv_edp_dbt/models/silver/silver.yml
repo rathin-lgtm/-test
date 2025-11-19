@@ -36,7 +36,7 @@ models:
   - name: sat_fund_attributes
     description: "Slowly changing descriptive attributes at fund level"
     columns:
-      - name: skey
+      - name: hk_key
         description: "sha256(hk_fund || fund_name || fund_currency || fund_investor_presentation_aiv || fund_investor_presentation_aiv_lock_date || fund_investor_presentation_aiv_type_efront || fund_efront_iqid || fund_lock_date)"
         data_tests: [not_null, unique]
       - name: hk_fund
@@ -47,7 +47,7 @@ models:
   - name: sat_fund_metrics
     description: "Snapshot metrics per fund & as_of_date"
     columns:
-      - name: skey
+      - name: hk_key
         description: "sha256(as_of_date || metric_currency_code || total_value || nav || tvpi || dpi || irr_gross || irr_net || distributions || contributions || commitments || capital_called || gain_loss || pme_irr_1 || pme_irr_2 || pme_irr_msciaw )"
         data_tests: [not_null, unique]
       - name: hk_fund
@@ -58,7 +58,7 @@ models:
   - name: sat_portfolio_metrics
     description: "Snapshot metrics per portfolio & as_of_date"
     columns:
-      - name: skey
+      - name: hk_key
         data_tests: [not_null, unique]
       - name: hk_portfolio
         data_tests:
@@ -68,7 +68,7 @@ models:
   - name: sat_portfolio_attributes
     description: "Slowly changing descriptive attributes at portfolio level"
     columns:
-      - name: skey
+      - name: hk_key
         data_tests: [not_null, unique]
       - name: hk_portfolio
         data_tests:

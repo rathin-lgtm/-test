@@ -72,6 +72,6 @@ SELECT
     portfolio_stage_broad,
     portfolio_stage,
     portfolio_manager,
-    {{ encoded_hashed_row() }} as skey,
+    {{ encoded_hashed_row() }} as hk_key,
     load_dt
 FROM attributes
