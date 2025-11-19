@@ -1,6 +1,5 @@
 with attributes as (
     SELECT 
-        hk_portfolio,
         hk_link,
         currency.name as portfolio_currency,
         portfolio.portfolio_close_year,
@@ -46,13 +45,12 @@ with attributes as (
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON portfolio.portfolio_currency_id = currency.currency_id
     JOIN {{ ref('link_portfolio_fund') }} link
-        ON sha2(upper(trim(portfolio.portfolio_id))) = link.hk_portfolio
-        AND sha2(upper(trim(portfolio.fund_id))) = link.hk_fund
+        ON portfolio.portfolio_id = link.portfolio_id
+        AND portfolio.fund_id = link.fund_id
     WHERE portfolio.portfolio_id <> -1 
-)
-
+),
+final_attributes as (
 SELECT
-    hk_portfolio,
     hk_link,
     portfolio_name,
     portfolio_entity_status,
@@ -75,6 +73,9 @@ SELECT
     start_eff_date as effective_from,
     end_eff_date as effective_to,
     active_ind as is_active,
-    {{ encoded_hashed_row() }} as skey,
     load_dt,
 FROM attributes
+)
+
+{{ append_hk_key_column('final_attributes') }}
+

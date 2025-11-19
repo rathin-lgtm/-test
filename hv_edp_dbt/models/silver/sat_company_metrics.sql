@@ -42,12 +42,14 @@ daily_metrics as (
     JOIN {{ ref('hub_company') }} hub_original
         ON metrics.original_company_id = hub_original.company_id 
     GROUP BY date_id, hub.hk_company, hub_original.hk_company
-)
+),
+
+final_metrics as (
 SELECT
     {{ to_date('date_id') }} as as_of_date,
     hk_company,
     hk_company_original,
-    {{ encoded_hashed_row() }} as hk_company_metric,
+    load_dt,
     {{ company_rollup('company_realized_value') }} as realized_value, 
     {{ company_rollup('company_current_value') }} as current_value, 
     {{ company_rollup('company_total_value') }} as total_value, 
@@ -60,3 +62,6 @@ SELECT
         ELSE total_value / total_cost
     END as tvtc,
 FROM daily_metrics
+)
+
+{{ append_hk_key_column('final_metrics') }}

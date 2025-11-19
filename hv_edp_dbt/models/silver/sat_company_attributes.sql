@@ -25,16 +25,4 @@ with attributes as (
         ON company.company_id = hub.company_id 
 )
 
-SELECT
-hk_company,
-company_name,
-company_currency,
-company_status,
-company_business_description,
-company_geography_broad,
-company_geography_country,
-company_industry_category,
-company_industry_broad,
-company_industry,
-{{ encoded_hashed_row() }} as skey
-FROM attributes
+{{ append_hk_key_column('attributes') }}

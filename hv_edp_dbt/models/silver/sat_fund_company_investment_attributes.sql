@@ -20,7 +20,4 @@ with attributes as (
         AND company_valuation.fund_id = link.fund_id
 )
 
-SELECT
-a.*,
-{{ encoded_hashed_row() }} as skey
-FROM attributes a
+{{ append_hk_key_column('attributes') }}
