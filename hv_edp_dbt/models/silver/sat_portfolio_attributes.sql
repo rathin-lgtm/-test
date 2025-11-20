@@ -22,10 +22,7 @@ with attributes as (
             WHEN manager.manager_id = -1 THEN 'HarbourVest Partners'
             ELSE LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(manager.manager_name, CHAR(10), ''), CHAR(34),''''), CHAR(13), ''), CHAR(9), ''), CHAR(160), '')))
         END as portfolio_manager,
-        CURRENT_TIMESTAMP() as load_dt,
-        portfolio.start_eff_date,
-        portfolio.end_eff_date,
-        portfolio.active_ind
+        CURRENT_TIMESTAMP() as load_dt
     FROM
         {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} portfolio
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_type_broad') }} type_broad
@@ -70,10 +67,7 @@ SELECT
     portfolio_stage_broad,
     portfolio_stage,
     portfolio_manager,
-    start_eff_date as effective_from,
-    end_eff_date as effective_to,
-    active_ind as is_active,
-    load_dt,
+    load_dt
 FROM attributes
 )
 

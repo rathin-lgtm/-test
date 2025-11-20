@@ -8,10 +8,7 @@ with attributes as (
         {{ to_date('aiv_fund.lock_date') }} as fund_investor_presentation_aiv_lock_date,
         aiv_fund.fund_type_e_id as fund_investor_presentation_aiv_type_efront,
         {{ to_date('fund.lock_date') }} as fund_lock_date,
-        CURRENT_TIMESTAMP() as load_dt,
-        fund.start_eff_date,
-        fund.end_eff_date,
-        fund.active_ind
+        CURRENT_TIMESTAMP() as load_dt
     FROM 
         {{ source('bronze_from_harborview_edw', 'dim_fund') }} fund
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} c
@@ -33,10 +30,7 @@ SELECT
     fund_investor_presentation_aiv_lock_date,
     fund_investor_presentation_aiv_type_efront,
     fund_lock_date,
-    load_dt,
-    start_eff_date as effective_from,
-    end_eff_date as effective_to,
-    active_ind as is_active
+    load_dt
 FROM attributes
 ORDER BY hk_fund
 )
