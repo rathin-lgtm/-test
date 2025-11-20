@@ -8,18 +8,18 @@ models:
     description: "DV Hub for Funds"
     columns:
       - name: hk_fund
-        description: "sha256(upper(trim(efront_fund_id)))"
+        description: "sha256(upper(trim(fund_id)))"
         data_tests: [not_null, unique]
-      - name: efront_fund_id
+      - name: fund_id
         data_tests: [not_null, unique]
 
   - name: hub_investor
     description: "DV Hub for Investors"
     columns:
       - name: hk_investor
-        description: "sha256(upper(trim(efront_investor_id)))"
+        description: "sha256(upper(trim(investor_id)))"
         data_tests: [not_null, unique]
-      - name: efront_investor_id
+      - name: investor_id
         data_tests: [not_null, unique]
 
   - name: hub_portfolio
@@ -28,52 +28,8 @@ models:
       - name: hk_portfolio
         description: "sha256(upper(trim(portfolio_id)))"
         data_tests: [not_null, unique]
-
-# ================
-# SATELLITES
-# ================
-
-  - name: sat_fund_attributes
-    description: "Slowly changing descriptive attributes at fund level"
-    columns:
-      - name: skey
-        description: "sha256(hk_fund || fund_name || fund_currency || fund_investor_presentation_aiv || fund_investor_presentation_aiv_lock_date || fund_investor_presentation_aiv_type_efront || fund_efront_iqid || fund_lock_date)"
+      - name: portfolio_id
         data_tests: [not_null, unique]
-      - name: hk_fund
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
-
-  - name: sat_fund_metrics
-    description: "Snapshot metrics per fund & as_of_date"
-    columns:
-      - name: skey
-        description: "sha256(as_of_date || metric_currency_code || total_value || nav || tvpi || dpi || irr_gross || irr_net || distributions || contributions || commitments || capital_called || gain_loss || pme_irr_1 || pme_irr_2 || pme_irr_msciaw )"
-        data_tests: [not_null, unique]
-      - name: hk_fund
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
-
-  - name: sat_portfolio_metrics
-    description: "Snapshot metrics per portfolio & as_of_date"
-    columns:
-      - name: skey
-        data_tests: [not_null, unique]
-      - name: hk_portfolio
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
-
-  - name: sat_portfolio_attributes
-    description: "Slowly changing descriptive attributes at portfolio level"
-    columns:
-      - name: skey
-        data_tests: [not_null, unique]
-      - name: hk_portfolio
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_portfolio'), field: hk_portfolio}
 
 # ================
 # LINKS
@@ -84,5 +40,93 @@ models:
     description: "DV Link for Portfolios and Funds"
     columns:
       - name: hk_link
-        description: "sha256(upper(trim(portfolio_id+fund_id)))"
+        description: "sha2(hk_portfolio || hk_fund) "
         data_tests: [not_null, unique]
+
+  - name: link_fund_company
+    description: "DV Link for Funds and Companies"
+    columns:
+      - name: hk_link
+        description: "sha2(hk_company || hk_fund) "
+        data_tests: [not_null, unique]
+
+# ================
+# SATELLITES
+# ================
+
+  - name: sat_fund_attributes
+    description: "Slowly changing descriptive attributes at fund level"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_fund
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_fund'), field: hk_fund}
+
+  - name: sat_fund_metrics
+    description: "Snapshot metrics per fund & as_of_date"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_fund
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_fund'), field: hk_fund}
+
+  - name: sat_portfolio_metrics
+    description: "Snapshot metrics per portfolio & as_of_date"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
+
+  - name: sat_portfolio_attributes
+    description: "Slowly changing descriptive attributes at portfolio level"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
+
+  - name: sat_company_attributes
+    description: "Slowly changing descriptive attributes at company level"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_company
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_company'), field: hk_company}
+
+  - name: sat_fund_company_investment_attributes
+    description: "Slowly changing descriptive attributes at company fund level"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_fund_company'), field: hk_link}
+
+  - name: sat_company_metrics
+    description: "Snapshot metrics per portfolio & as_of_date"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_company
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_company'), field: hk_company}

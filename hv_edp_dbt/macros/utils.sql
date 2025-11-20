@@ -4,6 +4,20 @@
 {% endmacro %}
 
 
-{% macro encoded_hashed_row() %}
-    HEX_ENCODE(TO_CHAR(HASH(OBJECT_CONSTRUCT_KEEP_NULL(* EXCLUDE (load_dt)))))
+{% macro append_hk_key_column(cte_name) %}
+    SELECT t.*,
+    HEX_ENCODE(TO_CHAR(HASH(OBJECT_CONSTRUCT_KEEP_NULL(* EXCLUDE (load_dt))))) as hk_key
+    from {{ cte_name }} t
+{% endmacro %}
+
+{% macro indicator_yes_no(indicator_col) %}
+    CASE 
+        WHEN {{ indicator_col }} = 1 THEN 'Yes'
+        WHEN {{ indicator_col }} = 0 THEN 'No'
+        ELSE 'Unknown'
+    END
+{% endmacro %}
+
+{% macro hk(column) %}
+    sha2(upper(trim({{ column }})))
 {% endmacro %}

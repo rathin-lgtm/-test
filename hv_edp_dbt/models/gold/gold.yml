@@ -14,3 +14,8 @@ models:
     columns:
       - name: as_of_date
         tests: [not_null]
+  - name: gold_company_metrics
+    description: "Gold Company Metrics"
+    columns:
+      - name: as_of_date
+        tests: [not_null]

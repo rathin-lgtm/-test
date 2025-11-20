@@ -27,8 +27,6 @@ SELECT
     commitments as portfolio_commitments,
     calls as portfolio_calls
 FROM {{ ref('sat_portfolio_metrics') }} metrics
-JOIN {{ ref('hub_portfolio') }} hub
-    ON metrics.hk_portfolio = hub.hk_portfolio
 JOIN {{ ref('sat_portfolio_attributes') }} attributes
     ON metrics.hk_link = attributes.hk_link
 ORDER BY as_of_date

@@ -79,10 +79,11 @@ xirrs as (
         {{ target.database }}.{{ this.schema }}.xirr(amount_10_year, cashflow_date, -0.01) * max(ten_year_cashflow_ind) as irr_10_year
     FROM cashflows
     GROUP BY fund_id, currency_id, date_id
-)
+),
+final_metrics as (
 SELECT 
     {{ to_date('d.date_id') }} as as_of_date,
-    sha2(upper(trim(fid.source_table_col_val))) as hk_fund,
+    hub.hk_fund,
     c.currency_code as metric_currency_code,
     {{ fund_rollup('nav') }} as lp_nav,
     {{ fund_rollup('tvpi') }} as tvpi,
@@ -118,14 +119,15 @@ SELECT
         ORDER BY d.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) as irr_10_year,
-    HEX_ENCODE(HASH(as_of_date, hk_fund, currency_code, nav, tvpi, distributions, contributions, total_value, commitments, capital_called, gain_loss, irr, irr_1_year, irr_3_year, irr_5_year, irr_10_year)) as skey,
-    load_dt,
-    record_source
+    d.load_dt,
 FROM (daily_metrics) d
 JOIN {{ source('bronze_from_harborview_edw', 'currency') }} c
     ON d.currency_id = c.currency_id
-JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
-    ON d.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
 LEFT OUTER JOIN xirrs x
     ON x.fund_id = d.fund_id AND d.date_id = x.date_id AND d.currency_id = x.currency_id
+JOIN {{ ref('hub_fund') }} hub
+    ON d.fund_id = hub.fund_id
 ORDER BY as_of_date
+)
+
+{{ append_hk_key_column('final_metrics') }}
