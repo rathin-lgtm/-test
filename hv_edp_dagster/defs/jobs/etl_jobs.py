@@ -3,7 +3,6 @@ from pathlib import Path
 import yaml
 from dagster import define_asset_job
 
-from hv_edp_dagster.constants import ETLJobs, GoldModels
 from hv_edp_dagster.utils import get_dbt_project_dir, select_gold_asset_with_upstream
 
 
@@ -25,17 +24,3 @@ all_etl_jobs = [
     )
     for model_name in load_gold_definitions()
 ]
-
-fund_metrics_etl_job = define_asset_job(
-    name=ETLJobs.fund_metrics, selection=select_gold_asset_with_upstream(GoldModels.fund_metrics)
-)
-
-portfolio_metrics_etl_job = define_asset_job(
-    name=ETLJobs.portfolio_metrics,
-    selection=select_gold_asset_with_upstream(GoldModels.portfolio_metrics),
-)
-
-company_metrics_etl_job = define_asset_job(
-    name=ETLJobs.company_metrics,
-    selection=select_gold_asset_with_upstream(GoldModels.company_metrics),
-)

@@ -30,8 +30,6 @@ JOIN {{ ref('sat_company_attributes') }} company
     ON metrics.hk_company = company.hk_company
 JOIN {{ ref('sat_company_attributes') }} company_original
     ON metrics.hk_company_original = company_original.hk_company
-JOIN {{ ref('link_fund_company') }} link
-    ON metrics.hk_company = link.hk_company
 JOIN {{ ref('sat_fund_company_investment_attributes') }} investment_attributes
-    ON link.hk_link = investment_attributes.hk_link
+    ON metrics.hk_link = investment_attributes.hk_link
     AND metrics.as_of_date = investment_attributes.as_of_date

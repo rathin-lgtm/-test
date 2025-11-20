@@ -14,6 +14,7 @@ WITH fund_hier_ownership as (
 company_metrics as (
     SELECT
         cv.date_id,
+        cv.fund_id,
         cv.company_id,
         cv.original_company_id,
         cv.currency_id,
@@ -26,6 +27,7 @@ company_metrics as (
 daily_metrics as (
     SELECT
         hub.hk_company,
+        link.hk_link,
         hub_original.hk_company as hk_company_original,
         date_id,
         {{ company_realized_value('metric_id', 'hier_amount') }} as company_realized_value,
@@ -41,12 +43,16 @@ daily_metrics as (
         ON metrics.company_id = hub.company_id 
     JOIN {{ ref('hub_company') }} hub_original
         ON metrics.original_company_id = hub_original.company_id 
-    GROUP BY date_id, hub.hk_company, hub_original.hk_company
+    JOIN {{ ref('link_fund_company') }} link
+        ON metrics.fund_id = link.fund_id
+        and metrics.company_id = link.company_id
+    GROUP BY date_id, hub.hk_company, hub_original.hk_company, link.hk_link
 ),
 
 final_metrics as (
 SELECT
     {{ to_date('date_id') }} as as_of_date,
+    hk_link,
     hk_company,
     hk_company_original,
     load_dt,
