@@ -90,3 +90,4 @@ schedules/
 storage/
 .logs_queue/
 .nux/
+*.concurrent-update-lock

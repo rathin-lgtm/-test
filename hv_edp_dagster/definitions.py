@@ -9,10 +9,7 @@ from dagster_dbt import DbtCliResource
 from hv_edp_dagster.constants import SNOWFLAKE_CONFIG_DATA, Environments
 from hv_edp_dagster.constants import SnowflakeEnv as sf
 from hv_edp_dagster.defs import assets
-from hv_edp_dagster.defs.jobs.etl_jobs import (
-    fund_metrics_etl_job,
-    portfolio_metrics_etl_job,
-)
+from hv_edp_dagster.defs.jobs.etl_jobs import all_etl_jobs
 from hv_edp_dagster.defs.jobs.infra_jobs import destroy_infra_job, provision_infra_job
 from hv_edp_dagster.defs.resources import JobConfig, SnowflakeConfig
 from hv_edp_dagster.defs.sensors import connection_cleanup_sensors, new_file_sensors
@@ -62,7 +59,7 @@ def get_resources():
 defs = Definitions(
     assets=load_assets_from_package_module(package_module=assets),
     resources=get_resources(),
-    jobs=[provision_infra_job, destroy_infra_job, fund_metrics_etl_job, portfolio_metrics_etl_job],
+    jobs=[*all_etl_jobs, provision_infra_job, destroy_infra_job],
     sensors=[*new_file_sensors, *connection_cleanup_sensors],
     executor=in_process_executor if sf.IS_LOCAL_ENVIRONMENT else multiprocess_executor,
 )

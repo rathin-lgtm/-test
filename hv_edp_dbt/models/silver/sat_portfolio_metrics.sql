@@ -104,10 +104,9 @@ xirrs as (
         ON irrs.currency_id = currency.currency_id
 ),
 
-combined as (
+final_metrics as (
 SELECT 
     monthly.as_of_date,
-    hk_portfolio,
     hk_link,
     monthly.currency_code as metric_currency_code,
     distributions,
@@ -129,10 +128,9 @@ SELECT
     LEFT JOIN xirrs
         ON monthly.portfolio_id = xirrs.portfolio_id AND xirrs.as_of_date = monthly.as_of_date and xirrs.currency_code = monthly.currency_code and xirrs.fund_id = monthly.fund_id
     JOIN {{ ref('link_portfolio_fund') }} link
-        ON sha2(upper(trim(monthly.portfolio_id))) = link.hk_portfolio
-        AND sha2(upper(trim(monthly.fund_id))) = link.hk_fund
+        ON monthly.portfolio_id = link.portfolio_id
+        AND monthly.fund_id = link.fund_id
     ORDER BY as_of_date
 )
 
-SELECT *, {{ encoded_hashed_row() }} as hk_key,  from combined
-ORDER BY as_of_date
+{{ append_hk_key_column('final_metrics') }}

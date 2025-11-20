@@ -1,6 +1,5 @@
 with attributes as (
     SELECT 
-        hk_portfolio,
         hk_link,
         currency.name as portfolio_currency,
         portfolio.portfolio_close_year,
@@ -24,9 +23,6 @@ with attributes as (
             ELSE LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(manager.manager_name, CHAR(10), ''), CHAR(34),''''), CHAR(13), ''), CHAR(9), ''), CHAR(160), '')))
         END as portfolio_manager,
         CURRENT_TIMESTAMP() as load_dt
-       -- portfolio.start_eff_date,
-        --portfolio.end_eff_date,
-        --portfolio.active_ind
     FROM
         {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} portfolio
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_type_broad') }} type_broad
@@ -46,13 +42,12 @@ with attributes as (
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON portfolio.portfolio_currency_id = currency.currency_id
     JOIN {{ ref('link_portfolio_fund') }} link
-        ON sha2(upper(trim(portfolio.portfolio_id))) = link.hk_portfolio
-        AND sha2(upper(trim(portfolio.fund_id))) = link.hk_fund
+        ON portfolio.portfolio_id = link.portfolio_id
+        AND portfolio.fund_id = link.fund_id
     WHERE portfolio.portfolio_id <> -1 
-)
-
+),
+final_attributes as (
 SELECT
-    hk_portfolio,
     hk_link,
     portfolio_name,
     portfolio_entity_status,
@@ -72,6 +67,9 @@ SELECT
     portfolio_stage_broad,
     portfolio_stage,
     portfolio_manager,
-    {{ encoded_hashed_row() }} as hk_key,
     load_dt
 FROM attributes
+)
+
+{{ append_hk_key_column('final_attributes') }}
+

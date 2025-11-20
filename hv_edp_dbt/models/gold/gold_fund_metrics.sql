@@ -23,7 +23,5 @@ SELECT
     lp_contributions as fund_lp_contributions,
     lp_distributions as fund_lp_distributions
 FROM {{ ref('sat_fund_metrics') }} m
-JOIN {{ ref('hub_fund') }} f
-    ON m.hk_fund = f.hk_fund
 JOIN {{ ref('sat_fund_attributes') }} a
     ON m.hk_fund = a.hk_fund
