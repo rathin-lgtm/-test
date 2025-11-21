@@ -1,7 +1,8 @@
-{% macro portfolio_distributions(metric_col, amount_col) %}
+{% macro portfolio_distributions(metric_col, amount_col, type_broad_id_col) %}
     SUM(
         CASE
-            WHEN {{ metric_col }} in (3, 4, 150, 157, 428, 429, 430, 431, 432, 433, 434, 435, 444, 445, 446, 447, 182, 180, 315, 66, 314) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (3, 4, 150, 157, 428, 429, 430, 431, 432, 433, 434, 435, 444, 445, 446, 447, 182, 66, 314) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (180, 315) AND {{type_broad_id_col}} not in (0) THEN {{ amount_col }}
             ELSE 0
         END
     )
