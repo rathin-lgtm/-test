@@ -1,15 +1,12 @@
 WITH fund_hier_ownership as (
     SELECT 
         ivo.L29_id,
-        fspfn.fund_sub_perspective_id,
         ivo.fund_hier_id,
         ivo.fund_hier,
         max(ivo.hier_percentage) as hier_percentage
     FROM {{ source('bronze_from_harborview_edw', 'fund_hiers_pct_hist') }} ivo
-    JOIN {{ source('bronze_from_harborview_edw', 'fact_fund_sub_perspective_fund_network_paths') }} fspfn ON
-        ivo.fund_hier_id = fspfn.fund_hier_id
-    WHERE ivo.ownership_quarter_seq = 0
-    GROUP BY ivo.L29_id, fspfn.fund_sub_perspective_id, ivo.fund_hier_id, ivo.fund_hier
+    WHERE ivo.ownership_quarter_seq = 0 AND ivo.active_ind = 1
+    GROUP BY ivo.L29_id, ivo.fund_hier_id, ivo.fund_hier
 ),
 company_metrics as (
     SELECT

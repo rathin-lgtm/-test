@@ -2,6 +2,7 @@ SELECT
     as_of_date,
     efront_fund_id,
     fund_name,
+    fund_sub_perspective_name,
     fund_currency,
     metric_currency_code as metric_currency,
     fund_lock_date,

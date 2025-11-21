@@ -4,7 +4,7 @@
 ) }}
 
 with lp_investor_txns as (
-    SELECT * FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} WHERE investor_type = 'LP'
+    SELECT * FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} WHERE investor_type = 'LP' AND exclude_transaction = 0 AND active_ind = 1
 ),
 daily_metrics as (
     SELECT
