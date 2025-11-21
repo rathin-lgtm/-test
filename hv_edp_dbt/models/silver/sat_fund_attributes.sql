@@ -1,8 +1,15 @@
-with attributes as (
+with sub_perspectives as (
+    -- TODO: To be removed when proper tag system is in place and these sub-perspective attributes are placed somewhere else.
+    SELECT *
+    FROM {{ source('bronze_from_harborview_edw', 'dim_fund_sub_perspective') }}
+    WHERE fund_perspective_view_id = 3 -- SELECT MAIN FUNDS ONLY
+),
+attributes as (
     SELECT
         hub.hk_fund,
         fid.source_table_col_val as efront_fund_id,
         fund.short_name as fund_name,
+        sp.fund_sub_perspective_name,
         c.name as fund_currency,
         aiv_fund.short_name as fund_investor_presentation_aiv,
         {{ to_date('aiv_fund.lock_date') }} as fund_investor_presentation_aiv_lock_date,
@@ -15,24 +22,27 @@ with attributes as (
         ON fund.currency_id = c.currency_id
     JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
         ON fund.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
+    JOIN sub_perspectives sp
+        ON sp.fund_sub_perspective_primary_fund_id = fund.fund_id
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} aiv_fund
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
     JOIN {{ ref('hub_fund') }} hub
         ON fund.fund_id = hub.fund_id
 ),
 final_attributes as (
-SELECT 
-    hk_fund,
-    efront_fund_id,
-    fund_name,
-    fund_currency,
-    fund_investor_presentation_aiv,
-    fund_investor_presentation_aiv_lock_date,
-    fund_investor_presentation_aiv_type_efront,
-    fund_lock_date,
-    load_dt
-FROM attributes
-ORDER BY hk_fund
+    SELECT 
+        hk_fund,
+        efront_fund_id,
+        fund_name,
+        fund_sub_perspective_name,
+        fund_currency,
+        fund_investor_presentation_aiv,
+        fund_investor_presentation_aiv_lock_date,
+        fund_investor_presentation_aiv_type_efront,
+        fund_lock_date,
+        load_dt
+    FROM attributes
+    ORDER BY hk_fund
 )
 
 {{ append_hk_key_column('final_attributes') }}
