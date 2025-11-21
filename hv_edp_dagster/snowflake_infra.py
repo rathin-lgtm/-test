@@ -123,19 +123,21 @@ class FileFormats(Enum):
 ALL_FILE_FORMATS = [file_format.value for file_format in FileFormats]
 
 
-def load_bronze_table_definition_fron_dbt() -> list[Table]:
+def load_bronze_table_definition_from_dbt() -> list[Table]:
     try:
         config_path = Path(get_dbt_project_dir(), "models", "sources.yml")
         with open(config_path) as f:
             config_data = yaml.safe_load(f)
         table_definitions = []
         for source in config_data["sources"]:
+            source_db=Sources[source["meta"]["source_db"]].value
+            file_format=FileFormats[source["meta"]["source_file_format"]].value
             for table in source["tables"]:
                 table_definitions.append(
                     Table(
                         name=table["name"].upper(),
-                        source=Sources[source["meta"]["source_db"]].value,
-                        file_format=FileFormats[source["meta"]["source_file_format"]].value,
+                        source=source_db,
+                        file_format=file_format,
                     )
                 )
         return table_definitions
@@ -143,4 +145,4 @@ def load_bronze_table_definition_fron_dbt() -> list[Table]:
         raise Exception("Error loading sources.yml occured, make sure it has valid data.")
 
 
-ALL_TABLES = load_bronze_table_definition_fron_dbt()
+ALL_TABLES = load_bronze_table_definition_from_dbt()
