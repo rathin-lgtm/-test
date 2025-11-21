@@ -30,6 +30,15 @@ models:
         data_tests: [not_null, unique]
       - name: portfolio_id
         data_tests: [not_null, unique]
+  
+  - name: hub_holding
+    description: "DV Hub for Holdings"
+    columns: 
+      - name: hk_holding
+        description: "sha256(upper(trim(holding_id)))"
+        data_tests: [not_null, unique]
+      - name: holding_id
+        data_tests: [not_null]
 
 # ================
 # LINKS
@@ -130,3 +139,25 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('hub_company'), field: hk_company}
+
+  - name: sat_holding_attributes
+    description: "Slowly changing descriptive attributes at holding level"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_holding
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_holding'), field: hk_holding}
+  
+  - name: sat_holding_metrics
+    description: "Snapshot metrics per holding & as_of_date"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_holding
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_holding'), field: hk_holding}

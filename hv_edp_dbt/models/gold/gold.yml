@@ -19,3 +19,8 @@ models:
     columns:
       - name: as_of_date
         tests: [not_null]
+  - name: gold_holding_metrics
+    description: "Gold Holding Metrics"
+    columns:
+      - name: as_of_date
+        tests: [not_null]

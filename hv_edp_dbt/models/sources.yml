@@ -99,6 +99,11 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_fact_irr_investment_fund_hierarchy']
+          - name: dim_holdings
+            description: DIM_HOLDINGS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_holdings']
           - name: company
             description: COMPANY loaded from Harbourview EDW
             meta:
