@@ -5,7 +5,7 @@ with monthly_metrics as (
     transactions_monthly.portfolio_id,
     transactions_monthly.fund_id,
     currency.currency_code,
-    {{ portfolio_distributions('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount') }} as distributions,
+    {{ portfolio_distributions('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount', 'dim_portfolios.type_broad_id') }} as distributions,
     {{ portfolio_debt_borrowed('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount') }} +
     {{ portfolio_calls_unlevered('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount') }} +
     {{ portfolio_debt_deferred('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount') }} as calls,
