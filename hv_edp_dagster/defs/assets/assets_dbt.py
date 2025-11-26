@@ -1,4 +1,4 @@
-from dagster import AssetExecutionContext, AssetMaterialization
+from dagster import AssetExecutionContext, Output
 from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets
 
 from hv_edp_dagster.constants import DbtArguments
@@ -18,25 +18,24 @@ def dbt_project_dbt_assets(
     context.log.info(f"Running dbt with args: {dbt_build_args}")
     try:
         invocation = dbt.cli(dbt_build_args, context=context)
-        dbt_events = list(invocation.stream_raw_events())
-        dagster_events = [
-            dagster_event
-            for dbt_event in dbt_events
-            for dagster_event in dbt_event.to_default_asset_events(manifest=invocation.manifest)
-        ]
-        run_results = invocation.get_artifact("run_results.json")
-        manifest = invocation.get_artifact("manifest.json")
-        results_by_asset_key = {
-            dagster_dbt_translator.get_asset_key(manifest["nodes"][result["unique_id"]]): result
-            for result in run_results["results"]
-        }
+        dagster_events = list(invocation.stream())
+        try:
+            run_results = invocation.get_artifact("run_results.json")
+            compiled_code_by_unique_id = {
+                result["unique_id"]: result.get("compiled_code")
+                for result in run_results["results"]
+            }
+        except Exception as e:
+            context.log.error(f"Failed to get run_results.json: {e}")
         for dagster_event in dagster_events:
-            if isinstance(dagster_event, AssetMaterialization):
-                asset_result = results_by_asset_key[dagster_event.asset_key]
-                context.log.info(
-                    f"Compiled code: {asset_result.get('compiled_code',
-                                                       'No compiled code available')}."
-                )
+            try:
+                if isinstance(dagster_event, Output):
+                    compiled_code = compiled_code_by_unique_id.get(
+                        dagster_event.metadata["unique_id"].text, "No compiled code available"
+                    )
+                    context.log.info(f"Compiled code: {compiled_code}")
+            except Exception as e:
+                context.log.error(f"Failed to log compiled code: {e}")
             yield dagster_event
         context.log.info("Dbt build completed successfully")
     except Exception as e:
