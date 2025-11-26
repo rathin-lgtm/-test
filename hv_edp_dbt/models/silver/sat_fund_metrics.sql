@@ -15,14 +15,6 @@ daily_metrics as (
     {{ fund_distributions('t.metric_id', 't.amount') }} as distributions,
     {{ fund_contributions('t.metric_id', 't.amount') }} as contributions,
     nav + distributions as total_value,
-    CASE 
-        WHEN contributions = 0 THEN 0
-        ELSE total_value / contributions
-    END as tvpi,
-    CASE 
-        WHEN contributions = 0 THEN 0
-        ELSE distributions / contributions
-    END as dpi,
     {{ fund_commitments('t.metric_id', 't.amount') }} as commitments,
     contributions + {{ capital_called_add_term('t.metric_id', 't.amount') }} as capital_called,
     total_value - contributions as gain_loss,
