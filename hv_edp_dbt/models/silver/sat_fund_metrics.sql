@@ -86,11 +86,17 @@ SELECT
     hub.hk_fund,
     c.currency_code as metric_currency_code,
     {{ fund_rollup('nav') }} as lp_nav,
-    {{ fund_rollup('tvpi') }} as tvpi,
-    {{ fund_rollup('dpi') }} as dpi,
     {{ fund_rollup('distributions') }} as lp_distributions,
     {{ fund_rollup('contributions') }} as lp_contributions,
     {{ fund_rollup('total_value') }} as lp_total_value,
+    CASE 
+        WHEN lp_contributions = 0 THEN 0
+        ELSE lp_total_value / lp_contributions
+    END as tvpi,
+    CASE 
+        WHEN lp_contributions = 0 THEN 0
+        ELSE lp_distributions / lp_contributions
+    END as dpi,
     {{ fund_rollup('commitments') }} as lp_commitments,
     {{ fund_rollup('capital_called') }} as lp_capital_called,
     {{ fund_rollup('gain_loss') }} as gain_loss,
