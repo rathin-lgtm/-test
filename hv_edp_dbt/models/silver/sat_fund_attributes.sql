@@ -22,7 +22,7 @@ attributes as (
         ON fund.currency_id = c.currency_id
     JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
         ON fund.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
-    JOIN sub_perspectives sp
+    LEFT JOIN sub_perspectives sp
         ON sp.fund_sub_perspective_primary_fund_id = fund.fund_id
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} aiv_fund
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
