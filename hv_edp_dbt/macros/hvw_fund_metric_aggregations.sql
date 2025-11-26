@@ -83,10 +83,6 @@
     END
 {% endmacro %}
 
-{% macro irr_currency_ids() %}
-8, 10
-{% endmacro %}
-
 {% macro irr_cashflow_metric_ids() %}
 217, 218, 227
 {% endmacro %}
