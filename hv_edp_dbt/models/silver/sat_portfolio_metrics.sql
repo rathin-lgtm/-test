@@ -113,7 +113,7 @@ SELECT
     calls,
     dpi,
     commitments,
-    debt_balance_no_directs + COALESCE(nav_no_deb_balance, 0) as nav,
+    debt_balance_no_directs + COALESCE( {{ portfolio_rollup('nav_no_deb_balance') }}, 0) as nav,
     COALESCE(distributions + nav, 0) as total_value,
     CASE 
         WHEN calls = 0 THEN 0
