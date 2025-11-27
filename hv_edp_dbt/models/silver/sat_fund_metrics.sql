@@ -15,14 +15,6 @@ daily_metrics as (
     {{ fund_distributions('t.metric_id', 't.amount') }} as distributions,
     {{ fund_contributions('t.metric_id', 't.amount') }} as contributions,
     nav + distributions as total_value,
-    CASE 
-        WHEN contributions = 0 THEN 0
-        ELSE total_value / contributions
-    END as tvpi,
-    CASE 
-        WHEN contributions = 0 THEN 0
-        ELSE distributions / contributions
-    END as dpi,
     {{ fund_commitments('t.metric_id', 't.amount') }} as commitments,
     contributions + {{ capital_called_add_term('t.metric_id', 't.amount') }} as capital_called,
     total_value - contributions as gain_loss,
@@ -86,11 +78,17 @@ SELECT
     hub.hk_fund,
     c.currency_code as metric_currency_code,
     {{ fund_rollup('nav') }} as lp_nav,
-    {{ fund_rollup('tvpi') }} as tvpi,
-    {{ fund_rollup('dpi') }} as dpi,
     {{ fund_rollup('distributions') }} as lp_distributions,
     {{ fund_rollup('contributions') }} as lp_contributions,
     {{ fund_rollup('total_value') }} as lp_total_value,
+    CASE 
+        WHEN lp_contributions = 0 THEN 0
+        ELSE lp_total_value / lp_contributions
+    END as tvpi,
+    CASE 
+        WHEN lp_contributions = 0 THEN 0
+        ELSE lp_distributions / lp_contributions
+    END as dpi,
     {{ fund_rollup('commitments') }} as lp_commitments,
     {{ fund_rollup('capital_called') }} as lp_capital_called,
     {{ fund_rollup('gain_loss') }} as gain_loss,
