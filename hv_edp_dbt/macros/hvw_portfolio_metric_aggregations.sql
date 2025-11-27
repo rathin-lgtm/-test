@@ -1,12 +1,3 @@
-{% macro portfolio_rollup(col) %}
-    SUM({{ col }}) OVER (
-        PARTITION BY hk_link, metric_currency_code
-        ORDER BY monthly.as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    )
-{% endmacro %}
-
-
 {% macro portfolio_distributions(metric_col, amount_col, type_broad_id_col) %}
     SUM(
         CASE

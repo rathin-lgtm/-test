@@ -1,5 +1,6 @@
 SELECT
     as_of_date,
+    fund_id,
     efront_fund_id,
     fund_name,
     fund_sub_perspective_name,
@@ -26,3 +27,5 @@ SELECT
 FROM {{ ref('sat_fund_metrics') }} m
 JOIN {{ ref('sat_fund_attributes') }} a
     ON m.hk_fund = a.hk_fund
+JOIN {{ ref('hub_fund') }} hub
+    ON m.hk_fund = hub.hk_fund
