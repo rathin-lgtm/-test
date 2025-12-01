@@ -1,7 +1,10 @@
 SELECT
     as_of_date,
+    portfolio_id,
+    fund_id,
     portfolio_name,
     portfolio_close_year,
+    portfolio_disclosure_level,
     portfolio_commitment_year,
     metric_currency_code as metric_currency,
     portfolio_currency,
@@ -29,4 +32,6 @@ SELECT
 FROM {{ ref('sat_portfolio_metrics') }} metrics
 JOIN {{ ref('sat_portfolio_attributes') }} attributes
     ON metrics.hk_link = attributes.hk_link
+JOIN {{ ref('link_portfolio_fund') }} link
+    ON metrics.hk_link = link.hk_link
 ORDER BY as_of_date
