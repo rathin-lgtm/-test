@@ -156,6 +156,15 @@
     )
 {% endmacro %}
 
+{% macro Investor_Distribution_in_Total_ExcludeTotal_Transfers_Transactions_(metric_col, amount_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (40,41,42,43,44,45,46,47,48,49,52,56,60,63,186,187,188,189,210,211) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
 
 
 
