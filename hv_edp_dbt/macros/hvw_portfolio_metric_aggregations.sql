@@ -57,8 +57,8 @@
 {% macro portfolio_nav_no_deb_balance(metric_col, amount_col, asset_type_id_col) %}
     SUM(
         CASE
-            WHEN {{ metric_col }} in (257, 262, 261, 453, 452, 466, 468, 472) THEN {{ amount_col }} /*CALCPORTFOLIONAVCURRENTVALUEOFDEAL, CALCPORTFOLIONAVCURRENTVALUEOFDEALROLLFORWARDPORTION, calcportfolioofficialnavcurrerntvalueofdeal, calcportfolioHGPSMonthlynavcurrentvalueofdeal, calcportfolioNAVdebtbalance */
-            WHEN {{ metric_col }} in (263) THEN -1*{{ amount_col }} 
+            WHEN {{ metric_col }} in (257, 261, 453, 452, 466, 468, 472) THEN {{ amount_col }} /*CALCPORTFOLIONAVCURRENTVALUEOFDEAL, CALCPORTFOLIONAVCURRENTVALUEOFDEALROLLFORWARDPORTION, calcportfolioofficialnavcurrerntvalueofdeal, calcportfolioHGPSMonthlynavcurrentvalueofdeal, calcportfolioNAVdebtbalance */
+            WHEN {{ metric_col }} in (262, 263) THEN -1*{{ amount_col }} 
             WHEN {{ metric_col }} in (256) AND {{asset_type_id_col}} in (1, 5) THEN {{ amount_col }} /* CurrentvalueofDirect,  calcportfolionavcurrentvalueofAffiliatefund*/
             ELSE 0
         END
