@@ -53,7 +53,7 @@ SELECT
     portfolio_entity_status,
     portfolio_currency,
     portfolio_close_year,
-    portfolio_commitment_year,
+    COALESCE(portfolio_commitment_year, 0) as portfolio_commitment_year,
     portfolio_disclosure_level,
     type_broad_id,
     type_broad_desc,
