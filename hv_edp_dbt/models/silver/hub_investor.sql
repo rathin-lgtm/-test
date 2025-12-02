@@ -1,11 +1,9 @@
-with distinct_investor_ids as (
-    SELECT distinct(investor_id), file_name
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }}
+with investments as (
+    select * from {{ source('bronze_from_harborview_edw', 'dim_investor') }}
 )
 
-SELECT 
-    {{ hk('investor_id') }} as hk_investor,
-    investor_id,
+select distinct {{ hk('investor_name_id') }} as hk_investor,
+    investor_name_id as investor_id,
     CURRENT_TIMESTAMP() as load_dt,
-    file_name as record_source
-FROM distinct_investor_ids 
+    investments.file_name as record_source
+    from investments
