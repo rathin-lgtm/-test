@@ -1,146 +1,147 @@
-With distribution_transactions as(
+WITH distribution_transactions AS(
     SELECT hk_link,
     inv_tr.date_id,
         cal_q.quarter_id,
         cal_q.quarter_desc,
         cal_q.quarter_counter,       
         inv_tr.currency_id,
-        {{ Investor_Distribution_in_Total_excludeTotal_Transfers_Transaction('inv_tr.metric_id', 'inv_tr.amount') }} +
-        {{ Investor_Distribution_Adjustment_Transaction('inv_tr.metric_id', 'inv_tr.amount') }}  as Transaction_Amount,
-        'INVESTOR_DISTRIBUTION' as transaction_type,
-        CURRENT_TIMESTAMP() as load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} as inv_tr
-    JOIN    {{ ref('link_fund_investor_transaction') }} as link 
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} as cal_q
+        {{ investor_distribution_in_total_exclude_total_transfers_transaction('inv_tr.metric_id', 'inv_tr.amount') }} +
+        {{ investor_distribution_adjustment_transaction('inv_tr.metric_id', 'inv_tr.amount') }}  AS transaction_amount,
+        'INVESTOR_DISTRIBUTION' AS transaction_type,
+        CURRENT_TIMESTAMP() AS load_dt
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    JOIN    {{ ref('link_fund_investor_transaction') }} AS link 
+        ON Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
-    AND dim_fund.type not in ('Third Party Investor')
+    AND dim_fund.type NOT IN ('Third Party Investor')
     GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
 ),
-contribution_transactions as(
+contribution_transactions AS(
     SELECT hk_link,
     inv_tr.date_id,
         cal_q.quarter_id,
         cal_q.quarter_desc,
         cal_q.quarter_counter,       
         inv_tr.currency_id,
-        {{ Investor_Capital_Called_Excludes_Total_Transfers_Transaction('inv_tr.metric_id', 'inv_tr.amount') }} +
-        {{ Investor_Contribution_Adjustment_Transaction('inv_tr.metric_id', 'inv_tr.amount') }}  as Transaction_Amount,
-        'INVESTOR_CONTRIBUTION' as transaction_type,
-        CURRENT_TIMESTAMP() as load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} as inv_tr
-    JOIN    {{ ref('link_fund_investor_transaction') }} as link
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} as cal_q
+        {{ investor_capital_called_excludes_total_transfers_transaction('inv_tr.metric_id', 'inv_tr.amount') }} +
+        {{ investor_contribution_adjustment_transaction('inv_tr.metric_id', 'inv_tr.amount') }}  AS transaction_amount,
+        'INVESTOR_CONTRIBUTION' AS transaction_type,
+        CURRENT_TIMESTAMP() AS load_dt
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    JOIN    {{ ref('link_fund_investor_transaction') }} AS link
+        ON Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
-    AND dim_fund.type not in ('Third Party Investor')
+    AND dim_fund.type NOT IN ('Third Party Investor')
     GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
 ),
-commitment_transactions as(
+commitment_transactions AS(
     SELECT hk_link,
     inv_tr.date_id,
         cal_q.quarter_id,
         cal_q.quarter_desc,
         cal_q.quarter_counter,       
         inv_tr.currency_id,
-        {{ Investor_Transaction_Unfunded('inv_tr.metric_id', 'inv_tr.amount') }} +
-        {{ CALC_Investor_Transaction_Contribution_in_Cap_Adjustment('inv_tr.metric_id', 'inv_tr.amount') }}  as Transaction_Amount,
-        'INVESTOR_COMMITMENT' as transaction_type,
-        CURRENT_TIMESTAMP() as load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} as inv_tr
-    JOIN    {{ ref('link_fund_investor_transaction') }} as link
+        {{ investor_transaction_unfunded('inv_tr.metric_id', 'inv_tr.amount') }} +
+        {{ calc_investor_transaction_contribution_in_cap_adjustment('inv_tr.metric_id', 'inv_tr.amount') }}  +
+        {{ calc_investor_contribution_transactions_in_cap('inv_tr.metric_id', 'inv_tr.amount') }}as transaction_amount,
+        'INVESTOR_COMMITMENT' AS transaction_type,
+        CURRENT_TIMESTAMP() AS load_dt
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    JOIN    {{ ref('link_fund_investor_transaction') }} AS link
         On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} as cal_q
+        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
-    AND dim_fund.type not in ('Third Party Investor')
+    AND dim_fund.type NOT IN ('Third Party Investor')
     GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
 ),
-Investor_Distribution_in_Total_Exclude_Total_Transfers_Transactions as(
+investor_distribution_in_total_exclude_total_transfers_transactions AS(
     SELECT hk_link,
     inv_tr.date_id,
         cal_q.quarter_id,
         cal_q.quarter_desc,
         cal_q.quarter_counter,       
         inv_tr.currency_id,
-        {{ Investor_Distribution_in_Total_ExcludeTotal_Transfers_Transactions_('inv_tr.metric_id', 'inv_tr.amount') }}  as Transaction_Amount,
-        'INVESTOR_DISTRIBUTION_IN_TOTAL_EXCLUDE_TOTAL_TRANSFERS' as transaction_type,
-        CURRENT_TIMESTAMP() as load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} as inv_tr
-    JOIN    {{ ref('link_fund_investor_transaction') }} as link
+        {{ investor_distribution_in_total_exclude_total_transfers_transactions_m('inv_tr.metric_id', 'inv_tr.amount') }}  AS transaction_amount,
+        'INVESTOR_DISTRIBUTION_IN_TOTAL_EXCLUDE_TOTAL_TRANSFERS' AS transaction_type,
+        CURRENT_TIMESTAMP() AS load_dt
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    JOIN    {{ ref('link_fund_investor_transaction') }} AS link
         On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} as cal_q
+        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
-    AND dim_fund.type not in ('Third Party Investor')
+    AND dim_fund.type NOT IN ('Third Party Investor')
     GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
 ),
-Investor_Transfer_of_Interest_Transactions as(
+investor_transfer_of_interest_transactions AS(
     SELECT hk_link,
     inv_tr.date_id,
         cal_q.quarter_id,
         cal_q.quarter_desc,
         cal_q.quarter_counter,       
         inv_tr.currency_id,
-        {{ Investor_Inception_Transferred_Contribution_Component('inv_tr.metric_id', 'inv_tr.amount') }} -
-        {{ Investor_Inception_Transferred_Distribution_Component('inv_tr.metric_id', 'inv_tr.amount') }} +
-        {{ Investor_Inception_Transferred_Income_Expense_Component('inv_tr.metric_id', 'inv_tr.amount') }}  as Transaction_Amount,
-        'INVESTOR_TRANSFER_OF_INTEREST' as transaction_type,
-        CURRENT_TIMESTAMP() as load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} as inv_tr
-    JOIN    {{ ref('link_fund_investor_transaction') }} as link
+        {{ investor_inception_transferred_contribution_component('inv_tr.metric_id', 'inv_tr.amount') }} -
+        {{ investor_inception_transferred_distribution_component('inv_tr.metric_id', 'inv_tr.amount') }} +
+        {{ investor_inception_transferred_income_expense_component('inv_tr.metric_id', 'inv_tr.amount') }}  AS transaction_amount,
+        'INVESTOR_TRANSFER_OF_INTEREST' AS transaction_type,
+        CURRENT_TIMESTAMP() AS load_dt
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    JOIN    {{ ref('link_fund_investor_transaction') }} AS link
         On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} as cal_q
+        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
-    AND dim_fund.type not in ('Third Party Investor')
+    AND dim_fund.type NOT IN ('Third Party Investor')
     GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
 ),
-Investor_Distribution_Net_Transaction as(
+investor_distribution_net_transaction AS(
     SELECT hk_link,
     inv_tr.date_id,
         cal_q.quarter_id,
         cal_q.quarter_desc,
         cal_q.quarter_counter,       
         inv_tr.currency_id,
-        {{ Investor_Distribution_in_Total_excludeTotal_Transfers_Transaction('inv_tr.metric_id', 'inv_tr.amount') }} +
-        {{ Investor_Distribution_Adjustment_Transaction('inv_tr.metric_id', 'inv_tr.amount') }}-
-        {{ Investor_WithHolding_('inv_tr.metric_id', 'inv_tr.amount') }}  as Transaction_Amount,
-        'INVESTOR_DISTRIBUTION_NET_TRANSACTION' as transaction_type,
-        CURRENT_TIMESTAMP() as load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} as inv_tr
-    JOIN    {{ ref('link_fund_investor_transaction') }} as link
+        {{ investor_distribution_in_total_exclude_total_transfers_transaction('inv_tr.metric_id', 'inv_tr.amount') }} +
+        {{ investor_distribution_adjustment_transaction('inv_tr.metric_id', 'inv_tr.amount') }}-
+        {{ investor_withholding_m('inv_tr.metric_id', 'inv_tr.amount') }}  AS transaction_amount,
+        'INVESTOR_DISTRIBUTION_NET_TRANSACTION' AS transaction_type,
+        CURRENT_TIMESTAMP() AS load_dt
+    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    JOIN    {{ ref('link_fund_investor_transaction') }} AS link
         On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} as cal_q
+        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
-    AND dim_fund.type not in ('Third Party Investor')
+    AND dim_fund.type NOT IN ('Third Party Investor')
     GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
 ),
-final_metrics as(
-    Select hk_link,
+final_metrics AS(
+    SELECT hk_link,
     date_id,
-    date_id as as_of_date,
+    date_id AS as_of_date,
         quarter_id,
         quarter_desc,
         quarter_counter,       
@@ -148,11 +149,11 @@ final_metrics as(
         Transaction_Amount,
         transaction_type,
         load_dt
-    From distribution_transactions
-    Union
-    Select hk_link,
+    FROM distribution_transactions
+    UNION
+    SELECT hk_link,
     date_id, 
-    date_id as as_of_date,
+    date_id AS as_of_date,
         quarter_id,
         quarter_desc,
         quarter_counter,       
@@ -160,11 +161,11 @@ final_metrics as(
         Transaction_Amount,
         transaction_type,
         load_dt
-    From contribution_transactions
-    Union
-    Select hk_link,
+    FROM contribution_transactions
+    UNION
+    SELECT hk_link,
     date_id,
-    date_id as as_of_date,
+    date_id AS as_of_date,
         quarter_id,
         quarter_desc,
         quarter_counter,       
@@ -172,11 +173,11 @@ final_metrics as(
         Transaction_Amount,
         transaction_type,
         load_dt
-    From commitment_transactions
-    Union
-    Select hk_link,
+    FROM commitment_transactions
+    UNION
+    SELECT hk_link,
     date_id,
-    date_id as as_of_date,
+    date_id AS as_of_date,
         quarter_id,
         quarter_desc,
         quarter_counter,       
@@ -184,11 +185,11 @@ final_metrics as(
         Transaction_Amount,
         transaction_type,
         load_dt
-    From Investor_Transfer_of_Interest_Transactions
-    Union
-    Select hk_link,
+    FROM investor_transfer_of_interest_transactions
+    UNION
+    SELECT hk_link,
     date_id,
-    date_id as as_of_date,
+    date_id AS as_of_date,
         quarter_id,
         quarter_desc,
         quarter_counter,       
@@ -196,11 +197,11 @@ final_metrics as(
         Transaction_Amount,
         transaction_type,
         load_dt
-    From Investor_Distribution_in_Total_Exclude_Total_Transfers_Transactions
-    Union
-    Select hk_link,
+    FROM investor_distribution_in_total_exclude_total_transfers_transactions
+    UNION
+    SELECT hk_link,
     date_id,
-    date_id as as_of_date,
+    date_id AS as_of_date,
         quarter_id,
         quarter_desc,
         quarter_counter,       
@@ -208,7 +209,7 @@ final_metrics as(
         Transaction_Amount,
         transaction_type,
         load_dt
-    From Investor_Distribution_Net_Transaction
+    FROM investor_distribution_net_transaction
 )
 
 {{ append_hk_key_column('final_metrics') }}

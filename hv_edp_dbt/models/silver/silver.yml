@@ -40,6 +40,13 @@ models:
       - name: holding_id
         data_tests: [not_null]
 
+  - name: hub_investor_transaction
+    description: "DV Hub for Investor Transactions"
+    columns: 
+      - name: hk_investor_transaction
+        description: "sha256(upper(trim(composite_key)))"
+        data_tests: [not_null, unique]
+
 # ================
 # LINKS
 # ================
@@ -57,6 +64,13 @@ models:
     columns:
       - name: hk_link
         description: "sha2(hk_company || hk_fund) "
+        data_tests: [not_null, unique]
+      
+  - name: link_fund_investor_transaction
+    description: "DV Link for Funds and Investor Transactions"
+    columns:
+      - name: hk_link
+        description: "sha2(hk_investor_transaction || hk_fund || hk_investor) "
         data_tests: [not_null, unique]
 
 # ================
@@ -161,3 +175,14 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('hub_holding'), field: hk_holding}
+      
+  - name: sat_investor_daily_transaction
+    description: "Snapshot metrics per transactions daily"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_fund_investor_transaction'), field: hk_link}
