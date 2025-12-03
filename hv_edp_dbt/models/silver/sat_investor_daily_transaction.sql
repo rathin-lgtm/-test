@@ -11,7 +11,7 @@ WITH distribution_transactions AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link 
-        ON Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        ON Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
@@ -34,7 +34,7 @@ contribution_transactions AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link
-        ON Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        ON Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
@@ -58,7 +58,7 @@ commitment_transactions AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        On Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
@@ -80,7 +80,7 @@ investor_distribution_in_total_exclude_total_transfers_transactions AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        On Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
@@ -104,7 +104,7 @@ investor_transfer_of_interest_transactions AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        On Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
@@ -128,7 +128,7 @@ investor_distribution_net_transaction AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        On Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
@@ -150,7 +150,7 @@ investor_capital_called_excludes_total_transfers_transaction AS(
         CURRENT_TIMESTAMP() AS load_dt
     FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link
-        On Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
+        On Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
         LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
         JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund

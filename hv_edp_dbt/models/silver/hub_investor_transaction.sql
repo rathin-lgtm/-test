@@ -1,6 +1,6 @@
 with investor_transactions as (
     select *, 
-    Concat(investor_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) as composite_key,
+    Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) as composite_key,
      from {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }}
 )
 
