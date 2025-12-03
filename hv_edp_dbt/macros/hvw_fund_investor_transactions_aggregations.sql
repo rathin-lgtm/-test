@@ -109,6 +109,17 @@
     )
 {% endmacro %}
 
+-- Investor Capital Called (excludes Total Transfers) Transaction
+
+{% macro investor_capital_called_excludes_total_transfers_transaction_m(metric_col, amount_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (12, 13, 14, 16, 185, 214, 215) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
 -- miscellaneous
 
 
