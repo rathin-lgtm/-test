@@ -19,7 +19,7 @@ WITH distribution_transactions AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 contribution_transactions AS(
     SELECT hk_link,
@@ -42,7 +42,7 @@ contribution_transactions AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 commitment_transactions AS(
     SELECT hk_link,
@@ -66,7 +66,7 @@ commitment_transactions AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 investor_distribution_in_total_exclude_total_transfers_transactions AS(
     SELECT hk_link,
@@ -88,7 +88,7 @@ investor_distribution_in_total_exclude_total_transfers_transactions AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 investor_transfer_of_interest_transactions AS(
     SELECT hk_link,
@@ -112,7 +112,7 @@ investor_transfer_of_interest_transactions AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 investor_distribution_net_transaction AS(
     SELECT hk_link,
@@ -136,7 +136,7 @@ investor_distribution_net_transaction AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 investor_capital_called_excludes_total_transfers_transaction AS(
     SELECT hk_link,
@@ -158,7 +158,7 @@ investor_capital_called_excludes_total_transfers_transaction AS(
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0
     AND dim_fund.type NOT IN ('Third Party Investor')
-    GROUP BY hk_link,date_id,quarter_id,quarter_desc,quarter_counter,inv_tr.currency_id
+    GROUP BY hk_link, date_id, quarter_id, quarter_desc, quarter_counter, inv_tr.currency_id
 ),
 final_metrics AS(
     SELECT hk_link,
