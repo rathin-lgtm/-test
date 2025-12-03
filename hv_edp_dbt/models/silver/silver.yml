@@ -17,7 +17,7 @@ models:
     description: "DV Hub for Investors"
     columns:
       - name: hk_investor
-        description: "sha256(upper(trim(investor_id)))"
+        description: "sha256(upper(trim(investor_name_id)))"
         data_tests: [not_null, unique]
       - name: investor_id
         data_tests: [not_null, unique]
@@ -47,6 +47,7 @@ models:
         description: "sha256(upper(trim(composite_key)))"
         data_tests: [not_null, unique]
 
+
 # ================
 # LINKS
 # ================
@@ -65,13 +66,21 @@ models:
       - name: hk_link
         description: "sha2(hk_company || hk_fund) "
         data_tests: [not_null, unique]
-      
+
+  - name: link_investor_fund
+    description: "DV Link for Investors and Funds"
+    columns:
+      - name: hk_link
+        description: "sha2(hk_investor || hk_fund)"
+        data_tests: [not_null, unique]
+
   - name: link_fund_investor_transaction
     description: "DV Link for Funds and Investor Transactions"
     columns:
       - name: hk_link
         description: "sha2(hk_investor_transaction || hk_fund || hk_investor) "
         data_tests: [not_null, unique]
+
 
 # ================
 # SATELLITES
@@ -175,7 +184,29 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('hub_holding'), field: hk_holding}
-      
+
+  - name: sat_investor_fund_metrics
+    description: "Snapshot metrics that represent investor and fund pair per as_of_date"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_investor_fund'), field: hk_link}
+
+  - name: sat_investor_attributes
+    description: "Slowly changing descriptive attributes at investor level"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_investor
+        data_tests:
+          - not_null
+          - relationships: {to: ref('hub_investor'), field: hk_investor}
+
   - name: sat_investor_daily_transaction
     description: "Snapshot metrics per transactions daily"
     columns:

@@ -1,9 +1,11 @@
-from dagster import AssetExecutionContext
-from dagster_dbt import DbtCliResource, dbt_assets
+from dagster import AssetExecutionContext, Output
+from dagster_dbt import DagsterDbtTranslator, DbtCliResource, dbt_assets
 
 from hv_edp_dagster.constants import DbtArguments
 from hv_edp_dagster.defs.resources import JobConfig
 from hv_edp_dagster.project import dbt_project
+
+dagster_dbt_translator = DagsterDbtTranslator()
 
 
 @dbt_assets(manifest=dbt_project.manifest_path)
@@ -15,7 +17,26 @@ def dbt_project_dbt_assets(
         dbt_build_args.append(DbtArguments.full_reload)
     context.log.info(f"Running dbt with args: {dbt_build_args}")
     try:
-        yield from dbt.cli(dbt_build_args, context=context).stream()
+        invocation = dbt.cli(dbt_build_args, context=context)
+        dagster_events = list(invocation.stream())
+        try:
+            run_results = invocation.get_artifact("run_results.json")
+            compiled_code_by_unique_id = {
+                result["unique_id"]: result.get("compiled_code")
+                for result in run_results["results"]
+            }
+        except Exception as e:
+            context.log.error(f"Failed to get run_results.json: {e}")
+        for dagster_event in dagster_events:
+            try:
+                if isinstance(dagster_event, Output):
+                    compiled_code = compiled_code_by_unique_id.get(
+                        dagster_event.metadata["unique_id"].text, "No compiled code available"
+                    )
+                    context.log.info(f"Compiled code: {compiled_code}")
+            except Exception as e:
+                context.log.error(f"Failed to log compiled code: {e}")
+            yield dagster_event
         context.log.info("Dbt build completed successfully")
     except Exception as e:
         context.log.error(f"Dbt build failed: {e}")

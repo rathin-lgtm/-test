@@ -18,6 +18,15 @@
     END
 {% endmacro %}
 
+{% macro disclosure_level(level_col) %}
+    CASE 
+        WHEN {{ level_col }} = 10 THEN 'All'
+        WHEN {{ level_col }} = 20 THEN 'NAV Only'
+        WHEN {{ level_col }} = 30 THEN 'No Metrics'
+        ELSE 'Unknown'
+    END
+{% endmacro %}
+
 {% macro hk(column) %}
     sha2(upper(trim({{ column }})))
 {% endmacro %}

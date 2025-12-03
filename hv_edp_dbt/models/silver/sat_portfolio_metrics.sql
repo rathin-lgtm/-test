@@ -22,7 +22,7 @@ with monthly_metrics as (
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON transactions_monthly.currency_id = currency.currency_id
     JOIN {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} dim_portfolios
-        ON transactions_monthly.portfolio_id = dim_portfolios.portfolio_id
+        ON transactions_monthly.portfolio_id = dim_portfolios.portfolio_id and transactions_monthly.fund_id = dim_portfolios.fund_id
     JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_hierarchy') }} dim_hierarchy
         ON transactions_monthly.fund_hier_id = dim_hierarchy.fund_hier_id and is_excluded = 0
     GROUP BY as_of_date, transactions_monthly.portfolio_id, currency_code, transactions_monthly.fund_id
@@ -40,7 +40,7 @@ daily_metrics as (
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
         ON transactions.currency_id = currency.currency_id
     JOIN {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} dim_portfolios
-        ON transactions.portfolio_id = dim_portfolios.portfolio_id
+        ON transactions.portfolio_id = dim_portfolios.portfolio_id and transactions.fund_id = dim_portfolios.fund_id
     JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_hierarchy') }} dim_hierarchy
         ON transactions.fund_hier_id = dim_hierarchy.fund_hier_id and is_excluded = 0
     GROUP BY as_of_date, transactions.portfolio_id, currency_code, transactions.fund_id

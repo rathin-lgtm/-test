@@ -138,5 +138,10 @@ sources:
             description: DIM_FUND_SUB_PERSPECTIVE loaded from Harbourview EDW
             meta:
               dagster:
-                asset_key: ['bronze_fact_dim_fund_sub_perspective']
+                asset_key: ['bronze_dim_fund_sub_perspective']
+          - name: dim_investor
+            description: DIM_INVESTOR loaded from Harbourview EDW
+            meta: 
+              dagster:
+                asset_key: ['bronze_dim_investor']
 
