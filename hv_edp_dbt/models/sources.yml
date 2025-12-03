@@ -149,4 +149,12 @@ sources:
             meta: 
               dagster:
                 asset_key: ['bronze_dim_investor']
+    - name: bronze_from_harborview_edw_delta
+      description: Raw delta data uploaded from CSVs.
+      database: "{{ target.database }}"
+      schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
+      meta:
+        source_db: HARBOURVIEW_EDW_DELTA
+        source_file_format: PARQUET
+      tables:
 

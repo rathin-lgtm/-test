@@ -73,12 +73,12 @@ class AssetFactory:
 
         return [clear_table_assets(table) for table in tables]
 
-    def generate_bronze_table_assets(
+    def generate_pre_bronze_table_assets(
         self, tables: list[Table], depends_on: List[AssetsDefinition]
     ) -> List[AssetsDefinition]:
         def bronze_table_asset(table: Table, dependancy: AssetsDefinition) -> AssetsDefinition:
             @asset(
-                name=f"bronze_{table.name.lower()}",
+                name=f"pre_bronze_{table.name.lower()}",
                 kinds=self.asset_kinds,
                 deps=[dependancy],
                 group_name=self.asset_group,
