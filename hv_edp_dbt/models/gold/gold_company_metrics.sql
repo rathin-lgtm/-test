@@ -1,5 +1,7 @@
 SELECT
     metrics.as_of_date as as_of_date,
+    fund_attributes.efront_fund_id,
+    link.company_id,
     company.company_name as company_name,
     company.company_currency as company_currency,
     company.company_business_description as company_exposure_business_description,
@@ -33,3 +35,7 @@ JOIN {{ ref('sat_company_attributes') }} company_original
 JOIN {{ ref('sat_fund_company_investment_attributes') }} investment_attributes
     ON metrics.hk_link = investment_attributes.hk_link
     AND metrics.as_of_date = investment_attributes.as_of_date
+JOIN {{ ref('link_fund_company') }} link
+    ON metrics.hk_link = link.hk_link
+JOIN {{ ref('sat_fund_attributes') }} fund_attributes
+    ON link.hk_fund = fund_attributes.hk_fund

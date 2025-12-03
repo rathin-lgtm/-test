@@ -1,5 +1,6 @@
 SELECT
     as_of_date,
+    attributes.efront_investor_id,
     investor_name,
     investor_group_id,
     investor_group_name,

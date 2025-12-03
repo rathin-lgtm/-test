@@ -1,6 +1,5 @@
 SELECT
     as_of_date,
-    fund_id,
     efront_fund_id,
     fund_name,
     fund_sub_perspective_name,
