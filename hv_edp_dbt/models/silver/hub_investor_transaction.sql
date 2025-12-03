@@ -7,7 +7,7 @@ with investor_transactions as (
 -- There is a hashvalue column present in the source table but we are generating our own hash key based on business keys
 select distinct {{ hk('composite_key') }} as hk_investor_transaction,
     composite_key,
-    investor_id,
+    investor_name_id as investor_id,
     date_id,
     currency_id,
     fund_id,
