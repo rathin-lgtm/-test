@@ -19,6 +19,12 @@ clean-targets:
 models:
   hv_edp_dbt:
     +materialized: incremental
+    bronze:
+      +schema: "bronze"
+      +meta:
+        dagster:
+          group:
+            "bronze"
     silver:
       +schema: "silver"
       +meta:

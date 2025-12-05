@@ -13,8 +13,7 @@ from hv_edp_dagster.defs.assets.asset_factory import AssetFactory
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
     ALL_FILE_FORMATS,
-    ALL_TABLES,
-    DATA_LANDING_STAGE,
+    Stage,
 )
 from hv_edp_dagster.utils import execute_sql
 
@@ -52,7 +51,9 @@ def snowflake_schema(snowflake_config: SnowflakeConfig) -> None:
 def snowflake_landing_stage(snowflake_config: SnowflakeConfig) -> None:
     execute_sql(
         snowflake_config,
-        DATA_LANDING_STAGE.create_sql(snowflake_config.database, snowflake_config.schema_bronze),
+        Stage(snowflake_config.stage).create_sql(
+            snowflake_config.database, snowflake_config.schema_bronze
+        ),
     )
 
 
@@ -60,11 +61,6 @@ provision_infra_asset_factory = AssetFactory(AssetGroups.provision_infra, ASSET_
 snowflake_file_format_assets: List[AssetsDefinition] = (
     provision_infra_asset_factory.generate_snowflake_file_format_assets(
         ALL_FILE_FORMATS, [snowflake_schema]
-    )
-)
-snowflake_table_assets: List[AssetsDefinition] = (
-    provision_infra_asset_factory.generate_snowflake_table_assets(
-        ALL_TABLES, [snowflake_landing_stage] + snowflake_file_format_assets
     )
 )
 

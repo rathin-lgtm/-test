@@ -33,7 +33,7 @@ class FileTypes:
 class AssetGroups:
     provision_infra = "provision_infra"
     destroy_infra = "destroy_infra"
-    bronze = "bronze"
+    raw = "raw"
 
 
 class SnowflakeEnv:
@@ -51,22 +51,23 @@ SNOWFLAKE_CONFIG_DATA = {
     Environments.PERSONAL_DEV: {
         "database": f"HV_EDP_{SnowflakeEnv.SNOWFLAKE_USER.split('@')[0]}_DEV",
         "schema_bronze": "PERSONAL_DEV_BRONZE",
+        "stage": "LANDING",
     },
     Environments.SHARED_DEV: {
         "database": "HV_EDP_DEV",
         "schema_bronze": "DEV_BRONZE",
+        "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
     Environments.UAT: {
         "database": "HV_EDP_UAT",
         "schema_bronze": "UAT_BRONZE",
+        "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
     Environments.PROD: {
         "database": "HV_EDP_PRD",
         "schema_bronze": "PRD_BRONZE",
+        "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
 }
 
-SHARED_DEV_BRONZE_PATH = (
-    f'{SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]["database"]}.'
-    f'{SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]["schema_bronze"]}'
-)
+SHARED_DEV_BRONZE_PATH = ".".join(SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV].values())

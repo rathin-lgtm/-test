@@ -7,7 +7,7 @@ sources:
       schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
       meta:
         source_db: HARBOURVIEW_EDW
-        source_file_format: CSV
+        source_file_format: PARQUET
       tables:
           - name: dim_fund
             description: DIM_FUND loaded from Harbourview EDW
@@ -16,9 +16,10 @@ sources:
                 asset_key: ['bronze_dim_fund']
           - name: fact_investor_transactions
             description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
+            load_by_delta: True
             meta:
               dagster:
-                asset_key: ['bronze_fact_investor_transactions']
+                asset_key: ['raw_fact_investor_transactions']
           - name: currency
             description: CURRENCY loaded from Harbourview EDW
             meta:
@@ -149,12 +150,3 @@ sources:
             meta: 
               dagster:
                 asset_key: ['bronze_dim_investor']
-    - name: bronze_from_harborview_edw_delta
-      description: Raw delta data uploaded from CSVs.
-      database: "{{ target.database }}"
-      schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
-      meta:
-        source_db: HARBOURVIEW_EDW_DELTA
-        source_file_format: PARQUET
-      tables:
-
