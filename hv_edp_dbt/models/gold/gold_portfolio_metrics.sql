@@ -1,7 +1,7 @@
 SELECT
     as_of_date,
     portfolio_id,
-    fund_id,
+    fund_attributes.efront_fund_id,
     portfolio_name,
     portfolio_close_year,
     portfolio_disclosure_level,
@@ -34,4 +34,5 @@ JOIN {{ ref('sat_portfolio_attributes') }} attributes
     ON metrics.hk_link = attributes.hk_link
 JOIN {{ ref('link_portfolio_fund') }} link
     ON metrics.hk_link = link.hk_link
-ORDER BY as_of_date
+JOIN {{ ref('sat_fund_attributes') }} fund_attributes
+    ON link.hk_fund = fund_attributes.hk_fund
