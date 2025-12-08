@@ -120,16 +120,16 @@
     )
 {% endmacro %}
 
--- miscellaneous
-
+-- Investor Withholding
 
 {% macro investor_withholding_m(metric_col, amount_col) %}
     SUM(
         CASE
-            WHEN {{ metric_col }} IN (23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39) THEN {{ amount_col }}
+            WHEN {{ metric_col }} IN (23, 24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39) THEN {{ amount_col }}
             ELSE 0
         END
     )
 {% endmacro %}
+
 
 
