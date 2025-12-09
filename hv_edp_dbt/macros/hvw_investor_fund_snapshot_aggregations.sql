@@ -81,3 +81,46 @@
         END
     )
 {% endmacro %}
+
+{% macro running_sum_investor_contribution(metric_col, amount_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (12, 13, 14, 16, 185, 214, 215,319, 320) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
+{% macro running_sum_investor_distribution(metric_col, amount_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 52, 56, 60, 63, 186, 187, 188, 189, 210, 211, 326, 327) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
+
+{% macro unfunded_running(metric_col, amount_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (12, 13, 14, 15, 16, 17, 18, 185, 214, 215) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (6) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (12, 13, 14, 15, 16, 17, 18, 185, 214, 215) THEN -1* {{ amount_col }}
+            WHEN {{ metric_col }} in (391) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (319, 320, 321) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (12,13,14,16,185,214,215) THEN -1* {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
+{% macro transfer_out(metric_col, amount_col, transfered_col) %}
+    SUM(
+        CASE 
+            WHEN {{ metric_col }} in (164)
+                AND {{ transfered_col }} in (1) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
