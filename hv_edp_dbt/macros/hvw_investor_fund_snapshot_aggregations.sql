@@ -91,16 +91,6 @@
     )
 {% endmacro %}
 
-{% macro running_sum_investor_distribution(metric_col, amount_col) %}
-    SUM(
-        CASE
-            WHEN {{ metric_col }} in (40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 52, 56, 60, 63, 186, 187, 188, 189, 210, 211, 326, 327) THEN {{ amount_col }}
-            ELSE 0
-        END
-    )
-{% endmacro %}
-
-
 {% macro unfunded_running(metric_col, amount_col) %}
     SUM(
         CASE
