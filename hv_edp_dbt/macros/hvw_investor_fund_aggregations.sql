@@ -62,6 +62,17 @@
     )
 {% endmacro %}
 
+{% macro investor_nav_in_lock_date(metric_col, amount_col, date_id_col, lock_date_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (12, 13, 14, 15, 16, 17, 18, 185, 214, 215) THEN {{ amount_col }}
+            WHEN {{ metric_col }} in (40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 456, 457, 458) THEN -1*{{ amount_col }}
+            WHEN {{ metric_col }} in (83, 86, 87, 88, 89, 90, 91, 92, 93, 94, 96, 103, 104, 105, 106, 107, 110, 111, 120, 108, 109, 164, 119, 95, 85, 98, 100, 102, 121, 122, 123, 124, 125, 126, 127, 128, 129, 131, 133, 84, 97, 99, 101, 112, 113, 114, 115, 116, 117, 118, 130, 132, 233, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 234, 235, 236, 237, 238, 239, 240, 241, 245, 246, 247, 248, 249, 347, 366, 367, 368, 369, 372, 375, 371, 374, 377, 370, 373, 376, 378, 379, 380, 382, 384, 386, 381, 383, 385, 398, 399, 400, 346, 85, 514, 94, 510, 96, 515, 347, 485, 108, 460, 111, 120, 517, 459, 460, 461, 462, 463, 464, 465) AND {{ date_id_col }} < {{ lock_date_col }} THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
 {% macro investor_transfers(metric_col, amount_col, transfered_col, date_id_col, lock_date_col) %}
     SUM(
         CASE 
@@ -82,12 +93,34 @@
     )
 {% endmacro %}
 
+{% macro investor_transfer_of_interest_nav_total(metric_col, amount_col, transfered_col, transfer_group_col) %}
+    SUM(
+        CASE
+            WHEN {{ metric_col }} in (15, 16, 55, 56, 60, 61) AND {{ transfer_group_col }} = 0 AND {{ transfered_col }} = 2 THEN {{ amount_col }} * 
+                CASE
+                    WHEN {{ metric_col }} in (55, 56, 60, 61) THEN -1 
+                    ELSE 1
+                END
+            WHEN {{ metric_col }} = 164 AND {{ transfered_col }} = 2 THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
 {% macro running_sum_investor_contribution(metric_col, amount_col) %}
     SUM(
         CASE
             WHEN {{ metric_col }} in (12, 13, 14, 16, 185, 214, 215,319, 320) THEN {{ amount_col }}
             ELSE 0
         END
+    )
+{% endmacro %}
+
+{% macro investor_rollup(col) %}
+    SUM({{ col }}) OVER (
+        PARTITION BY hk_link
+        ORDER BY as_of_date
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     )
 {% endmacro %}
 

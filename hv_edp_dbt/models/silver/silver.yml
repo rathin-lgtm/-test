@@ -186,7 +186,7 @@ models:
           - relationships: {to: ref('hub_holding'), field: hk_holding}
 
   - name: sat_investor_fund_metrics
-    description: "Snapshot metrics that represent investor and fund pair per as_of_date"
+    description: "Snapshot of cashflow metrics that represent investor and fund pair per as_of_date"
     columns:
       - name: hk_key
         description: "Hashed values for the whole row except load_dt"
@@ -217,6 +217,17 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('link_fund_investor_transaction'), field: hk_link}
+  
+  - name: sat_investor_fund_performance
+    description: 'Snapshot of performance metrics that represent investor and fund pair per as_of_date'
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt and record_source"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_investor_fund'), field: hk_link}
 
   - name: sat_portfolio_sub_perspective
     description: "Portfolio metrics per sub_perspective"

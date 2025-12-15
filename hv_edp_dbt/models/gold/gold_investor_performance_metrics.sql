@@ -1,9 +1,14 @@
 SELECT
-    as_of_date,
+    metrics.as_of_date,
     attributes.efront_investor_id,
     investor_name,
     investor_group_id,
     investor_group_name,
+    called_pct as investor_percent_called,
+    distributed_pct as investor_percent_distributed,
+    tvf_sales_rt as investor_tv_f_sales,
+    tvpi_rt as investor_tv_c,
+    unfunded_inception_to_date_amt as investor_unfunded,
     total_value_sales_amount as total_value_sales,
     net_asset_value_sales_amount as net_asset_value_sales,
     distribution_amount as investor_distribution,
@@ -20,4 +25,7 @@ JOIN {{ ref('link_investor_fund') }} link
     ON metrics.hk_link = link.hk_link
 JOIN {{ ref('sat_investor_attributes') }} attributes
     ON attributes.hk_investor = link.hk_investor
+JOIN {{ ref('sat_investor_fund_performance') }} performance
+    ON performance.hk_link = link.hk_link
+    AND metrics.as_of_date = performance.as_of_date
 ORDER BY as_of_date

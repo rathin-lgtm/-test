@@ -30,3 +30,13 @@
 {% macro hk(column) %}
     sha2(upper(trim({{ column }})))
 {% endmacro %}
+
+{% macro safe_division(numerators, denominators) %}
+    {%- set num_expr = numerators | join(' + ') -%}
+    {%- set den_expr = denominators | join(' + ') -%}
+
+    CASE 
+        WHEN ({{ den_expr }}) = 0 THEN 0
+        ELSE ({{ num_expr }}) / ({{ den_expr }})
+    END
+{% endmacro %}
