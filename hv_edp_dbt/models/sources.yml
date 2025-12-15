@@ -134,6 +134,11 @@ sources:
             meta:
               dagster:
                 asset_key: ['bronze_fact_fund_sub_perspective_fund_network_paths']
+          - name: fact_fund_sub_perspective_funds
+            description: FACT_FUND_SUB_PERSPECTIVE_FUNDS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_fund_sub_perspective_funds']
           - name: dim_fund_sub_perspective
             description: DIM_FUND_SUB_PERSPECTIVE loaded from Harbourview EDW
             meta:
