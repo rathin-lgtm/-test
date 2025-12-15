@@ -35,3 +35,9 @@ models:
     columns:
       - name: as_of_date
         tests: [not_null]
+
+  - name: gold_portfolio_sub_perspective_metrics
+    description: "Gold Portfolio Sub_perspective Metrics"
+    columns:
+      - name: as_of_date
+        tests: [not_null]

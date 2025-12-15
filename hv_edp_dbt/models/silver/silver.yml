@@ -217,3 +217,14 @@ models:
         data_tests:
           - not_null
           - relationships: {to: ref('link_fund_investor_transaction'), field: hk_link}
+
+  - name: sat_portfolio_sub_perspective
+    description: "Portfolio metrics per sub_perspective"
+    columns:
+      - name: hk_key
+        description: "Hashed values for the whole row except load_dt"
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
