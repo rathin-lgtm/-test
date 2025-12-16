@@ -131,5 +131,10 @@
     )
 {% endmacro %}
 
-
-
+{% macro investor_transaction_rollup(col) %}
+    SUM({{ col }}) OVER (
+        PARTITION BY hk_link, currency_id
+        ORDER BY as_of_date
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    )
+{% endmacro %}

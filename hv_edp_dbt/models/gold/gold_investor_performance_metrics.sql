@@ -9,17 +9,17 @@ SELECT
     tvf_sales_rt as investor_tv_f_sales,
     tvpi_rt as investor_tv_c,
     unfunded_inception_to_date_amt as investor_unfunded,
-    total_value_sales_amount as total_value_sales,
-    net_asset_value_sales_amount as net_asset_value_sales,
-    distribution_amount as investor_distribution,
-    contribution_amount as investor_contribution,
-    commitment_amount as investor_commitment,
-    distribution_gain_amount as investor_distribution_gain,
+    total_value_sales_amt as total_value_sales,
+    net_asset_value_sales_amt as net_asset_value_sales,
+    distribution_amt as investor_distribution,
+    contribution_amt as investor_contribution,
+    commitment_amt as investor_commitment,
+    distribution_gain_amt as investor_distribution_gain,
     nav_total_running_sum as investor_nav_total_running_sum,
     contribution_total_running_sum as investor_contribution_total_running_sum,
     distribution_total_running_sum as investor_distribution_total_running_sum,
-    unfunded_runninng_amount as unfunded,
-    transfer_out_pnl_amount
+    unfunded_running_amt as unfunded,
+    transfer_out_pnl_amt as transfer_out_pnl_amount
 FROM {{ ref('sat_investor_fund_metrics') }} metrics
 JOIN {{ ref('link_investor_fund') }} link
     ON metrics.hk_link = link.hk_link
