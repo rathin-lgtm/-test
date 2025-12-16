@@ -150,3 +150,30 @@ sources:
               dagster:
                 asset_key: ['bronze_dim_investor']
 
+    - name: bronze_from_harborview_edw_parquet
+      description: Raw data uploaded from CSVs.
+      database: "{{ target.database }}"
+      schema: "{{ env_var('ENVIRONMENT') }}_RAW"
+      meta:
+        source_db: HARBOURVIEW_EDW
+        source_file_format: PARQUET_FILE
+      tables:
+        - name: dim_manager_pq
+          description: "DIM_MANAGER table"
+          external:
+            location: "@HV_EDP_DEV.DEV_BRONZE.STG_EXT_DMZ_KRTSYSNP_EDP/HARBOURVIEW_EDW/DIM_MANAGER/"
+            file_format: "PERSONAL_DEV_BRONZE.PARQUET_FILE"
+            pattern: ".\\*.parquet$"
+            infer_schema: true
+            auto_refresh: true
+            partitions:
+              - name: year
+                data_type: string
+                expression: "split_part(METADATA$FILENAME, '/', 3)"
+              - name: month
+                data_type: string
+                expression: "split_part(METADATA$FILENAME, '/', 4)"
+              - name: day
+                data_type: string
+                expression: "split_part(METADATA$FILENAME, '/', 5)"
+            columns: []
