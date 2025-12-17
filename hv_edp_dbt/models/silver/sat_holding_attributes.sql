@@ -6,7 +6,8 @@ with attributes as (
         CURRENT_TIMESTAMP() as load_dt,
         holding.start_eff_date,
         holding.end_eff_date,
-        holding.active_ind
+        holding.active_ind,
+        holding.holding_disclosure_level
     FROM
         {{ source('bronze_from_harborview_edw', 'dim_holdings') }} holding
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
@@ -20,6 +21,7 @@ final_attributes as (
     SELECT 
         hk_holding,
         holding_currency,
+        holding_disclosure_level,
         fund_id,
         load_dt
     FROM attributes
