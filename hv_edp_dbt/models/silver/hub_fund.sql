@@ -1,5 +1,5 @@
 with funds as (
-    select * from {{ source('bronze_from_harborview_edw', 'dim_fund') }}
+    select * from {{ source('raw_from_harborview_edw', 'dim_fund') }}
 )
 
 select {{ hk('fund_id') }} as hk_fund,

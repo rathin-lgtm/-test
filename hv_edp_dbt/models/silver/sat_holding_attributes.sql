@@ -8,8 +8,8 @@ with attributes as (
         holding.end_eff_date,
         holding.active_ind
     FROM
-        {{ source('bronze_from_harborview_edw', 'dim_holdings') }} holding
-    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
+        {{ source('raw_from_harborview_edw', 'dim_holdings') }} holding
+    JOIN {{ source('raw_from_harborview_edw', 'currency') }} currency
         ON currency.currency_id = holding.holding_currency_id
     JOIN {{ ref('hub_holding') }} hub
         ON holding.holding_id = hub.holding_id

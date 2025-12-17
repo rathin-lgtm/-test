@@ -1,7 +1,26 @@
 version: 2
 
+_external_table: &external_table
+  external:
+    location: "@HV_EDP_DEV.DEV_BRONZE.STG_EXT_DMZ_KRTSYSNP_EDP/HARBOURVIEW_EDW/DIM_MANAGER/"
+    file_format: "{{ env_var('ENVIRONMENT') }}_RAW.PARQUET_FILE"
+    pattern: ".\\*.parquet$"
+    infer_schema: true
+    auto_refresh: true
+    partitions:
+      - name: year
+        data_type: string
+        expression: "split_part(METADATA$FILENAME, '/', 3)"
+      - name: month
+        data_type: string
+        expression: "split_part(METADATA$FILENAME, '/', 4)"
+      - name: day
+        data_type: string
+        expression: "split_part(METADATA$FILENAME, '/', 5)"
+    columns: []
+
 sources:
-    - name: bronze_from_harborview_edw
+    - name: raw_from_harborview_edw
       description: Raw data uploaded from CSVs.
       database: "{{ target.database }}"
       schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
@@ -11,170 +30,85 @@ sources:
       tables:
           - name: dim_fund
             description: DIM_FUND loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund']
+            <<: *external_table
           - name: fact_investor_transactions
-            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
-            load_by_delta: True
-            meta:
-              dagster:
-                asset_key: ['raw_fact_investor_transactions']
+            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW      
+            <<: *external_table
           - name: currency
             description: CURRENCY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_currency']
+            <<: *external_table
           - name: global_edw_key_to_iqid
             description: GLOBAL_EDW_KEY_TO_IQID loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_global_edw_key_to_iqid']
+            <<: *external_table
           - name: dim_portfolios
             description: DIM_PORTFOLIOS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_portfolios']
+            <<: *external_table
           - name: fact_investment_transactions_fund_hierarchy_monthly
             description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_investment_transactions_fund_hierarchy_monthly']
+            <<: *external_table
           - name: fact_investment_transactions_fund_hierarchy
             description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_investment_transactions_fund_hierarchy']
+            <<: *external_table
           - name: dim_fund_hierarchy
             description: DIM_FUND_HIERARCY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund_hierarchy']
+            <<: *external_table
           - name: dim_type_broad
             description: DIM_TYPE_BROAD loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_type_broad']
+            <<: *external_table
           - name: dim_hv_geography_hierarchy
             description: DIM_HV_GEOGRAPHY_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_hv_geography_hierarchy']
+            <<: *external_table
           - name: dim_company_industry_hierarchy
             description: DIM_COMPANY_INDUSTRY_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_company_industry_hierarchy']
+            <<: *external_table
           - name: dim_manager
             description: DIM_MANAGER loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_manager']
+            <<: *external_table
           - name: stage
             description: STAGE loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_stage']
+            <<: *external_table
           - name: fact_irr_investor
             description: FACT_IRR_INVESTOR loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_irr_investor']
+            <<: *external_table
           - name: calendar
             description: CALENDAR loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_calendar']
+            <<: *external_table
           - name: calendar_quarter
             description: CALENDAR_QUARTER loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_calendar_quarter']
+            <<: *external_table
           - name: calendar_month
             description: CALENDAR_MONTH loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_calendar_month']
+            <<: *external_table
           - name: fact_irr_investment_fund_hierarchy
             description: FACT_IRR_INVESTMENT_FUND_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_irr_investment_fund_hierarchy']
+            <<: *external_table
           - name: dim_holdings
             description: DIM_HOLDINGS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_holdings']
+            <<: *external_table
           - name: company
             description: COMPANY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_company']
+            <<: *external_table
           - name: company_broad
             description: COMPANY_BROAD loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_company_broad']
+            <<: *external_table
           - name: fund_hiers_pct_hist
             description: FUND_HIERS_PCT_HIST loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fund_hiers_pct_hist']
+            <<: *external_table
           - name: fact_company_valuation
             description: FACT_COMPANY_VALUATION loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_company_valuation']
+            <<: *external_table
           - name: dim_investment_type
             description: DIM_INVESTMENT_TYPE loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_investment_type']
+            <<: *external_table
           - name: fact_fund_sub_perspective_fund_network_paths
             description: FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_fund_sub_perspective_fund_network_paths']
+            <<: *external_table
           - name: fact_fund_sub_perspective_funds
             description: FACT_FUND_SUB_PERSPECTIVE_FUNDS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_fund_sub_perspective_funds']
+            <<: *external_table
           - name: dim_fund_sub_perspective
             description: DIM_FUND_SUB_PERSPECTIVE loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund_sub_perspective']
+            <<: *external_table
           - name: dim_investor
             description: DIM_INVESTOR loaded from Harbourview EDW
-            meta: 
-              dagster:
-                asset_key: ['bronze_dim_investor']
-
-    - name: bronze_from_harborview_edw_parquet
-      description: Raw data uploaded from CSVs.
-      database: "{{ target.database }}"
-      schema: "{{ env_var('ENVIRONMENT') }}_RAW"
-      meta:
-        source_db: HARBOURVIEW_EDW
-        source_file_format: PARQUET_FILE
-      tables:
-        - name: dim_manager_pq
-          description: "DIM_MANAGER table"
-          external:
-            location: "@HV_EDP_DEV.DEV_BRONZE.STG_EXT_DMZ_KRTSYSNP_EDP/HARBOURVIEW_EDW/DIM_MANAGER/"
-            file_format: "PERSONAL_DEV_BRONZE.PARQUET_FILE"
-            pattern: ".\\*.parquet$"
-            infer_schema: true
-            auto_refresh: true
-            partitions:
-              - name: year
-                data_type: string
-                expression: "split_part(METADATA$FILENAME, '/', 3)"
-              - name: month
-                data_type: string
-                expression: "split_part(METADATA$FILENAME, '/', 4)"
-              - name: day
-                data_type: string
-                expression: "split_part(METADATA$FILENAME, '/', 5)"
-            columns: []
+            <<: *external_table

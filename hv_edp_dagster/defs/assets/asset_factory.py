@@ -35,9 +35,10 @@ class AssetFactory:
     def generate_raw_table_assets(self, tables: list[Table]) -> List[AssetsDefinition]:
         def create_table_asset(table: Table) -> AssetsDefinition:
             @asset(
-                name=f"raw_{table.name.lower()}",
+                name=table.name.lower(),
                 kinds=self.asset_kinds,
                 group_name=self.asset_group,
+                key_prefix="raw_from_harborview_edw",
             )
             def _table(snowflake_config: SnowflakeConfig, infra_job_config: JobConfig) -> None:
                 execute_sql(

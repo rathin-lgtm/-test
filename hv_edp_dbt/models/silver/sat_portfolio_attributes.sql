@@ -24,22 +24,22 @@ with attributes as (
         END as portfolio_manager,
         CURRENT_TIMESTAMP() as load_dt
     FROM
-        {{ source('bronze_from_harborview_edw', 'dim_portfolios') }} portfolio
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_type_broad') }} type_broad
+        {{ source('raw_from_harborview_edw', 'dim_portfolios') }} portfolio
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_type_broad') }} type_broad
         ON portfolio.type_broad_id = type_broad.type_broad_id
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_hv_geography_hierarchy') }} dim_geo
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_hv_geography_hierarchy') }} dim_geo
         ON dim_geo.code = portfolio.portfolio_geography_id
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_company_industry_hierarchy') }} dim_company
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_company_industry_hierarchy') }} dim_company
         ON dim_company.industry_fine_code = portfolio.di_fine_industry_id
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'stage') }} stage
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'stage') }} stage
         ON stage.stage_code = portfolio.portfolio_stage_id
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'stage') }} l1_stage
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'stage') }} l1_stage
         ON stage.l1 = l1_stage.stage_code
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'stage') }} l2_stage
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'stage') }} l2_stage
         ON stage.l2 = l2_stage.stage_code
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_manager') }} manager
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_manager') }} manager
         ON portfolio.project_manager_id = manager.manager_id
-    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
+    JOIN {{ source('raw_from_harborview_edw', 'currency') }} currency
         ON portfolio.portfolio_currency_id = currency.currency_id
     JOIN {{ ref('link_portfolio_fund') }} link
         ON portfolio.portfolio_id = link.portfolio_id

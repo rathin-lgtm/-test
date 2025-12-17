@@ -1,7 +1,7 @@
 with sub_perspectives as (
     -- TODO: To be removed when proper tag system is in place and these sub-perspective attributes are placed somewhere else.
     SELECT *
-    FROM {{ source('bronze_from_harborview_edw', 'dim_fund_sub_perspective') }}
+    FROM {{ source('raw_from_harborview_edw', 'dim_fund_sub_perspective') }}
     WHERE fund_perspective_view_id = 3 -- SELECT MAIN FUNDS ONLY
 ),
 attributes as (
@@ -17,14 +17,14 @@ attributes as (
         {{ to_date('fund.lock_date') }} as fund_lock_date,
         CURRENT_TIMESTAMP() as load_dt
     FROM 
-        {{ source('bronze_from_harborview_edw', 'dim_fund') }} fund
-    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} c
+        {{ source('raw_from_harborview_edw', 'dim_fund') }} fund
+    JOIN {{ source('raw_from_harborview_edw', 'currency') }} c
         ON fund.currency_id = c.currency_id
-    JOIN {{ source('bronze_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
+    JOIN {{ source('raw_from_harborview_edw', 'global_edw_key_to_iqid') }} fid
         ON fund.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
     LEFT JOIN sub_perspectives sp
         ON sp.fund_sub_perspective_primary_fund_id = fund.fund_id
-    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} aiv_fund
+    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_fund') }} aiv_fund
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
     JOIN {{ ref('hub_fund') }} hub
         ON fund.fund_id = hub.fund_id
