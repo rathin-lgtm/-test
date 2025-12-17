@@ -1,6 +1,10 @@
-from typing import List
-
-from dagster import AssetsDefinition, asset
+from dagster import (
+    AssetExecutionContext,
+    AssetSpec,
+    MaterializeResult,
+    asset,
+    multi_asset,
+)
 
 from hv_edp_dagster.constants import (
     ASSET_KINDS,
@@ -9,11 +13,9 @@ from hv_edp_dagster.constants import (
     Environments,
     SnowflakeEnv,
 )
-from hv_edp_dagster.defs.assets.asset_factory import AssetFactory
 from hv_edp_dagster.defs.resources import SnowflakeConfig
 from hv_edp_dagster.snowflake_infra import (
     ALL_FILE_FORMATS,
-    Stage,
 )
 from hv_edp_dagster.utils import execute_sql
 
@@ -38,31 +40,27 @@ def snowflake_db(snowflake_config: SnowflakeConfig) -> None:
 def snowflake_schema(snowflake_config: SnowflakeConfig) -> None:
     execute_sql(
         snowflake_config,
-        f"CREATE SCHEMA IF NOT EXISTS {snowflake_config.schema_bronze};",
+        f"CREATE SCHEMA IF NOT EXISTS {snowflake_config.schema_raw};",
     )
 
 
-@asset(
-    kinds=ASSET_KINDS,
-    deps=[snowflake_schema],
+@multi_asset(
+    specs=[
+        AssetSpec(
+            key=f"snowflake_file_format_{file_format.name}",
+            kinds=ASSET_KINDS,
+            deps=[snowflake_schema],
+        )
+        for file_format in ALL_FILE_FORMATS
+    ],
+    can_subset=True,
     group_name=AssetGroups.provision_infra,
-    tags={AssetTags.environment: Environments.PERSONAL_DEV},
 )
-def snowflake_landing_stage(snowflake_config: SnowflakeConfig) -> None:
-    execute_sql(
-        snowflake_config,
-        Stage(snowflake_config.stage).create_sql(
-            snowflake_config.database, snowflake_config.schema_bronze
-        ),
-    )
-
-
-provision_infra_asset_factory = AssetFactory(AssetGroups.provision_infra, ASSET_KINDS)
-snowflake_file_format_assets: List[AssetsDefinition] = (
-    provision_infra_asset_factory.generate_snowflake_file_format_assets(
-        ALL_FILE_FORMATS, [snowflake_schema]
-    )
-)
+def file_formats(context: AssetExecutionContext, snowflake_config: SnowflakeConfig):
+    for file_format in ALL_FILE_FORMATS:
+        execute_sql(snowflake_config, file_format.create_sql())
+    for key in context.selected_asset_keys:
+        yield MaterializeResult(key)
 
 
 @asset(kinds=ASSET_KINDS, group_name=AssetGroups.destroy_infra)

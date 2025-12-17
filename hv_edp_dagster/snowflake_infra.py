@@ -53,7 +53,7 @@ class FileFormat(SnowflakeResource):
     file_type: str
 
     def create_sql(self, header: bool = True, delimiter: str = ",", enclosed_by: str = '"') -> str:
-        sql = f"CREATE OR REPLACE FILE FORMAT {self.name} TYPE = {self.file_type}"
+        sql = f"CREATE FILE FORMAT IF NOT EXISTS {self.name} TYPE = {self.file_type}"
         if self.file_type == FileTypes.CSV:
             sql += f""", PARSE_HEADER = {header}, FIELD_DELIMITER = "{delimiter}",
             FIELD_OPTIONALLY_ENCLOSED_BY = '{enclosed_by}'"""
@@ -63,35 +63,6 @@ class FileFormat(SnowflakeResource):
 class Table(SnowflakeResource):
     source: str
     file_format: FileFormat
-
-    def create_sql(
-        self,
-        db: str,
-        schema: str,
-        stage_location: str | None = None,
-    ) -> str:
-        full_file_path = f"{stage_location}/{self.source}/{self.name}"
-        return f"""CREATE OR REPLACE EXTERNAL TABLE {db}.{schema}.RAW_{self.name}
-                USING TEMPLATE (
-                    SELECT ARRAY_AGG(
-                        OBJECT_CONSTRUCT(
-                            'COLUMN_NAME', UPPER(COLUMN_NAME),
-                            'TYPE', 'STRING',
-                            'NULLABLE', NULLABLE,
-                            'EXPRESSION', EXPRESSION
-                            )
-                        )
-                    FROM TABLE(
-                        INFER_SCHEMA(
-                            LOCATION=>'@{full_file_path}/',
-                            FILE_FORMAT=>'{self.file_format.name}'
-                        )
-                    )
-                )
-                LOCATION=@{full_file_path}/
-                FILE_FORMAT={self.file_format.name}
-                AUTO_REFRESH=True;
-                """
 
 
 class FileFormats(Enum):

@@ -7,7 +7,7 @@ from dagster import (
 from dagster_dbt import DbtCliResource
 
 from hv_edp_dagster.constants import (
-    SHARED_DEV_BRONZE_PATH,
+    SHARED_DEV_STAGE_PATH,
     SNOWFLAKE_CONFIG_DATA,
     Environments,
 )
@@ -48,7 +48,7 @@ def get_snowflake_config():
 
 def get_resources():
     stage_location = (
-        SHARED_DEV_BRONZE_PATH
+        SHARED_DEV_STAGE_PATH
         if sf.IS_LOCAL_ENVIRONMENT
         else get_snowflake_config().get_full_stage_path()
     )
@@ -57,9 +57,6 @@ def get_resources():
         "snowflake_config": get_snowflake_config(),
         "etl_job_config": JobConfig(
             full_reload=False,
-            stage_location=stage_location,
-        ),
-        "infra_job_config": JobConfig(
             stage_location=stage_location,
         ),
     }

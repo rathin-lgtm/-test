@@ -21,7 +21,7 @@ def get_todays_folder_path() -> str:
 
 def get_files_from_folder(snowflake_config: SnowflakeConfig, table_name: str) -> list[str]:
     full_stage_path = (
-        f"{snowflake_config.database}.{snowflake_config.schema_bronze}.{snowflake_config.stage}"
+        f"{snowflake_config.database}.{snowflake_config.schema_raw}.{snowflake_config.stage}"
     )
     list_sql = f"LIST @{table_name}/{full_stage_path}/{get_todays_folder_path()};"
     results = execute_sql(snowflake_config, list_sql, fetch_results=True)
@@ -32,7 +32,7 @@ def get_files_from_folder(snowflake_config: SnowflakeConfig, table_name: str) ->
 
 def get_processed_files(snowflake_config: SnowflakeConfig, table_name: str) -> list[str]:
     sql = f"""SELECT FILE_NAME FROM
-    {snowflake_config.database}.{snowflake_config.schema_bronze}.{table_name}
+    {snowflake_config.database}.{snowflake_config.schema_raw}.{table_name}
     where FILE_DATE=TO_DATE('{get_todays_folder_path()}', 'YYYY/MM/DD');"""
     results = execute_sql(snowflake_config, sql, fetch_results=True)
     if results is None:

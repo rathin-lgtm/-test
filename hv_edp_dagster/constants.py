@@ -14,7 +14,11 @@ class Environments:
 class DbtArguments:
     build = "build"
     full_reload = "--full-refresh"
-    project_dir = "hv_edp_dbt"
+    run_operation = "run-operation"
+    stage_external_sources = "stage_external_sources"
+    vars = "--vars"
+    args = "--args"
+    select = "select: {}"
 
 
 class AssetTags:
@@ -50,24 +54,29 @@ class SnowflakeEnv:
 SNOWFLAKE_CONFIG_DATA = {
     Environments.PERSONAL_DEV: {
         "database": f"HV_EDP_{SnowflakeEnv.SNOWFLAKE_USER.split('@')[0]}_DEV",
-        "schema_bronze": "PERSONAL_DEV_BRONZE",
+        "schema_raw": "PERSONAL_DEV_RAW",
         "stage": "LANDING",
     },
     Environments.SHARED_DEV: {
         "database": "HV_EDP_DEV",
-        "schema_bronze": "DEV_BRONZE",
+        "schema_raw": "DEV_RAW",
         "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
     Environments.UAT: {
         "database": "HV_EDP_UAT",
-        "schema_bronze": "UAT_BRONZE",
+        "schema_raw": "UAT_RAW",
         "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
     Environments.PROD: {
         "database": "HV_EDP_PRD",
-        "schema_bronze": "PRD_BRONZE",
+        "schema_raw": "PRD_RAW",
         "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
 }
 
-SHARED_DEV_BRONZE_PATH = ".".join(SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV].values())
+SHARED_DEV_CONFIG_DATA = SNOWFLAKE_CONFIG_DATA[Environments.SHARED_DEV]
+SHARED_DEV_STAGE_PATH = (
+    f"@{SHARED_DEV_CONFIG_DATA['database']}."
+    f"{SHARED_DEV_CONFIG_DATA['schema_raw']}."
+    f"{SHARED_DEV_CONFIG_DATA['stage']}"
+)

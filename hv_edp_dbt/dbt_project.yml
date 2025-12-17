@@ -16,6 +16,9 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+vars:
+  stage_location: ""
+
 models:
   hv_edp_dbt:
     +materialized: incremental
