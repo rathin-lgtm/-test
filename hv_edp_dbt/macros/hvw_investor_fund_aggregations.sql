@@ -148,6 +148,15 @@
     )
 {% endmacro %}
 
+{% macro investor_return_of_captial(metric_col, amount_col) %}
+    SUM(
+        CASE 
+            WHEN {{ metric_col }} in (43, 45, 47, 48) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}
+
 
 {% macro irr_cashflow_metric_investor_fund_performance_ids() %}
 -- Cashflows: Contribution, Distribution, Interest Paid, PL Transferred
@@ -168,3 +177,4 @@
         WHEN {{ metric_col }} = 332 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (PL Unlocked Transf NAV)
     END
 {% endmacro %}
+
