@@ -147,3 +147,12 @@
         END
     )
 {% endmacro %}
+
+{% macro investor_return_of_captial(metric_col, amount_col) %}
+    SUM(
+        CASE 
+            WHEN {{ metric_col }} in (43, 45, 47, 48) THEN {{ amount_col }}
+            ELSE 0
+        END
+    )
+{% endmacro %}

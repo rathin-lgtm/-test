@@ -149,4 +149,9 @@ sources:
             meta: 
               dagster:
                 asset_key: ['bronze_dim_investor']
+          - name: dim_investments
+            description: DIM_INVESTMENTS loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_dim_investments']
 
