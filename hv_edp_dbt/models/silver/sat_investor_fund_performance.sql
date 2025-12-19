@@ -59,7 +59,7 @@ with investor_performance_metrics as (
 
 final_metrics as (
     SELECT
-    as_of_date,
+    metrics.as_of_date,
     hk_link,
     {{ investor_rollup('called_pct') }} as called_pct,
     {{ investor_rollup('distributed_pct') }} as distributed_pct,
@@ -76,9 +76,10 @@ final_metrics as (
     JOIN {{ ref('link_investor_fund') }} link
         ON metrics.investor_id = link.investor_id
         AND metrics.fund_id = link.fund_id
-    JOIN {{ ref('investor_fund_performance_irr_intermediate') }} i
-        ON metrics.investor_id = i.investor_id
-        AND metrics.fund_id = i.fund_id
+    LEFT JOIN {{ ref('investor_fund_performance_irr_intermediate') }} i
+       ON metrics.investor_id = i.investor_id
+       AND metrics.fund_id = i.fund_id
+        AND metrics.as_of_date = i.as_of_date1
     ORDER BY as_of_date
 )
 

@@ -1,5 +1,4 @@
 SELECT
-    link.hk_link,
     metrics.as_of_date,
     attributes.efront_investor_id,
     short_name as investor_name,

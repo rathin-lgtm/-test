@@ -51,7 +51,6 @@ xirrs AS (
         investor_id,
         currency_id,
         date_id,
-
         -- Inception IRR: gate by presence of inception cashflows (NOT by 1-year guard rail)
         CASE
           WHEN COALESCE(SUM(amount_inception), 0) <> 0
@@ -89,38 +88,40 @@ xirrs AS (
 
 -- Final IRR-only output (investor + fund)
 final_irrs AS (
-  SELECT
+  SELECT DISTINCT
+    link.hk_link,
     hub.hk_fund,
     inv_hub.hk_investor,
     x.investor_id,
     x.fund_id,
+    {{ to_date('x.date_id') }} as as_of_date,
     -- Carry-forward latest non-NULL IRRs per investor+fund
     LAST_VALUE(irr_inception) IGNORE NULLS OVER (
-        PARTITION BY x.fund_id, x.investor_id, x.currency_id
+        PARTITION BY  x.investor_id,x.fund_id
         ORDER BY x.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS irr,
 
     LAST_VALUE(irr_1_year) IGNORE NULLS OVER (
-        PARTITION BY x.fund_id, x.investor_id, x.currency_id
+        PARTITION BY  x.investor_id,x.fund_id
         ORDER BY x.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS irr_1_year,
 
     LAST_VALUE(irr_3_year) IGNORE NULLS OVER (
-        PARTITION BY x.fund_id, x.investor_id, x.currency_id
+        PARTITION BY x.investor_id, x.fund_id
         ORDER BY x.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS irr_3_year,
 
     LAST_VALUE(irr_5_year) IGNORE NULLS OVER (
-        PARTITION BY x.fund_id, x.investor_id, x.currency_id
+        PARTITION BY x.investor_id, x.fund_id
         ORDER BY x.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS irr_5_year,
 
     LAST_VALUE(irr_10_year) IGNORE NULLS OVER (
-        PARTITION BY x.fund_id, x.investor_id, x.currency_id
+        PARTITION BY x.investor_id, x.fund_id
         ORDER BY x.date_id
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS irr_10_year
@@ -136,4 +137,18 @@ final_irrs AS (
    
 )
 
-SELECT * from final_irrs
+SELECT DISTINCT
+    hk_link as hk_link1, -- aliasing to avoid name conflict in the final join. The ambiguos column name appears from macro.
+    hk_fund,
+    hk_investor,
+    investor_id,
+    fund_id,
+    as_of_date as as_of_date1, -- aliasing because ambiguos column name appears from macro after join. You can see the compiled query in sat_investor_fund_performance.
+    sum(irr) as irr,
+    sum(irr_1_year) as irr_1_year,
+    sum(irr_3_year) as irr_3_year,  
+    sum(irr_5_year) as irr_5_year,  
+    sum(irr_10_year) as irr_10_year
+FROM final_irrs
+GROUP BY hk_link, hk_fund, hk_investor, investor_id, fund_id, as_of_date
+ORDER BY as_of_date
