@@ -59,27 +59,18 @@ with investor_performance_metrics as (
 
 final_metrics as (
     SELECT
-    metrics.as_of_date,
+    as_of_date,
     hk_link,
     {{ investor_rollup('called_pct') }} as called_pct,
     {{ investor_rollup('distributed_pct') }} as distributed_pct,
     {{ investor_rollup('tvf_sales_rt') }} as tvf_sales_rt,
     {{ investor_rollup('tvpi_rt') }} as tvpi_rt,
     {{ investor_rollup('unfunded') }} as unfunded_inception_to_date_amt,
-    i.irr as irr_sales_rt,
-    i.irr_1_year as irr_1_year_sales_rt,
-    i.irr_3_year as irr_3_year_sales_rt,
-    i.irr_5_year as irr_5_year_sales_rt,
-    i.irr_10_year as irr_10_year_sales_rt,
     CURRENT_TIMESTAMP() as load_dt,
     FROM investor_performance_metrics metrics
     JOIN {{ ref('link_investor_fund') }} link
         ON metrics.investor_id = link.investor_id
         AND metrics.fund_id = link.fund_id
-    LEFT JOIN {{ ref('investor_fund_performance_irr_intermediate') }} i
-       ON metrics.investor_id = i.investor_id
-       AND metrics.fund_id = i.fund_id
-        AND metrics.as_of_date = i.as_of_date1
     ORDER BY as_of_date
 )
 
