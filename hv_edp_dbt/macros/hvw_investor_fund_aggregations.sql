@@ -156,25 +156,3 @@
         END
     )
 {% endmacro %}
-
-
-{% macro irr_cashflow_metric_investor_fund_performance_ids() %}
--- Cashflows: Contribution, Distribution, Interest Paid, PL Transferred
--- Ending NAVs at month-end: NAV Core Lock, PL Unlocked Transf NAV
-217, 218, 230
-{% endmacro %}
-
-
-{% macro fund_irr_amount_filter_inception_investor_fund_performance(metric_col, fact_date_col, cal_date_dim_col, amount_col) %}
-    CASE
-        WHEN {{ metric_col }} = 217 THEN -1 * {{ amount_col }}   -- Contribution (outflow)
-        WHEN {{ metric_col }} = 218 THEN       {{ amount_col }}  -- Distribution (inflow)
-        WHEN {{ metric_col }} = 220 THEN -1 * {{ amount_col }}   -- Interest Paid (outflow)
-        WHEN {{ metric_col }} = 230 THEN -1 * {{ amount_col }}   -- PL Transferred (outflow)
-
-        -- Ending NAVs only when the fact row date equals the month-end (your calendar macro ensures Date_Fact/Date_Dim)
-        WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (        WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (Nav Core Lock)
-        WHEN {{ metric_col }} = 332 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (PL Unlocked Transf NAV)
-    END
-{% endmacro %}
-
