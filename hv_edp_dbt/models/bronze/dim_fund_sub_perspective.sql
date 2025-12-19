@@ -1,0 +1,1 @@
+{{ load_full_refresh_table('raw_from_harborview_edw', 'dim_fund_sub_perspective') }}

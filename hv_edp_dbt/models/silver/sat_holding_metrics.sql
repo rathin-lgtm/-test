@@ -6,11 +6,11 @@ with holding_metrics as (
         currency.currency_code,
         {{ holding_commitment('transactions_monthly.metric_id', 'transactions_monthly.running_monthly_amount', 'transactions_monthly.currency_id', 'transactions_monthly.investment_currency_id') }} as holding_commitment_unlevered
     FROM (
-        SELECT * FROM {{ source('raw_from_harborview_edw', 'fact_investment_transactions_fund_hierarchy_monthly') }} WHERE date_flag in ('B', 'E') and holding_id != -1
+        SELECT * FROM {{ ref('fact_investment_transactions_fund_hierarchy_monthly') }} WHERE date_flag in ('B', 'E') and holding_id != -1
     ) transactions_monthly
-    JOIN {{ source('raw_from_harborview_edw', 'currency') }} currency
+    JOIN {{ ref('currency') }} currency
         ON transactions_monthly.currency_id = currency.currency_id
-    JOIN {{ source('raw_from_harborview_edw', 'dim_fund_hierarchy') }} dim_hierarchy
+    JOIN {{ ref('dim_fund_hierarchy') }} dim_hierarchy
         ON transactions_monthly.fund_hier_id = dim_hierarchy.fund_hier_id and is_excluded = 0
     GROUP BY as_of_date, transactions_monthly.holding_id, currency_code, transactions_monthly.fund_id
 ),

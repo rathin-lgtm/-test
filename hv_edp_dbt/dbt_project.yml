@@ -21,21 +21,23 @@ vars:
 
 models:
   hv_edp_dbt:
-    +materialized: incremental
     bronze:
       +schema: "bronze"
+      +materialized: table
       +meta:
         dagster:
           group:
             "bronze"
     silver:
       +schema: "silver"
+      +materialized: incremental
       +meta:
         dagster:
           group:
             "silver"
     gold:
       +schema: "gold"
+      +materialized: incremental
       +meta:
         dagster:
           group:

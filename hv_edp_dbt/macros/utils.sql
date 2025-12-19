@@ -1,6 +1,6 @@
 
 {% macro to_date(col) %}
-    TRY_TO_DATE({{ col }}, 'YYYYMMDD')
+    TRY_TO_DATE({{ col }}::VARCHAR, 'YYYYMMDD')
 {% endmacro %}
 
 

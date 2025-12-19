@@ -50,9 +50,9 @@ with investor_performance_metrics as (
         {{ investor_contribution_commitment_fund_currency('investor_transactions.metric_id', 'investor_transactions.amount') }} +
         {{ investor_contribution_cap_components('investor_transactions.metric_id', 'investor_transactions.amount') }} as unfunded,
     FROM (
-        SELECT * FROM {{ source('raw_from_harborview_edw', 'fact_investor_transactions') }} WHERE exclude_transaction = 0
+        SELECT * FROM {{ ref('fact_investor_transactions') }} WHERE exclude_transaction = 0
     ) investor_transactions
-    JOIN {{ source('raw_from_harborview_edw', 'dim_fund') }} fund
+    JOIN {{ ref('dim_fund') }} fund
         ON investor_transactions.fund_id = fund.fund_id and fund.type <> 'Third Party Investor'
     GROUP BY as_of_date, investor_transactions.investor_name_id, investor_transactions.fund_id
 ),

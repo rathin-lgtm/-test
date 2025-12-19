@@ -86,6 +86,11 @@ sources:
             external:
               location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_HV_GEOGRAPHY_HIERARCHY/"
               <<: *external_table_common
+          - name: dim_investments
+            description: DIM_INVESTMENTS loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_INVESTMENTS/"
+              <<: *external_table_common
           - name: dim_investment_type
             description: DIM_INVESTMENT_TYPE loaded from Harbourview EDW
             external:

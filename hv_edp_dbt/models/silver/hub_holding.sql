@@ -1,5 +1,5 @@
 with holdings as (
-    select * from {{ source('raw_from_harborview_edw', 'dim_holdings') }}
+    select * from {{ ref('dim_holdings') }}
 )
 
 select distinct {{ hk('holding_id') }} as hk_holding,

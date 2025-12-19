@@ -12,14 +12,14 @@ with attributes as (
         company_hier.L3_description as company_industry,
         CURRENT_TIMESTAMP() as load_dt
     FROM
-        {{ source('raw_from_harborview_edw', 'company') }} company
-    LEFT JOIN {{ source('raw_from_harborview_edw', 'company_broad') }} company_broad
+        {{ ref('company') }} company
+    LEFT JOIN {{ ref('company_broad') }} company_broad
         ON company.company_broad_id = company_broad.company_broad_id
-    JOIN {{ source('raw_from_harborview_edw', 'currency') }} currency
+    JOIN {{ ref('currency') }} currency
         ON company_broad.currency_id = currency.currency_id
-    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_hv_geography_hierarchy') }} dim_geo
+    LEFT JOIN {{ ref('dim_hv_geography_hierarchy') }} dim_geo
         ON dim_geo.code = company.investment_geography_id
-    LEFT JOIN {{ source('raw_from_harborview_edw', 'dim_company_industry_hierarchy') }} company_hier
+    LEFT JOIN {{ ref('dim_company_industry_hierarchy') }} company_hier
         ON company.industry_fine_code = company_hier.industry_fine_code
     JOIN {{ ref('hub_company') }} hub
         ON company.company_id = hub.company_id 

@@ -4,6 +4,7 @@ from typing import Any
 from dagster import (
     AssetExecutionContext,
     AssetSpec,
+    MaterializeResult,
     Output,
     multi_asset,
 )
@@ -33,17 +34,21 @@ def dbt_sources_external_tables(
         DbtArguments.run_operation,
         DbtArguments.stage_external_sources,
         DbtArguments.args,
-        DbtArguments.select.format(".".join(context.asset_key.path)),
+        DbtArguments.select.format(
+            " ".join([".".join(key.path) for key in context.selected_asset_keys])
+        ),
         DbtArguments.vars,
     ]
     vars: dict[str, Any] = {"stage_location": etl_job_config.stage_location}
     if etl_job_config.full_reload:
         vars["ext_full_refresh"] = True
     dbt_args.append(json.dumps(vars))
-    yield from dbt.cli(
+    dbt.cli(
         dbt_args,
         manifest=dbt_project.manifest_path,
-    ).stream()
+    ).wait()
+    for key in context.selected_asset_keys:
+        yield MaterializeResult(asset_key=key)
 
 
 @dbt_assets(manifest=dbt_project.manifest_path)

@@ -1,5 +1,5 @@
 with investors as (
-    select * from {{ source('raw_from_harborview_edw', 'fact_investor_transactions') }}
+    select * from {{ ref('fact_investor_transactions') }}
 )
 
 SELECT DISTINCT

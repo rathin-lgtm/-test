@@ -1,5 +1,5 @@
 with portfolios as (
-    select * from {{ source('raw_from_harborview_edw', 'dim_portfolios') }}
+    select * from {{ ref('dim_portfolios') }}
 )
 
 select distinct {{ hk('portfolio_id') }} as hk_portfolio,
