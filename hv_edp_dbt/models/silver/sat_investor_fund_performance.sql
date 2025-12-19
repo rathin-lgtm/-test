@@ -59,7 +59,7 @@ with investor_performance_metrics as (
 
 final_metrics as (
     SELECT
-    metrics.as_of_date,
+    as_of_date,
     hk_link,
     {{ investor_rollup('called_pct') }} as called_pct,
     {{ investor_rollup('distributed_pct') }} as distributed_pct,
