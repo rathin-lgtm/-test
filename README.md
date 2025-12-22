@@ -3,7 +3,7 @@
 1) Create .env file in the root directory with the following data:
 ```
 SNOWFLAKE_USER=your username (email address)
-SNOWFLAKE_ACCOUNT=HVPLP-ACCTKURTOSYSNP
+SNOWFLAKE_ACCOUNT=HVPLP-ACCTCDPNP
 SNOWFLAKE_WH=KRTSYSNP_WAREHOUSE
 SNOWFLAKE_ROLE=_OKTA-SF_JAMLABS_DEV
 ENVIRONMENT=personal_dev
