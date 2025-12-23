@@ -22,7 +22,15 @@ SELECT
     lp_commitments as fund_lp_commitments,
     lp_capital_called as fund_lp_capital_called,
     lp_contributions as fund_lp_contributions,
-    lp_distributions as fund_lp_distributions
+    lp_distributions as fund_lp_distributions,
+    a.investor_presentation_aiv_initial_capcall_date as fund_investor_presentation_aiv_initial_capital_call_date,
+    a.investor_presentation_aiv_origination_date as fund_investor_presentation_aiv_origination_date,
+    a.investor_presentation_aiv_origination_quarter as fund_investor_presentation_aiv_origination_quarter,
+    a.investor_presentation_aiv_origination_year as fund_investor_presentation_aiv_origination_year,
+    a.investor_presentation_aiv_currency as fund_investor_presentation_aiv_currency,
+    a.investor_presentation_aiv_type as fund_investor_presentation_aiv_type,
+    a.investor_presentation_aiv_do_not_show_irr as fund_investor_presentation_aiv_do_not_show_irr,
+    a.investor_presentation_aiv_accounting_status as fund_investor_presentation_aiv_accounting_status
 FROM {{ ref('sat_fund_metrics') }} m
 JOIN {{ ref('sat_fund_attributes') }} a
     ON m.hk_fund = a.hk_fund
