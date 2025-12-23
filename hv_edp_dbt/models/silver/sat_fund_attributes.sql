@@ -17,6 +17,14 @@ attributes as (
         {{ to_date('aiv_fund.lock_date') }} as fund_investor_presentation_aiv_lock_date,
         aiv_fund.fund_type_e_id as fund_investor_presentation_aiv_type_efront,
         {{ to_date('fund.lock_date') }} as fund_lock_date,
+        {{ to_date('aiv_fund.Initial_Capcall_Date') }} as investor_presentation_aiv_initial_capcall_date,
+        {{ to_date('aiv_fund.Fund_Org_Date') }} as investor_presentation_aiv_origination_date,
+        cal.calendar_quarter_id as investor_presentation_aiv_origination_quarter,
+        cal.calendar_year as investor_presentation_aiv_origination_year,
+        c.name as investor_presentation_aiv_currency,
+        aiv_fund.type as investor_presentation_aiv_type,
+        aiv_fund.do_not_show_irr as investor_presentation_aiv_do_not_show_irr,
+        aiv_fund.accounting_status as investor_presentation_aiv_accounting_status,
         CURRENT_TIMESTAMP() as load_dt
     FROM 
         {{ source('bronze_from_harborview_edw', 'dim_fund') }} fund
@@ -30,6 +38,8 @@ attributes as (
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
     JOIN {{ ref('hub_fund') }} hub
         ON fund.fund_id = hub.fund_id
+    LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar') }} cal
+        ON aiv_fund.Fund_Org_Date = cal.date_id
 ),
 final_attributes as (
     SELECT 
@@ -42,6 +52,14 @@ final_attributes as (
         fund_investor_presentation_aiv_lock_date,
         fund_investor_presentation_aiv_type_efront,
         fund_lock_date,
+        investor_presentation_aiv_initial_capcall_date,
+        investor_presentation_aiv_origination_date,
+        investor_presentation_aiv_origination_quarter,
+        investor_presentation_aiv_origination_year,
+        investor_presentation_aiv_currency,
+        investor_presentation_aiv_type,
+        investor_presentation_aiv_do_not_show_irr,
+        investor_presentation_aiv_accounting_status,
         load_dt
     FROM attributes
     ORDER BY hk_fund
