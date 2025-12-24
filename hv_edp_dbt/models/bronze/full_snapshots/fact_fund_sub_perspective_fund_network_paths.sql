@@ -1,0 +1,1 @@
+{{ load_full_refresh_table('raw_from_harborview_edw', 'fact_fund_sub_perspective_fund_network_paths') }}

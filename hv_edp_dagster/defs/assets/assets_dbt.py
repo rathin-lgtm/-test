@@ -1,5 +1,4 @@
 import json
-from typing import Any
 
 from dagster import (
     AssetExecutionContext,
@@ -39,9 +38,7 @@ def dbt_sources_external_tables(
         ),
         DbtArguments.vars,
     ]
-    vars: dict[str, Any] = {"stage_location": etl_job_config.stage_location}
-    if etl_job_config.full_reload:
-        vars["ext_full_refresh"] = True
+    vars = {"stage_location": etl_job_config.stage_location, "ext_full_refresh": True}
     dbt_args.append(json.dumps(vars))
     dbt.cli(
         dbt_args,
