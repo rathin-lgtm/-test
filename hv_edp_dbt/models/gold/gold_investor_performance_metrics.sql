@@ -1,6 +1,7 @@
 SELECT
     metrics.as_of_date,
     attributes.efront_investor_id,
+    fund_attributes.efront_fund_id,
     short_name as investor_name,
     parent_group_id as investor_group_id,
     parent_group_name as investor_group_name,
@@ -32,6 +33,8 @@ JOIN {{ ref('link_investor_fund') }} link
     ON metrics.hk_link = link.hk_link
 JOIN {{ ref('sat_investor_attributes') }} attributes
     ON attributes.hk_investor = link.hk_investor
+JOIN {{ ref('sat_fund_attributes') }} fund_attributes
+    ON link.hk_fund = fund_attributes.hk_fund
 JOIN {{ ref('sat_investor_fund_performance') }} performance
     ON performance.hk_link = link.hk_link
     AND metrics.as_of_date = performance.as_of_date
