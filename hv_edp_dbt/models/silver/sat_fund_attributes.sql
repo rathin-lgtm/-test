@@ -74,7 +74,7 @@ attributes as (
         ON aiv_fund.Fund_Org_Date = cal.date_id
 ),
 final_attributes as (
-    SELECT
+    SELECT DISTINCT
         hk_fund,
         efront_fund_id,
         fund_name,
