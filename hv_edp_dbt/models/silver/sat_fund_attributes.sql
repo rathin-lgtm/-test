@@ -1,9 +1,11 @@
 with sub_perspectives as (
-    -- TODO: To be removed when proper tag system is in place and these sub-perspective attributes are placed somewhere else.
+    -- TODO: To be removed WHEN proper tag system is in place AND these sub-perspective attributes are placed somewhere else.
     SELECT *
     FROM {{ source('bronze_from_harborview_edw', 'dim_fund_sub_perspective') }} dim
     JOIN {{ source('bronze_from_harborview_edw', 'fact_fund_sub_perspective_funds') }} fct
-        ON fct.fund_sub_perspective_id = dim.fund_sub_perspective_id
+        --I had to relplcae ON with USING in join clause becuase later on we are also joining with dim_fund_sub_perspective_primary_fund table
+        --  which also has fund_sub_perspective_id column AND was getting ambiguous column name for fund_sub_perspective_id column
+        USING (fund_sub_perspective_id)   
     WHERE fund_perspective_view_id = 3 -- SELECT MAIN FUNDS ONLY
 ),
 attributes as (
@@ -25,6 +27,32 @@ attributes as (
         aiv_fund.type as investor_presentation_aiv_type,
         aiv_fund.do_not_show_irr as investor_presentation_aiv_do_not_show_irr,
         aiv_fund.accounting_status as investor_presentation_aiv_accounting_status,
+        pf.primary_geo_focus as sub_perspective_geographic_focus,
+        pf.initial_capcall_date as sub_perspective_initial_capital_call_date,
+        pf.investment_period as sub_perspective_investment_period,
+        CONCAT( pf.primary_geo_focus ,
+
+       (CASE WHEN pf.primary_geo_focus LIKE '' OR (pf.fund_strategy LIKE '' AND pf.primary_inv_focus LIKE '') THEN ''
+              WHEN pf.primary_geo_focus NOT LIKE '' AND pf.fund_strategy LIKE '' AND pf.primary_inv_focus LIKE '' THEN ''
+              ELSE ' 'END),
+
+       (CASE WHEN pf.fund_strategy LIKE 'Secondaries' AND pf.primary_inv_focus LIKE 'Secondary' THEN ''
+             ELSE pf.fund_strategy END),
+
+       (CASE WHEN (pf.fund_strategy LIKE '' OR pf.primary_inv_focus LIKE '') THEN ''
+             WHEN pf.fund_strategy LIKE 'Secondaries' AND pf.primary_inv_focus LIKE 'Secondary' THEN ''
+             ELSE ' 'END),
+
+       (CASE WHEN pf.primary_inv_focus LIKE 'Direct' THEN 'Direct Co-Investments'
+              WHEN pf.primary_inv_focus LIKE 'Direct, Primary' THEN 'Direct Co-Investments Primary Funds'
+              WHEN pf.primary_inv_focus LIKE 'Direct, Primary, Secondary' THEN 'Direct Co-Investments Primary Funds Secondary Investments'
+              WHEN pf.primary_inv_focus LIKE 'Direct, Secondary' THEN 'Direct Co-Investments Secondary Investments'
+              WHEN pf.primary_inv_focus LIKE 'Primary' THEN 'Primary Funds'
+              WHEN pf.primary_inv_focus LIKE 'Primary, Secondary' THEN 'Primary Funds Secondary Investments'
+              WHEN pf.primary_inv_focus LIKE 'Secondary' THEN 'Secondary Investments'
+              ELSE pf.primary_inv_focus END)
+              ) as sub_perspective_investment_strategy,
+        pf.primary_inv_focus as sub_perspective_investment_focus,
         CURRENT_TIMESTAMP() as load_dt
     FROM 
         {{ source('bronze_from_harborview_edw', 'dim_fund') }} fund
@@ -38,11 +66,13 @@ attributes as (
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
     JOIN {{ ref('hub_fund') }} hub
         ON fund.fund_id = hub.fund_id
+    LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_sub_perspective_primary_fund') }} pf
+        USING (fund_sub_perspective_id)
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar') }} cal
         ON aiv_fund.Fund_Org_Date = cal.date_id
 ),
 final_attributes as (
-    SELECT 
+    SELECT DISTINCT
         hk_fund,
         efront_fund_id,
         fund_name,
@@ -60,6 +90,11 @@ final_attributes as (
         investor_presentation_aiv_type,
         investor_presentation_aiv_do_not_show_irr,
         investor_presentation_aiv_accounting_status,
+        sub_perspective_geographic_focus,
+        sub_perspective_initial_capital_call_date,
+        sub_perspective_investment_period,
+        sub_perspective_investment_strategy,
+        sub_perspective_investment_focus,
         load_dt
     FROM attributes
     ORDER BY hk_fund
