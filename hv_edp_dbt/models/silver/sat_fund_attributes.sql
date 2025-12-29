@@ -1,11 +1,10 @@
 with sub_perspectives as (
-    -- TODO: To be removed WHEN proper tag system is in place and these sub-perspective attributes are placed somewhere else.
+    -- TODO: To be removed WHEN proper tag system is in place AND these sub-perspective attributes are placed somewhere else.
     SELECT *
     FROM {{ source('bronze_from_harborview_edw', 'dim_fund_sub_perspective') }} dim
     JOIN {{ source('bronze_from_harborview_edw', 'fact_fund_sub_perspective_funds') }} fct
-        --ON fct.fund_sub_perspective_id = dim.fund_sub_perspective_id
         --I had to relplcae ON with USING in join clause becuase later on we are also joining with dim_fund_sub_perspective_primary_fund table
-        --  which also has fund_sub_perspective_id column and was getting ambiguous column name for fund_sub_perspective_id column
+        --  which also has fund_sub_perspective_id column AND was getting ambiguous column name for fund_sub_perspective_id column
         USING (fund_sub_perspective_id)   
     WHERE fund_perspective_view_id = 3 -- SELECT MAIN FUNDS ONLY
 ),
@@ -31,17 +30,17 @@ attributes as (
         pf.primary_geo_focus as sub_perspective_geographic_focus,
         pf.initial_capcall_date as sub_perspective_initial_capital_call_date,
         pf.investment_period as sub_perspective_investment_period,
-        concat( pf.primary_geo_focus ,
+        CONCAT( pf.primary_geo_focus ,
 
-       (CASE WHEN pf.primary_geo_focus LIKE '' or (pf.fund_strategy LIKE '' and pf.primary_inv_focus LIKE '') THEN ''
-              WHEN pf.primary_geo_focus not LIKE '' and pf.fund_strategy LIKE '' and pf.primary_inv_focus LIKE '' THEN ''
+       (CASE WHEN pf.primary_geo_focus LIKE '' OR (pf.fund_strategy LIKE '' AND pf.primary_inv_focus LIKE '') THEN ''
+              WHEN pf.primary_geo_focus NOT LIKE '' AND pf.fund_strategy LIKE '' AND pf.primary_inv_focus LIKE '' THEN ''
               ELSE ' 'END),
 
-       (CASE WHEN pf.fund_strategy LIKE 'Secondaries' and pf.primary_inv_focus LIKE 'Secondary' THEN ''
+       (CASE WHEN pf.fund_strategy LIKE 'Secondaries' AND pf.primary_inv_focus LIKE 'Secondary' THEN ''
              ELSE pf.fund_strategy END),
 
-       (CASE WHEN (pf.fund_strategy LIKE '' or pf.primary_inv_focus LIKE '') THEN ''
-             WHEN pf.fund_strategy LIKE 'Secondaries' and pf.primary_inv_focus LIKE 'Secondary' THEN ''
+       (CASE WHEN (pf.fund_strategy LIKE '' OR pf.primary_inv_focus LIKE '') THEN ''
+             WHEN pf.fund_strategy LIKE 'Secondaries' AND pf.primary_inv_focus LIKE 'Secondary' THEN ''
              ELSE ' 'END),
 
        (CASE WHEN pf.primary_inv_focus LIKE 'Direct' THEN 'Direct Co-Investments'
@@ -69,7 +68,6 @@ attributes as (
         ON fund.fund_id = hub.fund_id
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'dim_fund_sub_perspective_primary_fund') }} pf
         USING (fund_sub_perspective_id)
-       -- ON sp.fund_sub_perspective_id = pf.fund_sub_perspective_id
     LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar') }} cal
         ON aiv_fund.Fund_Org_Date = cal.date_id
 ),
