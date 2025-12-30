@@ -1,7 +1,11 @@
 with sub_perspectives as (
-    -- TODO: To be removed when proper tag system is in place and these sub-perspective attributes are placed somewhere else.
+    -- TODO: To be removed WHEN proper tag system is in place AND these sub-perspective attributes are placed somewhere else.
     SELECT *
-    FROM {{ ref('dim_fund_sub_perspective') }}
+    FROM {{ ref('dim_fund_sub_perspective') }} dim
+    JOIN {{ ref('fact_fund_sub_perspective_funds') }} fct
+        --I had to relplcae ON with USING in join clause becuase later on we are also joining with dim_fund_sub_perspective_primary_fund table
+        --  which also has fund_sub_perspective_id column AND was getting ambiguous column name for fund_sub_perspective_id column
+        USING (fund_sub_perspective_id)   
     WHERE fund_perspective_view_id = 3 -- SELECT MAIN FUNDS ONLY
 ),
 attributes as (
@@ -15,6 +19,40 @@ attributes as (
         {{ to_date('aiv_fund.lock_date') }} as fund_investor_presentation_aiv_lock_date,
         aiv_fund.fund_type_e_id as fund_investor_presentation_aiv_type_efront,
         {{ to_date('fund.lock_date') }} as fund_lock_date,
+        {{ to_date('aiv_fund.initial_capcall_date') }} as investor_presentation_aiv_initial_capcall_date,
+        {{ to_date('aiv_fund.fund_org_date') }} as investor_presentation_aiv_origination_date,
+        cal.calendar_quarter_id as investor_presentation_aiv_origination_quarter,
+        cal.calendar_year as investor_presentation_aiv_origination_year,
+        c.name as investor_presentation_aiv_currency,
+        aiv_fund.type as investor_presentation_aiv_type,
+        aiv_fund.do_not_show_irr as investor_presentation_aiv_do_not_show_irr,
+        aiv_fund.accounting_status as investor_presentation_aiv_accounting_status,
+        pf.primary_geo_focus as sub_perspective_geographic_focus,
+        pf.initial_capcall_date as sub_perspective_initial_capital_call_date,
+        pf.investment_period as sub_perspective_investment_period,
+        CONCAT( pf.primary_geo_focus ,
+
+       (CASE WHEN pf.primary_geo_focus LIKE '' OR (pf.fund_strategy LIKE '' AND pf.primary_inv_focus LIKE '') THEN ''
+              WHEN pf.primary_geo_focus NOT LIKE '' AND pf.fund_strategy LIKE '' AND pf.primary_inv_focus LIKE '' THEN ''
+              ELSE ' 'END),
+
+       (CASE WHEN pf.fund_strategy LIKE 'Secondaries' AND pf.primary_inv_focus LIKE 'Secondary' THEN ''
+             ELSE pf.fund_strategy END),
+
+       (CASE WHEN (pf.fund_strategy LIKE '' OR pf.primary_inv_focus LIKE '') THEN ''
+             WHEN pf.fund_strategy LIKE 'Secondaries' AND pf.primary_inv_focus LIKE 'Secondary' THEN ''
+             ELSE ' 'END),
+
+       (CASE WHEN pf.primary_inv_focus LIKE 'Direct' THEN 'Direct Co-Investments'
+              WHEN pf.primary_inv_focus LIKE 'Direct, Primary' THEN 'Direct Co-Investments Primary Funds'
+              WHEN pf.primary_inv_focus LIKE 'Direct, Primary, Secondary' THEN 'Direct Co-Investments Primary Funds Secondary Investments'
+              WHEN pf.primary_inv_focus LIKE 'Direct, Secondary' THEN 'Direct Co-Investments Secondary Investments'
+              WHEN pf.primary_inv_focus LIKE 'Primary' THEN 'Primary Funds'
+              WHEN pf.primary_inv_focus LIKE 'Primary, Secondary' THEN 'Primary Funds Secondary Investments'
+              WHEN pf.primary_inv_focus LIKE 'Secondary' THEN 'Secondary Investments'
+              ELSE pf.primary_inv_focus END)
+              ) as sub_perspective_investment_strategy,
+        pf.primary_inv_focus as sub_perspective_investment_focus,
         CURRENT_TIMESTAMP() as load_dt
     FROM 
         {{ ref('dim_fund') }} fund
@@ -23,14 +61,18 @@ attributes as (
     JOIN {{ ref('global_edw_key_to_iqid') }} fid
         ON fund.fund_id = fid.edw_key AND fid.source_table = 'fund_xref'
     LEFT JOIN sub_perspectives sp
-        ON sp.fund_sub_perspective_primary_fund_id = fund.fund_id
+        ON sp.fund_id = fund.fund_id
     LEFT JOIN {{ ref('dim_fund') }} aiv_fund
         ON fund.aiv_fund_group_id = aiv_fund.fund_id
     JOIN {{ ref('hub_fund') }} hub
         ON fund.fund_id = hub.fund_id
+    LEFT JOIN {{ ref('dim_fund_sub_perspective_primary_fund') }} pf
+        USING (fund_sub_perspective_id)
+    LEFT JOIN {{ ref('calendar') }} cal
+        ON aiv_fund.Fund_Org_Date = cal.date_id
 ),
 final_attributes as (
-    SELECT 
+    SELECT DISTINCT
         hk_fund,
         efront_fund_id,
         fund_name,
@@ -40,6 +82,19 @@ final_attributes as (
         fund_investor_presentation_aiv_lock_date,
         fund_investor_presentation_aiv_type_efront,
         fund_lock_date,
+        investor_presentation_aiv_initial_capcall_date,
+        investor_presentation_aiv_origination_date,
+        investor_presentation_aiv_origination_quarter,
+        investor_presentation_aiv_origination_year,
+        investor_presentation_aiv_currency,
+        investor_presentation_aiv_type,
+        investor_presentation_aiv_do_not_show_irr,
+        investor_presentation_aiv_accounting_status,
+        sub_perspective_geographic_focus,
+        sub_perspective_initial_capital_call_date,
+        sub_perspective_investment_period,
+        sub_perspective_investment_strategy,
+        sub_perspective_investment_focus,
         load_dt
     FROM attributes
     ORDER BY hk_fund

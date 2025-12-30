@@ -76,6 +76,11 @@ sources:
             external:
               location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_FUND_SUB_PERSPECTIVE/"
               <<: *external_table_common
+          - name: dim_fund_sub_perspective_primary_fund
+            description: DIM_FUND_SUB_PERSPECTIVE_PRIMARY_FUND loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_FUND_SUB_PERSPECTIVE_PRIMARY_FUND/"
+              <<: *external_table_common
           - name: dim_holdings
             description: DIM_HOLDINGS loaded from Harbourview EDW
             external:
