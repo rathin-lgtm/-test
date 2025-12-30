@@ -60,27 +60,31 @@
 {% endmacro %}
 
 {% macro fund_irr_amount_filter_limited(metric_col, fact_date_col, cal_date_dim_col, cal_date_col, amount_col) %}
-    CASE
+    SUM(
+        CASE
         WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_col }} THEN -1*{{ amount_col }}
         WHEN {{ metric_col }} = 217 AND {{ fact_date_col }} > {{ cal_date_col }} THEN -1*{{ amount_col }}
         WHEN {{ metric_col }} = 218 AND {{ fact_date_col }} > {{ cal_date_col }} THEN {{ amount_col }}
         WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}
     END
+    )
 {% endmacro %}
 
 {% macro fund_irr_amount_filter_inception(metric_col, fact_date_col, cal_date_dim_col, amount_col) %}
-    CASE
+    SUM(
+        CASE
         WHEN {{ metric_col }} = 217 THEN -1*{{ amount_col }}
         WHEN {{ metric_col }} = 218 THEN {{ amount_col }}
         WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}
     END
+    )
 {% endmacro %}
 
 {% macro fund_irr_cashflow_indicator_filter(years, date_id_col, rollup_date_id_col, metric_id_col) %}
-    CASE
+    MAX(CASE
         WHEN {{ date_id_col }} <= {{ rollup_date_id_col }} - ({{ years }}*10000) AND {{ metric_id_col }} IN (217,218) THEN 1 
         ELSE 0
-    END
+    END)
 {% endmacro %}
 
 {% macro irr_cashflow_metric_ids() %}
