@@ -27,7 +27,9 @@ SELECT
     performance.irr_1_year_sales_rt as investor_irr_sales_1_year,
     performance.irr_3_year_sales_rt as investor_irr_sales_3_year,
     performance.irr_5_year_sales_rt as investor_irr_sales_5_year,
-    performance.irr_10_year_sales_rt as investor_irr_sales_10_year
+    performance.irr_10_year_sales_rt as investor_irr_sales_10_year,
+    dc_sales_rt as dc_sales,
+    gain_loss_sales_amt as investor_gain_loss_sales
 FROM {{ ref('sat_investor_fund_metrics') }} metrics
 JOIN {{ ref('link_investor_fund') }} link
     ON metrics.hk_link = link.hk_link
