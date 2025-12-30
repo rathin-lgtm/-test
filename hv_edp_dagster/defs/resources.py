@@ -112,3 +112,6 @@ class JobConfig(ConfigurableResource):
         default=None, description="Whether to perform a full reload of data"
     )
     stage_location: str | None = Field(default=None, description="Stage location to use")
+    filtered_fund_ids: list[str] = Field(
+        description="List of fund IDs to filter (for personal dev development)"
+    )

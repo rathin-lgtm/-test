@@ -29,6 +29,7 @@ def dbt_source_assets():
 def dbt_sources_external_tables(
     context: AssetExecutionContext, dbt: DbtCliResource, etl_job_config: JobConfig
 ):
+    vars = json.dumps({"stage_location": etl_job_config.stage_location, "ext_full_refresh": True})
     dbt_args = [
         DbtArguments.run_operation,
         DbtArguments.stage_external_sources,
@@ -37,9 +38,9 @@ def dbt_sources_external_tables(
             " ".join([".".join(key.path) for key in context.selected_asset_keys])
         ),
         DbtArguments.vars,
+        vars,
     ]
-    vars = {"stage_location": etl_job_config.stage_location, "ext_full_refresh": True}
-    dbt_args.append(json.dumps(vars))
+
     dbt.cli(
         dbt_args,
         manifest=dbt_project.manifest_path,
@@ -52,7 +53,8 @@ def dbt_sources_external_tables(
 def dbt_project_dbt_assets(
     context: AssetExecutionContext, dbt: DbtCliResource, etl_job_config: JobConfig
 ):
-    dbt_build_args = [DbtArguments.build]
+    vars = json.dumps({"filtered_fund_ids": etl_job_config.filtered_fund_ids})
+    dbt_build_args = [DbtArguments.build, DbtArguments.vars, vars]
     if etl_job_config.full_reload:
         dbt_build_args.append(DbtArguments.full_reload)
     context.log.info(f"Running dbt with args: {dbt_build_args}")

@@ -1,3 +1,16 @@
+{% macro filter_new_ingests() %}
+    {% if is_incremental() %}
+        WHERE DATE_FROM_PARTS(year, month, day) > (SELECT max(file_date) FROM {{ this }} )
+    {% endif %}
+{% endmacro %}
+
+{% macro filter_fund_ids() %}
+    {% set fund_ids = var('filtered_fund_ids', []) %}
+    {% if target.name == "personal_dev" and fund_ids | length > 0  %}
+        AND fund_id in ( {{ fund_ids | join(', ') }} )
+    {% endif %}
+{% endmacro %}
+
 {% macro load_full_refresh_table(source_name, table_name) %}
     SELECT * EXCLUDE (value, time_period_key, session_log_key, year, month, day), DATE_FROM_PARTS(year, month, day) as file_date, METADATA$FILENAME as file_name FROM {{ source(source_name, table_name) }}
 {% endmacro %}
@@ -36,4 +49,5 @@ SELECT * EXCLUDE (rn, operation_ind),
 operation_ind as last_operation_ind
 FROM latest
 WHERE rn = 1
+{{ filter_fund_ids() }}
 {% endmacro %}

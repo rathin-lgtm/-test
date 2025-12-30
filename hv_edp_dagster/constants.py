@@ -80,3 +80,5 @@ SHARED_DEV_STAGE_PATH = (
     f"{SHARED_DEV_CONFIG_DATA['schema_raw']}."
     f"{SHARED_DEV_CONFIG_DATA['stage']}"
 )
+
+FILTERED_FUND_IDS = os.getenv("FILTERED_FUND_IDS", "").split(",")
