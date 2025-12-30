@@ -54,11 +54,11 @@ xirrs as (
         fund_id,
         currency_id,
         date_id,
-        {{ target.database }}.{{ this.schema }}.xirr(amount_inception, cashflow_date, -0.01) * max(one_year_cashflow_ind) as irr_inception,
-        {{ target.database }}.{{ this.schema }}.xirr(amount_1_year, cashflow_date, -0.01) * max(one_year_cashflow_ind) as irr_1_year,
-        {{ target.database }}.{{ this.schema }}.xirr(amount_3_year, cashflow_date, -0.01) * max(three_year_cashflow_ind) as irr_3_year,
-        {{ target.database }}.{{ this.schema }}.xirr(amount_5_year, cashflow_date, -0.01) * max(five_year_cashflow_ind) as irr_5_year,
-        {{ target.database }}.{{ this.schema }}.xirr(amount_10_year, cashflow_date, -0.01) * max(ten_year_cashflow_ind) as irr_10_year
+        {{ target.database }}.{{ this.schema }}.xirr(amount_inception, cashflow_date) * max(one_year_cashflow_ind) as irr_inception,
+        {{ target.database }}.{{ this.schema }}.xirr(amount_1_year, cashflow_date) * max(one_year_cashflow_ind) as irr_1_year,
+        {{ target.database }}.{{ this.schema }}.xirr(amount_3_year, cashflow_date) * max(three_year_cashflow_ind) as irr_3_year,
+        {{ target.database }}.{{ this.schema }}.xirr(amount_5_year, cashflow_date) * max(five_year_cashflow_ind) as irr_5_year,
+        {{ target.database }}.{{ this.schema }}.xirr(amount_10_year, cashflow_date) * max(ten_year_cashflow_ind) as irr_10_year
     FROM cashflows
     GROUP BY fund_id, currency_id, date_id
 ),
