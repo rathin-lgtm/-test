@@ -21,7 +21,6 @@ SELECT
     investment_attributes.company_public_status as company_public_status,
     investment_attributes.company_stage as company_exposure_stage,
     investment_attributes.company_stage_broad as company_exposure_stage_broad,
-    investment_attributes.currency as investment_currency,
     realized_value as company_realized_value,
     total_value as company_total_value,
     total_cost as company_total_cost,
