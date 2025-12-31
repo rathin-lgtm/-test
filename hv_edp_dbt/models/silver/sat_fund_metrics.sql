@@ -19,11 +19,10 @@ daily_metrics as (
     contributions + {{ capital_called_add_term('t.metric_id', 't.amount') }} as capital_called,
     total_value - contributions as gain_loss,
     CURRENT_TIMESTAMP() as load_dt,
-    t.file_name as record_source
     FROM lp_investor_txns t
     JOIN {{ ref('dim_fund') }} f
         ON t.fund_id = f.fund_id
-    GROUP BY t.date_id, t.fund_id, t.currency_id, t.file_name
+    GROUP BY t.date_id, t.fund_id, t.currency_id
 ),
 cashflows as (
     SELECT * FROM (
@@ -45,7 +44,7 @@ cashflows as (
         FROM {{ ref('fact_irr_investor') }} fii
         JOIN ({{ irr_calendar() }}) cal ON
             (fii.date_id = cal.rollup_date_id)
-        WHERE fii.active_ind = 1 AND fii.metric_id IN ({{ irr_cashflow_metric_ids() }}) and fii.date_id < 20170101
+        WHERE fii.active_ind = 1 AND fii.metric_id IN ({{ irr_cashflow_metric_ids() }})
         GROUP BY fii.fund_id, fii.currency_id, cashflow_date, rollup_to_date_id, investor_type
     ) WHERE COALESCE(amount_1_year, amount_3_year, amount_5_year, amount_10_year, amount_inception) IS NOT NULL AND investor_type = 'LP'
 ),

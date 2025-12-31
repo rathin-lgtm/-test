@@ -18,12 +18,6 @@ class XirrAggregator:
         self._cashflow_by_date = {}
 
     def accumulate(self, cashflow: float, cashflow_date: str):
-        if cashflow is not None and cashflow_date is not None:
-            self._state["cashflows"].append(cashflow)
-            self._state["dates"].append(cashflow_date)
-        self._state["guess"] = guess
-
-    def accumulate(self, cashflow: float, cashflow_date: str):
         if cashflow is None or cashflow_date is None:
             return
         current = self._cashflow_by_date.get(cashflow_date)
@@ -51,9 +45,5 @@ class XirrAggregator:
     @property
     def aggregate_state(self):
         return {"_cashflow_by_date": self._cashflow_by_date}
-
-    @property
-    def aggregate_state(self):
-        return self._state
     $$;
 {% endmacro %}

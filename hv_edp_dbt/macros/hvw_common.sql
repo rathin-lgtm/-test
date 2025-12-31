@@ -15,17 +15,17 @@ SELECT
     LAST_DAY(DATEADD(year, -7, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_7_Year,
     LAST_DAY(DATEADD(year, -10, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_10_Year,
     LAST_DAY(DATEADD(year, -15, DATE(case when rd.date_id = -1 then NULL else rd.date_id end, 'YYYYMMDD'))) as Date_15_Year
-FROM {{ source('raw_from_harborview_edw', 'calendar') }} txn
+FROM {{ ref('calendar') }} txn
 JOIN  (
     SELECT * 
-    FROM {{ source('raw_from_harborview_edw', 'calendar') }} 
+    FROM {{ ref('calendar') }} 
     WHERE DATE_ID IN (
         SELECT month_end_date 
-        FROM {{ source('raw_from_harborview_edw', 'calendar_month') }} 
+        FROM {{ ref('calendar_month') }} 
         WHERE month_id <> -1
     ) OR Date_ID IN (
         SELECT quarter_id 
-        FROM {{ source('raw_from_harborview_edw', 'calendar_quarter') }} 
+        FROM {{ ref('calendar_quarter') }} 
         WHERE quarter_counter = 1
     )) rd
 ON txn.date_id <= rd.date_id
@@ -43,14 +43,14 @@ SELECT
     LAST_DAY(DATEADD(year, -7, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_7_Year,
     LAST_DAY(DATEADD(year, -10, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_10_Year,
     LAST_DAY(DATEADD(year, -15, DATE(case when cal.date_id = -1 then NULL else cal.date_id end, 'YYYYMMDD'))) as Date_15_Year
-FROM {{ source('raw_from_harborview_edw', 'calendar') }} cal 
+FROM {{ ref('calendar') }} cal 
 WHERE DATE_ID in (
     SELECT month_end_date
-    FROM {{ source('raw_from_harborview_edw', 'calendar_month') }}
+    FROM {{ ref('calendar_month') }}
     WHERE month_id <> -1
 ) OR Date_ID in (
     SELECT quarter_id 
-    FROM {{ source('raw_from_harborview_edw', 'calendar_quarter') }}
+    FROM {{ ref('calendar_quarter') }}
     WHERE quarter_counter = 1
 )                         
 {% endmacro %}

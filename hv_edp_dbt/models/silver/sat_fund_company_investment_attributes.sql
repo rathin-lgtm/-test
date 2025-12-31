@@ -8,7 +8,7 @@ with attributes as (
         stage.description as company_stage,
         l1_stage.description as company_stage_broad,
         CURRENT_TIMESTAMP() as load_dt
-    FROM  (SELECT distinct date_id, company_id, fund_id, investment_year, investment_type_id, public_status, stage_id from {{ source('raw_from_harborview_edw', 'fact_company_valuation') }} ) company_valuation
+    FROM  (SELECT distinct date_id, company_id, fund_id, investment_year, investment_type_id, public_status, stage_id from {{ ref('fact_company_valuation') }} ) company_valuation
     LEFT JOIN {{ ref('dim_investment_type') }} investment_type
         ON company_valuation.investment_type_id = investment_type.investment_type_id
     LEFT JOIN {{ ref('stage') }} stage

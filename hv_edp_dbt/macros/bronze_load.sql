@@ -12,7 +12,13 @@
 {% endmacro %}
 
 {% macro load_full_refresh_table(source_name, table_name) %}
-    SELECT * EXCLUDE (value, time_period_key, session_log_key, year, month, day), DATE_FROM_PARTS(year, month, day) as file_date, METADATA$FILENAME as file_name FROM {{ source(source_name, table_name) }}
+    SELECT * EXCLUDE (value, time_period_key, session_log_key, year, month, day), 
+    DATE_FROM_PARTS(year, month, day) as file_date, 
+    METADATA$FILENAME as file_name,
+    METADATA$FILE_LAST_MODIFIED as file_timestamp
+    FROM {{ source(source_name, table_name) }}
+    QUALIFY DATE_FROM_PARTS(year, month, day) = MAX(DATE_FROM_PARTS(year, month, day)) OVER()
+    AND METADATA$FILE_LAST_MODIFIED = MAX((METADATA$FILE_LAST_MODIFIED)) OVER()
 {% endmacro %}
 
 

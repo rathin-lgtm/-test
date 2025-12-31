@@ -96,7 +96,7 @@ xirrs as (
             currency_id,
             date_id,
             fund_id,
-            {{ target.database }}.{{ this.schema }}.xirr(amount_inception, cashflow_date, -0.01) * max(one_year_cashflow_ind) as irr_inception
+            {{ target.database }}.{{ this.schema }}.xirr(amount_inception, cashflow_date) * max(one_year_cashflow_ind) as irr_inception
         FROM cashflows
         GROUP BY portfolio_id, currency_id, date_id, fund_id
     ) irrs
