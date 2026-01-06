@@ -166,7 +166,7 @@
 
 
 {% macro fund_irr_amount_filter_inception_investor_fund_performance(metric_col, fact_date_col, cal_date_dim_col, amount_col) %}
-    CASE
+    SUM(CASE
         WHEN {{ metric_col }} = 217 THEN -1 * {{ amount_col }}   -- Contribution (outflow)
         WHEN {{ metric_col }} = 218 THEN       {{ amount_col }}  -- Distribution (inflow)
         WHEN {{ metric_col }} = 220 THEN -1 * {{ amount_col }}   -- Interest Paid (outflow)
@@ -175,6 +175,6 @@
         -- Ending NAVs only when the fact row date equals the month-end (your calendar macro ensures Date_Fact/Date_Dim)
         WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (        WHEN {{ metric_col }} = 227 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (Nav Core Lock)
         WHEN {{ metric_col }} = 332 AND {{ fact_date_col }} = {{ cal_date_dim_col }} THEN {{ amount_col }}  -- End NAV (PL Unlocked Transf NAV)
-    END
+    END)
 {% endmacro %}
 

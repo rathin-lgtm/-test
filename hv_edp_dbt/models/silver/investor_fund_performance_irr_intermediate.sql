@@ -13,9 +13,6 @@ WITH cashflows AS (
             fii.investor_name_id as investor_id,
             fii.currency_id,
             fii.investor_type,
-            fii.metric_id,
-            fii.amount,
-
             -- Window indicators (guard rails)
             {{ fund_irr_cashflow_indicator_filter(1,  'fii.date_id', 'cal.rollup_to_date_id', 'fii.metric_id') }}  AS one_year_cashflow_ind,
             {{ fund_irr_cashflow_indicator_filter(3,  'fii.date_id', 'cal.rollup_to_date_id', 'fii.metric_id') }}  AS three_year_cashflow_ind,
@@ -39,6 +36,7 @@ WITH cashflows AS (
           ON fii.date_id = cal.rollup_date_id
         WHERE fii.active_ind = 1
           AND fii.metric_id IN ({{ irr_cashflow_metric_investor_fund_performance_ids() }})
+        GROUP BY fii.fund_id, investor_id, fii.currency_id, cashflow_date, cal.rollup_to_date_id, investor_type
     )
     WHERE COALESCE(amount_1_year, amount_3_year, amount_5_year, amount_10_year, amount_inception) IS NOT NULL
       AND investor_type = 'LP'

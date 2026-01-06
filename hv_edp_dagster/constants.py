@@ -81,4 +81,6 @@ SHARED_DEV_STAGE_PATH = (
     f"{SHARED_DEV_CONFIG_DATA['stage']}"
 )
 
-FILTERED_FUND_IDS = os.getenv("FILTERED_FUND_IDS", "").split(",")
+FILTERED_FUND_IDS = (
+    os.getenv("FILTERED_FUND_IDS", "").split(",") if os.getenv("FILTERED_FUND_IDS") else []
+)
