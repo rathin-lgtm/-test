@@ -138,7 +138,17 @@ sources:
             description: FACT_FUND_SUB_PERSPECTIVE_FUNDS loaded from Harbourview EDW
             meta:
               dagster:
-                asset_key: ['bronze_fact_fund_sub_perspective_funds'] 
+                asset_key: ['bronze_fact_fund_sub_perspective_funds']
+          - name: fact_investor_ownership
+            description: FACT_INVESTOR_OWNERSHIP loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_fact_investor_ownership']
+          - name: ownership_date
+            description: OWNERSHIP_DATE loaded from Harbourview EDW
+            meta:
+              dagster:
+                asset_key: ['bronze_ownership_date']
           - name: dim_fund_sub_perspective
             description: DIM_FUND_SUB_PERSPECTIVE loaded from Harbourview EDW
             meta:
