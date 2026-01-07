@@ -33,7 +33,7 @@ with src as (
     METADATA$FILENAME as file_name
     FROM {{ source(source_name, table_name) }} 
     {% if is_incremental() %}
-        WHERE {{ filter_new_ingests() }}
+        {{ filter_new_ingests() }}
         {{ filter_fund_ids('AND') }}
     {% else %}
         {{ filter_fund_ids('WHERE') }}
