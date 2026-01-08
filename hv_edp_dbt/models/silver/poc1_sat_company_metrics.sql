@@ -14,7 +14,7 @@ company_metrics as (
         cv.fund_id,
         cv.company_id,
         cv.original_company_id,
-        cv.currency_id,
+        currency.currency_code,
         cv.metric_id,
         cv.amount * fh.hier_percentage hier_amount,
         fh.fund_hier_id, -- adding these for getting joinng later to get comnay investor metrics
@@ -24,11 +24,13 @@ company_metrics as (
     FROM fund_hier_ownership fh
     JOIN {{ source('bronze_from_harborview_edw', 'fact_company_valuation') }} cv ON
         fh.L29_id = cv.fund_id
+    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency ON
+        cv.currency_id = currency.currency_id
         GROUP BY CV.DATE_ID,
         cv.fund_id,
         cv.company_id,
         cv.original_company_id,
-        cv.currency_id,
+        currency.currency_code,
         cv.metric_id,
         hier_amount,
         fh.fund_hier_id,
@@ -50,6 +52,7 @@ daily_metrics as (
         link.hk_link,
         hub_original.hk_company as hk_company_original,
         date_id,
+        currency_code,
         cip.investor_id, -- this field for company investor metrics
         {{ company_realized_value('metric_id', 'hier_amount') }} as company_realized_value,
         {{ company_current_value('metric_id', 'hier_amount') }} as company_current_value,
@@ -71,7 +74,7 @@ daily_metrics as (
         and metrics.company_id = link.company_id
     LEFT JOIN company_investor_percent cip
         ON metrics.fund_hier = cip.fund_network_path_id
-    GROUP BY date_id, hub.hk_company, hub_original.hk_company, link.hk_link, cip.investor_id
+    GROUP BY date_id, hub.hk_company, hub_original.hk_company, link.hk_link, metrics.currency_code, cip.investor_id
 ),
 
 final_metrics as (
@@ -81,16 +84,17 @@ SELECT
     hk_company,
     hk_company_original,
     load_dt,
+    currency_code as metric_currency_code,
     -- these two fields for investor_company metrics
     investor_id,
     INVESTOR_COMPANY_CURRENT_VALUE,
-    {{ company_rollup('company_realized_value') }} as realized_value, 
-    {{ company_rollup('company_current_value') }} as current_value, 
-    {{ company_rollup('company_total_value') }} as total_value, 
-    {{ company_rollup('company_realized_cost') }} as realized_cost,
-    {{ company_rollup('company_current_cost') }} as current_cost,
-    {{ company_rollup('company_total_cost') }} as total_cost, 
-    {{ company_rollup('company_gain_loss') }} as gain_loss,
+    company_realized_value as realized_value, 
+    company_current_value as current_value, 
+    company_total_value as total_value, 
+    company_realized_cost as realized_cost,
+    company_current_cost as current_cost,
+    company_total_cost as total_cost, 
+    company_gain_loss as gain_loss,
     CASE 
         WHEN total_cost = 0 THEN 0
         ELSE total_value / total_cost
