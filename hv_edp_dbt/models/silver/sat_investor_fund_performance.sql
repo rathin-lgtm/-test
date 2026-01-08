@@ -5,26 +5,6 @@ with investor_performance_metrics as (
         investor_transactions.fund_id,
         {{ safe_division(
             [
-                investor_capital_called_excludes_total_transfers_transaction('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_cap_components('investor_transactions.metric_id', 'investor_transactions.amount'), 
-                investor_transaction_unfunded('investor_transactions.metric_id', 'investor_transactions.amount')
-            ]
-            ) 
-        }} as called_pct,
-        {{ safe_division(
-            [
-                investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_total('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_contribution_adjustment_transaction('investor_transactions.metric_id', 'investor_transactions.amount')
-            ]
-            ) 
-        }} as distributed_pct,
-        {{ safe_division(
-            [
                 investor_nav('investor_transactions.metric_id', 'investor_transactions.amount'),
                 investor_transfers('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.is_transfered', 'investor_transactions.date_id', 'fund.lock_date_eqt'),
                 investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount')
@@ -75,8 +55,6 @@ final_metrics as (
     SELECT
     as_of_date,
     hk_link,
-    {{ investor_rollup('called_pct') }} as called_pct,
-    {{ investor_rollup('distributed_pct') }} as distributed_pct,
     {{ investor_rollup('tvf_sales_rt') }} as tvf_sales_rt,
     {{ investor_rollup('tvpi_rt') }} as tvpi_rt,
     {{ investor_rollup('unfunded') }} as unfunded_inception_to_date_amt,
