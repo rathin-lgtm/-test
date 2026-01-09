@@ -54,11 +54,12 @@ def dbt_project_dbt_assets(
     context: AssetExecutionContext, dbt: DbtCliResource, etl_job_config: JobConfig
 ):
     dbt_build_args = [DbtArguments.build]
+    filters = {}
     if etl_job_config.filtered_fund_ids:
-
-        dbt_build_args.extend(
-            [DbtArguments.vars, json.dumps({"filtered_fund_ids": etl_job_config.filtered_fund_ids})]
-        )
+        filters["filtered_fund_ids"] = etl_job_config.filtered_fund_ids
+    if etl_job_config.filtered_investor_ids:
+        filters["filtered_investor_ids"] = etl_job_config.filtered_investor_ids
+    dbt_build_args.extend([DbtArguments.vars, json.dumps(filters)])
     if etl_job_config.full_reload:
         dbt_build_args.append(DbtArguments.full_reload)
     context.log.info(f"Running dbt with args: {dbt_build_args}")

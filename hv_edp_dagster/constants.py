@@ -84,3 +84,6 @@ SHARED_DEV_STAGE_PATH = (
 FILTERED_FUND_IDS = (
     os.getenv("FILTERED_FUND_IDS", "").split(",") if os.getenv("FILTERED_FUND_IDS") else []
 )
+FILTERED_INVESTOR_IDS = (
+    os.getenv("FILTERED_INVESTOR_IDS", "").split(",") if os.getenv("FILTERED_INVESTOR_IDS") else []
+)

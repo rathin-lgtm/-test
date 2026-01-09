@@ -1,12 +1,13 @@
 {% macro filter_new_ingests() %}
-    WHERE DATE_FROM_PARTS(year, month, day) > (SELECT max(file_date) FROM {{ this }} )
+    DATE_FROM_PARTS(year, month, day) > (SELECT max(file_date) FROM {{ this }} )
 {% endmacro %}
 
-{% macro filter_fund_ids(preposition) %}
-    {% set fund_ids = var('filtered_fund_ids', []) %}
-    {% if target.name == "personal_dev" and fund_ids | length > 0  %}
-       {{preposition}} fund_id in ( {{ fund_ids | join(', ') }} )
-    {% endif %}
+{% macro filter_fund_ids(fund_ids) %}
+    fund_id in ( {{ fund_ids | join(', ') }} )
+{% endmacro %}
+
+{% macro filter_investor_ids(investor_ids) %}
+    investor_name_id in ( {{ investor_ids | join(', ') }} )
 {% endmacro %}
 
 {% macro load_full_refresh_table(source_name, table_name) %}
@@ -20,7 +21,7 @@
 {% endmacro %}
 
 
-{% macro load_delta_table(source_name, table_name, unique_keys) %}
+{% macro load_delta_table(source_name, table_name, unique_keys, fund_filter, investor_filter) %}
 {{
     config(
         incremental_strategy='merge',
@@ -32,11 +33,23 @@ with src as (
     DATE_FROM_PARTS(year, month, day) as file_date,
     METADATA$FILENAME as file_name
     FROM {{ source(source_name, table_name) }} 
+    WHERE True
+    {% if target.name == "personal_dev"%}
+        {% if fund_filter %}
+            {% set fund_ids = var('filtered_fund_ids', []) %}
+            {% if fund_ids | length > 0  %}
+                AND {{ filter_fund_ids(fund_ids) }}
+            {% endif %}
+        {% endif %}
+        {% if investor_filter %}
+            {% set investor_ids = var('filtered_investor_ids', []) %}
+            {% if investor_ids | length > 0  %}
+                AND {{ filter_investor_ids(investor_ids) }}
+            {% endif %}
+        {% endif %}
+    {% endif %}
     {% if is_incremental() %}
-        {{ filter_new_ingests() }}
-        {{ filter_fund_ids('AND') }}
-    {% else %}
-        {{ filter_fund_ids('WHERE') }}
+        AND {{ filter_new_ingests() }}
     {% endif %}
     
 ),

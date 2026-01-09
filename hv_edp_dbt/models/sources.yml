@@ -146,6 +146,11 @@ sources:
             external:
               location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY/"
               <<: *external_table_common
+          - name: fact_investor_ownership
+            description: FACT_INVESTOR_OWNERSHIP loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_INVESTOR_OWNERSHIP/"
+              <<: *external_table_common
           - name: fact_investor_transactions
             description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW      
             external:

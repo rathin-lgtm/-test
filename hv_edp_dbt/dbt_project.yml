@@ -19,6 +19,7 @@ clean-targets:
 vars:
   stage_location: ""
   filtered_fund_ids: []
+  filtered_fund_ids: []
 
 models:
   hv_edp_dbt:

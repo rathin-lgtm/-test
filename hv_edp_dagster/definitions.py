@@ -8,6 +8,7 @@ from dagster_dbt import DbtCliResource
 
 from hv_edp_dagster.constants import (
     FILTERED_FUND_IDS,
+    FILTERED_INVESTOR_IDS,
     SHARED_DEV_STAGE_PATH,
     SNOWFLAKE_CONFIG_DATA,
     Environments,
@@ -60,6 +61,7 @@ def get_resources():
             full_reload=False,
             stage_location=stage_location,
             filtered_fund_ids=FILTERED_FUND_IDS,
+            filtered_investor_ids=FILTERED_INVESTOR_IDS,
         ),
     }
 

@@ -115,3 +115,6 @@ class JobConfig(ConfigurableResource):
     filtered_fund_ids: list[str] = Field(
         description="List of fund IDs to filter (for personal dev development)"
     )
+    filtered_investor_ids: list[str] = Field(
+        description="List of investor (name) IDs to filter (for personal dev development)"
+    )
