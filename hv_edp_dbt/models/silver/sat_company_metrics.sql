@@ -14,12 +14,14 @@ company_metrics as (
         cv.fund_id,
         cv.company_id,
         cv.original_company_id,
-        cv.currency_id,
+        currency.currency_code,
         cv.metric_id,
         cv.amount * fh.hier_percentage hier_amount
     FROM fund_hier_ownership fh
     JOIN {{ source('bronze_from_harborview_edw', 'fact_company_valuation') }} cv ON
         fh.L29_id = cv.fund_id
+    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency ON
+        cv.currency_id = currency.currency_id
 ),
 daily_metrics as (
     SELECT
@@ -27,6 +29,7 @@ daily_metrics as (
         link.hk_link,
         hub_original.hk_company as hk_company_original,
         date_id,
+        currency_code,
         {{ company_realized_value('metric_id', 'hier_amount') }} as company_realized_value,
         {{ company_current_value('metric_id', 'hier_amount') }} as company_current_value,
         (company_current_value - company_realized_value) as company_total_value,
@@ -43,7 +46,7 @@ daily_metrics as (
     JOIN {{ ref('link_fund_company') }} link
         ON metrics.fund_id = link.fund_id
         and metrics.company_id = link.company_id
-    GROUP BY date_id, hub.hk_company, hub_original.hk_company, link.hk_link
+    GROUP BY date_id, hub.hk_company, hub_original.hk_company, link.hk_link, metrics.currency_code
 ),
 
 final_metrics as (
@@ -53,13 +56,14 @@ SELECT
     hk_company,
     hk_company_original,
     load_dt,
-    {{ company_rollup('company_realized_value') }} as realized_value, 
-    {{ company_rollup('company_current_value') }} as current_value, 
-    {{ company_rollup('company_total_value') }} as total_value, 
-    {{ company_rollup('company_realized_cost') }} as realized_cost,
-    {{ company_rollup('company_current_cost') }} as current_cost,
-    {{ company_rollup('company_total_cost') }} as total_cost, 
-    {{ company_rollup('company_gain_loss') }} as gain_loss,
+    currency_code as metric_currency_code,
+    company_realized_value as realized_value, 
+    company_current_value as current_value, 
+    company_total_value as total_value, 
+    company_realized_cost as realized_cost,
+    company_current_cost as current_cost,
+    company_total_cost as total_cost, 
+    company_gain_loss as gain_loss,
     CASE 
         WHEN total_cost = 0 THEN 0
         ELSE total_value / total_cost

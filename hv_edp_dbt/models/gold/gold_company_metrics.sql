@@ -3,6 +3,7 @@ SELECT
     fund_attributes.efront_fund_id,
     link.company_id,
     company.company_name as company_name,
+    metric_currency_code as metric_currency,
     company.company_currency as company_currency,
     company.company_business_description as company_exposure_business_description,
     company.company_geography_broad as company_exposure_geography_broad,
