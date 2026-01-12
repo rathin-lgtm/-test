@@ -1,11 +1,3 @@
-{% macro company_rollup(col) %}
-    SUM({{ col }}) OVER (
-        PARTITION BY hk_company, hk_company_original, hk_link
-        ORDER BY as_of_date
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    )
-{% endmacro %}
-
 {% macro company_realized_value(metric_col, amount_col) %}
     SUM(
         CASE

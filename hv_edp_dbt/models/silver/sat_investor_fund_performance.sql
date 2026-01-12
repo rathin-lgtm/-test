@@ -3,62 +3,21 @@ with investor_performance_metrics as (
         {{ to_date('investor_transactions.date_id') }} as as_of_date,
         investor_transactions.investor_name_id as investor_id,
         investor_transactions.fund_id,
-        {{ safe_division(
-            [
-                investor_capital_called_excludes_total_transfers_transaction('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_cap_components('investor_transactions.metric_id', 'investor_transactions.amount'), 
-                investor_transaction_unfunded('investor_transactions.metric_id', 'investor_transactions.amount')
-            ]
-            ) 
-        }} as called_pct,
-        {{ safe_division(
-            [
-                investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_total('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_contribution_adjustment_transaction('investor_transactions.metric_id', 'investor_transactions.amount')
-            ]
-            ) 
-        }} as distributed_pct,
-        {{ safe_division(
-            [
-                investor_nav('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_transfers('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.is_transfered', 'investor_transactions.date_id', 'fund.lock_date_eqt'),
-                investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_total('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_distribution_adjustment_transaction('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_transfer_of_interest_nav_total('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.is_transfered', 'investor_transactions.is_transfer_within_group')
-            ]
-            ) 
-        }} as tvf_sales_rt,
-        {{ safe_division(
-            [
-                investor_nav_in_lock_date('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.date_id', 'fund.lock_date_eqt'),
-                investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_cap_components('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_contribution_adjustment('investor_transactions.metric_id', 'investor_transactions.amount')
-            ]
-            ) 
-        }} as tvpi_rt,
-        {{ investor_contribution_commitment_fund_currency('investor_transactions.metric_id', 'investor_transactions.amount') }} +
+        {{ investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount') }} as distribution_amt,
+        {{ investor_nav('investor_transactions.metric_id', 'investor_transactions.amount') }} +
+        {{ investor_transfers('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.is_transfered', 'investor_transactions.date_id', 'fund.lock_date_eqt') }} +
+        {{ investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount') }} as total_value_sales,
+        {{ investor_contribution_total('investor_transactions.metric_id', 'investor_transactions.amount') }} +
+        {{ investor_distribution_adjustment_transaction('investor_transactions.metric_id', 'investor_transactions.amount') }} + 
+        {{ investor_transfer_of_interest_nav_total('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.is_transfered', 'investor_transactions.is_transfer_within_group') }} as inception_contribution_transfer_nav,
+        {{ investor_nav_in_lock_date('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.date_id', 'fund.lock_date_eqt') }} + 
+        {{ investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount') }} as total_value,
+        {{ investor_contribution_cap_components('investor_transactions.metric_id', 'investor_transactions.amount') }} + 
+        {{ investor_contribution_adjustment('investor_transactions.metric_id', 'investor_transactions.amount') }} as contribution_in_cap,
+        {{ investor_contribution_commitment_fund_currency('investor_transactions.metric_id', 'investor_transactions.amount') }} -
         {{ investor_contribution_cap_components('investor_transactions.metric_id', 'investor_transactions.amount') }} as unfunded,
-        {{ safe_division(
-            [
-                investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount')
-            ],
-            [
-                investor_contribution_total('investor_transactions.metric_id', 'investor_transactions.amount'),
-                investor_contribution_adjustment('investor_transactions.metric_id', 'investor_transactions.amount')
-            ]
-            )
-        }} as dc_sales_rt,
+        {{ investor_contribution_total('investor_transactions.metric_id', 'investor_transactions.amount') }} + 
+        {{ investor_contribution_adjustment('investor_transactions.metric_id', 'investor_transactions.amount') }} as contribution_transactions,
         {{ investor_nav('investor_transactions.metric_id', 'investor_transactions.amount') }} +
         {{ investor_transfers('investor_transactions.metric_id', 'investor_transactions.amount', 'investor_transactions.is_transfered', 'investor_transactions.date_id', 'fund.lock_date_eqt') }} +
         {{ investor_distribution('investor_transactions.metric_id', 'investor_transactions.amount') }} -
@@ -71,31 +30,46 @@ with investor_performance_metrics as (
     GROUP BY as_of_date, investor_transactions.investor_name_id, investor_transactions.fund_id
 ),
 
+rolled_performance as (
+    SELECT
+        as_of_date,
+        hk_link,
+        metrics.investor_id,
+        metrics.fund_id,
+        {{ investor_rollup('distribution_amt') }} as distribution_amt,
+        {{ investor_rollup('total_value_sales') }} as total_value_sales,
+        {{ investor_rollup('inception_contribution_transfer_nav') }} as inception_contribution_transfer_nav,
+        {{ investor_rollup('total_value') }} as total_value,
+        {{ investor_rollup('contribution_in_cap') }} as contribution_in_cap,
+        {{ investor_rollup('unfunded') }} as unfunded_inception_to_date_amt,
+        {{ investor_rollup('contribution_transactions') }} as contribution_transactions,
+        {{ investor_rollup('gain_loss_sales_amt') }} as gain_loss_sales_amt
+    FROM investor_performance_metrics metrics
+    JOIN {{ ref('link_investor_fund') }} link
+        ON metrics.investor_id = link.investor_id
+        AND metrics.fund_id = link.fund_id
+),
+
 final_metrics as (
     SELECT
     as_of_date,
     hk_link,
-    {{ investor_rollup('called_pct') }} as called_pct,
-    {{ investor_rollup('distributed_pct') }} as distributed_pct,
-    {{ investor_rollup('tvf_sales_rt') }} as tvf_sales_rt,
-    {{ investor_rollup('tvpi_rt') }} as tvpi_rt,
-    {{ investor_rollup('unfunded') }} as unfunded_inception_to_date_amt,
+    {{ safe_division(['rolled.total_value_sales'], ['rolled.inception_contribution_transfer_nav']) }} as tvf_sales_rt,
+    {{ safe_division(['rolled.total_value'], ['rolled.contribution_in_cap']) }} as tvpi_rt,
+    rolled.unfunded_inception_to_date_amt,
     i.irr as irr_sales_rt,
     i.irr_1_year as irr_1_year_sales_rt,
     i.irr_3_year as irr_3_year_sales_rt,
     i.irr_5_year as irr_5_year_sales_rt,
     i.irr_10_year as irr_10_year_sales_rt,
-    {{ investor_rollup('dc_sales_rt') }} as dc_sales_rt,
-    {{ investor_rollup('gain_loss_sales_amt') }} as gain_loss_sales_amt,
+    {{ safe_division(['rolled.distribution_amt'], ['rolled.contribution_transactions']) }} as dc_sales_rt,
+    rolled.gain_loss_sales_amt,
     CURRENT_TIMESTAMP() as load_dt,
-    FROM investor_performance_metrics metrics
-    JOIN {{ ref('link_investor_fund') }} link
-        ON metrics.investor_id = link.investor_id
-        AND metrics.fund_id = link.fund_id
+    FROM rolled_performance rolled
     LEFT JOIN {{ ref('investor_fund_performance_irr_intermediate') }} i
-       ON metrics.investor_id = i.investor_id
-       AND metrics.fund_id = i.fund_id
-        AND metrics.as_of_date = i.as_of_date1
+       ON rolled.investor_id = i.investor_id
+       AND rolled.fund_id = i.fund_id
+        AND rolled.as_of_date = i.as_of_date1
     ORDER BY as_of_date
 )
 

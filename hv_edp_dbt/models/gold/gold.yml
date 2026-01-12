@@ -30,8 +30,8 @@ models:
       - name: as_of_date
         tests: [not_null]
 
-  - name: gold_investor_daily_transaction_metrics
-    description: "Gold Investor Daily Transaction Metrics"
+  - name: gold_investor_transaction_metrics
+    description: "Gold Investor Transaction Metrics"
     columns:
       - name: as_of_date
         tests: [not_null]
