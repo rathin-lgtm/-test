@@ -6,7 +6,13 @@ from dagster import (
 )
 from dagster_dbt import DbtCliResource
 
-from hv_edp_dagster.constants import SNOWFLAKE_CONFIG_DATA, Environments
+from hv_edp_dagster.constants import (
+    FILTERED_FUND_IDS,
+    FILTERED_INVESTOR_IDS,
+    SHARED_DEV_STAGE_PATH,
+    SNOWFLAKE_CONFIG_DATA,
+    Environments,
+)
 from hv_edp_dagster.constants import SnowflakeEnv as sf
 from hv_edp_dagster.defs import assets
 from hv_edp_dagster.defs.jobs.etl_jobs import all_etl_jobs
@@ -43,15 +49,19 @@ def get_snowflake_config():
 
 
 def get_resources():
+    stage_location = (
+        SHARED_DEV_STAGE_PATH
+        if sf.IS_LOCAL_ENVIRONMENT
+        else get_snowflake_config().get_full_stage_path()
+    )
     return {
         "dbt": DbtCliResource(project_dir=dbt_project, target=sf.ENVIRONMENT),
         "snowflake_config": get_snowflake_config(),
         "etl_job_config": JobConfig(
             full_reload=False,
-            use_shared_stage=sf.IS_LOCAL_ENVIRONMENT,
-        ),
-        "infra_job_config": JobConfig(
-            use_shared_stage=sf.IS_LOCAL_ENVIRONMENT,
+            stage_location=stage_location,
+            filtered_fund_ids=FILTERED_FUND_IDS,
+            filtered_investor_ids=FILTERED_INVESTOR_IDS,
         ),
     }
 

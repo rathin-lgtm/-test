@@ -13,9 +13,6 @@ WITH cashflows AS (
             fii.investor_name_id as investor_id,
             fii.currency_id,
             fii.investor_type,
-            fii.metric_id,
-            fii.amount,
-
             -- Window indicators (guard rails)
             {{ fund_irr_cashflow_indicator_filter(1,  'fii.date_id', 'cal.rollup_to_date_id', 'fii.metric_id') }}  AS one_year_cashflow_ind,
             {{ fund_irr_cashflow_indicator_filter(3,  'fii.date_id', 'cal.rollup_to_date_id', 'fii.metric_id') }}  AS three_year_cashflow_ind,
@@ -34,11 +31,12 @@ WITH cashflows AS (
             -- Cashflow date used by XIRR
             cal.Date_Fact         AS cashflow_date,
             cal.rollup_to_date_id AS date_id
-        FROM {{ source('bronze_from_harborview_edw', 'fact_irr_investor') }} fii
+        FROM {{ ref('fact_irr_investor') }} fii
         JOIN ({{ irr_calendar() }}) cal
           ON fii.date_id = cal.rollup_date_id
         WHERE fii.active_ind = 1
           AND fii.metric_id IN ({{ irr_cashflow_metric_investor_fund_performance_ids() }})
+        GROUP BY fii.fund_id, investor_id, fii.currency_id, cashflow_date, cal.rollup_to_date_id, investor_type
     )
     WHERE COALESCE(amount_1_year, amount_3_year, amount_5_year, amount_10_year, amount_inception) IS NOT NULL
       AND investor_type = 'LP'
@@ -54,31 +52,31 @@ xirrs AS (
         -- Inception IRR: gate by presence of inception cashflows (NOT by 1-year guard rail)
         CASE
           WHEN COALESCE(SUM(amount_inception), 0) <> 0
-          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_inception, cashflow_date, -0.01)
+          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_inception, cashflow_date)
           ELSE NULL
         END AS irr_inception,
 
         CASE
           WHEN MAX(one_year_cashflow_ind) = 1
-          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_1_year, cashflow_date, -0.01)
+          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_1_year, cashflow_date)
           ELSE NULL
         END AS irr_1_year,
 
         CASE
           WHEN MAX(three_year_cashflow_ind) = 1
-          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_3_year, cashflow_date, -0.01)
+          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_3_year, cashflow_date)
           ELSE NULL
         END AS irr_3_year,
 
         CASE
           WHEN MAX(five_year_cashflow_ind) = 1
-          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_5_year, cashflow_date, -0.01)
+          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_5_year, cashflow_date)
           ELSE NULL
         END AS irr_5_year,
 
         CASE
           WHEN MAX(ten_year_cashflow_ind) = 1
-          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_10_year, cashflow_date, -0.01)
+          THEN {{ target.database }}.{{ this.schema }}.xirr(amount_10_year, cashflow_date)
           ELSE NULL
         END AS irr_10_year
 

@@ -1,0 +1,1 @@
+{{ load_full_refresh_table('raw_from_harborview_edw', 'global_edw_key_to_iqid') }}

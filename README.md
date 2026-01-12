@@ -8,6 +8,8 @@ SNOWFLAKE_WH=KRTSYSNP_WAREHOUSE
 SNOWFLAKE_ROLE=_OKTA-SF_JAMLABS_DEV
 ENVIRONMENT=personal_dev
 DAGSTER_HOME=full path to the root directory (i.e.  C:\Users\panisova\Source\repo\Hvp.Dna.EntRpt.Snowflake), used to store Dagster run information.
+FILTERED_FUND_IDS=fund ids list to filter for (local runs only, i.e. 2215985,2215987,2216055,50688539,37642683)
+FILTERED_INVESTOR_IDS=investor (name) ids list to filter for (local runs only, i.e. 1480545)
 ```
 2) Install Python 3.12 from Software Center
 3) Open a Powershell and navigate to code directory (make sure, that the code directory is located in ThreatLocker Thrusted path).
@@ -55,16 +57,12 @@ Dagster will run locally on http://127.0.0.1:3000/
 2) Open Dagster UI
 3) Trigger Provision infra job (Jobs -> provision_infra -> Materialize all). A database HV_EDP_{username}_DEV will be created in Snowflake, together with resources, required by the Bronze layer (schema, landing stage, tables, file format).
 
-Job settings:
-- **Use shared stage**: true/false (true by default. If set to false, personal dev landing stage will be used for source files template instead of shared dev landing stage).
-
-Note: bronze tables creation requires raw data file to be uploaded to the file landing stage, to be used as a template. The file should be uploaded in a folder {source_name}/{table_name}/YYYY/MM/DD (i.e. HARBOURVIEW_EDW/DIM_FUND/2025/10/15/edw_dim_fund.csv). For the personal dev environments, the shared dev's landing stage will be used by default, unless Use shared stage is set to True.
-
 ### Running ETL jobs on the personal development environment
 
 ETL jobs have different running modes:
 - **Full reload**: true/false (false by default - only new fresh files data is loaded. If set to true, will clean up bronze data, load all files from landing stage, and re-create silver and gold tables).
-- **Use shared stage**: true/false (true by default. If set to false, personal dev landing stage will be used for source files instead of shared dev landing stage).
+- **Stage location**: String ("@HV_EDP_DEV.DEV_RAW.STG_EXT_DMZ_KRTSYSNP_EDP" by default. Determines a stage where the data is read from).
+- **Filtered fund ids**: For the local runs, a list of fund ids to filter for (makes job runs faster, as it only gets fund ids selected from the raw table). Can be set in .env. 
 
 To change these settings, click on an arrow to the right from Materialize all, select Open Launchpad and change the job_config options.
 

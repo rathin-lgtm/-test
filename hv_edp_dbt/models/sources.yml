@@ -1,162 +1,183 @@
 version: 2
 
+_external_table_common: &external_table_common
+  file_format: "{{ env_var('ENVIRONMENT') }}_RAW.PARQUET_FILE"
+  pattern: ".\\*.parquet$"
+  infer_schema: true
+  auto_refresh: true
+  partitions:
+    - name: year
+      data_type: string
+      expression: "split_part(METADATA$FILENAME, '/', 3)"
+    - name: month
+      data_type: string
+      expression: "split_part(METADATA$FILENAME, '/', 4)"
+    - name: day
+      data_type: string
+      expression: "split_part(METADATA$FILENAME, '/', 5)"
+
+
 sources:
-    - name: bronze_from_harborview_edw
+    - name: raw_from_harborview_edw
       description: Raw data uploaded from CSVs.
       database: "{{ target.database }}"
-      schema: "{{ env_var('ENVIRONMENT') }}_BRONZE"
+      schema: "{{ env_var('ENVIRONMENT') }}_RAW"
       meta:
         source_db: HARBOURVIEW_EDW
-        source_file_format: CSV
+        source_file_format: PARQUET
       tables:
-          - name: dim_fund
-            description: DIM_FUND loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund']
-          - name: fact_investor_transactions
-            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_investor_transactions']
-          - name: currency
-            description: CURRENCY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_currency']
-          - name: global_edw_key_to_iqid
-            description: GLOBAL_EDW_KEY_TO_IQID loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_global_edw_key_to_iqid']
-          - name: dim_portfolios
-            description: DIM_PORTFOLIOS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_portfolios']
-          - name: fact_investment_transactions_fund_hierarchy_monthly
-            description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_investment_transactions_fund_hierarchy_monthly']
-          - name: fact_investment_transactions_fund_hierarchy
-            description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_investment_transactions_fund_hierarchy']
-          - name: dim_fund_hierarchy
-            description: DIM_FUND_HIERARCY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund_hierarchy']
-          - name: dim_type_broad
-            description: DIM_TYPE_BROAD loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_type_broad']
-          - name: dim_hv_geography_hierarchy
-            description: DIM_HV_GEOGRAPHY_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_hv_geography_hierarchy']
-          - name: dim_company_industry_hierarchy
-            description: DIM_COMPANY_INDUSTRY_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_company_industry_hierarchy']
-          - name: dim_manager
-            description: DIM_MANAGER loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_manager']
-          - name: stage
-            description: STAGE loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_stage']
-          - name: fact_irr_investor
-            description: FACT_IRR_INVESTOR loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_irr_investor']
           - name: calendar
             description: CALENDAR loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_calendar']
-          - name: calendar_quarter
-            description: CALENDAR_QUARTER loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_calendar_quarter']
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/CALENDAR/"
+              <<: *external_table_common
           - name: calendar_month
             description: CALENDAR_MONTH loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_calendar_month']
-          - name: fact_irr_investment_fund_hierarchy
-            description: FACT_IRR_INVESTMENT_FUND_HIERARCHY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_irr_investment_fund_hierarchy']
-          - name: dim_holdings
-            description: DIM_HOLDINGS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_holdings']
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/CALENDAR_MONTH/"
+              <<: *external_table_common
+          - name: calendar_quarter
+            description: CALENDAR_QUARTER loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/CALENDAR_QUARTER/"
+              <<: *external_table_common
           - name: company
             description: COMPANY loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_company']
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/COMPANY/"
+              <<: *external_table_common
           - name: company_broad
             description: COMPANY_BROAD loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_company_broad']
-          - name: fund_hiers_pct_hist
-            description: FUND_HIERS_PCT_HIST loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fund_hiers_pct_hist']
-          - name: fact_company_valuation
-            description: FACT_COMPANY_VALUATION loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_company_valuation']
-          - name: dim_investment_type
-            description: DIM_INVESTMENT_TYPE loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_investment_type']
-          - name: fact_fund_sub_perspective_fund_network_paths
-            description: FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_fund_sub_perspective_fund_network_paths']
-          - name: fact_fund_sub_perspective_funds
-            description: FACT_FUND_SUB_PERSPECTIVE_FUNDS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_fact_fund_sub_perspective_funds'] 
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/COMPANY_BROAD/"
+              <<: *external_table_common
+          - name: currency
+            description: CURRENCY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/CURRENCY/"
+              <<: *external_table_common
+          - name: dim_company_industry_hierarchy
+            description: DIM_COMPANY_INDUSTRY_HIERARCHY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_COMPANY_INDUSTRY_HIERARCHY/"
+              <<: *external_table_common
+          - name: dim_fund
+            description: DIM_FUND loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_FUND/"
+              <<: *external_table_common
+          - name: dim_fund_hierarchy
+            description: DIM_FUND_HIERARCHY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_FUND_HIERARCHY/"
+              <<: *external_table_common
           - name: dim_fund_sub_perspective
             description: DIM_FUND_SUB_PERSPECTIVE loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund_sub_perspective']
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_FUND_SUB_PERSPECTIVE/"
+              <<: *external_table_common
           - name: dim_fund_sub_perspective_primary_fund
             description: DIM_FUND_SUB_PERSPECTIVE_PRIMARY_FUND loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_fund_sub_perspective_primary_fund']
-          - name: dim_investor
-            description: DIM_INVESTOR loaded from Harbourview EDW
-            meta: 
-              dagster:
-                asset_key: ['bronze_dim_investor']
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_FUND_SUB_PERSPECTIVE_PRIMARY_FUND/"
+              <<: *external_table_common
+          - name: dim_holdings
+            description: DIM_HOLDINGS loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_HOLDINGS/"
+              <<: *external_table_common
+          - name: dim_hv_geography_hierarchy
+            description: DIM_HV_GEOGRAPHY_HIERARCHY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_HV_GEOGRAPHY_HIERARCHY/"
+              <<: *external_table_common
           - name: dim_investments
             description: DIM_INVESTMENTS loaded from Harbourview EDW
-            meta:
-              dagster:
-                asset_key: ['bronze_dim_investments']
-
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_INVESTMENTS/"
+              <<: *external_table_common
+          - name: dim_investment_type
+            description: DIM_INVESTMENT_TYPE loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_INVESTMENT_TYPE/"
+              <<: *external_table_common
+          - name: dim_investor
+            description: DIM_INVESTOR loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_INVESTOR/"
+              <<: *external_table_common
+          - name: dim_manager
+            description: DIM_MANAGER loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_MANAGER/"
+              <<: *external_table_common
+          - name: dim_portfolios
+            description: DIM_PORTFOLIOS loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_PORTFOLIOS/"
+              <<: *external_table_common
+          - name: dim_type_broad
+            description: DIM_TYPE_BROAD loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/DIM_TYPE_BROAD/"
+              <<: *external_table_common
+          - name: fact_company_valuation
+            description: FACT_COMPANY_VALUATION loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_COMPANY_VALUATION/"
+              <<: *external_table_common
+          - name: fact_fund_sub_perspective_funds
+            description: FACT_FUND_SUB_PERSPECTIVE_FUNDS loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_FUND_SUB_PERSPECTIVE_FUNDS/"
+              <<: *external_table_common
+          - name: fact_fund_sub_perspective_fund_network_paths
+            description: FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_FUND_SUB_PERSPECTIVE_FUND_NETWORK_PATHS/"
+              <<: *external_table_common
+          - name: fact_investment_transactions_fund_hierarchy
+            description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY/"
+              <<: *external_table_common
+          - name: fact_investment_transactions_fund_hierarchy_monthly
+            description: FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_INVESTMENT_TRANSACTIONS_FUND_HIERARCHY_MONTHLY/"
+              <<: *external_table_common
+          - name: fact_investor_ownership
+            description: FACT_INVESTOR_OWNERSHIP loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_INVESTOR_OWNERSHIP/"
+              <<: *external_table_common
+          - name: fact_investor_transactions
+            description: FACT_INVESTOR_TRANSACTIONS loaded from Harbourview EDW      
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_INVESTOR_TRANSACTIONS/"
+              <<: *external_table_common
+          - name: fact_irr_investment_fund_hierarchy
+            description: FACT_IRR_INVESTMENT_FUND_HIERARCHY loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_IRR_INVESTMENT_FUND_HIERARCHY/"
+              <<: *external_table_common
+          - name: fact_irr_investor
+            description: FACT_IRR_INVESTOR loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FACT_IRR_INVESTOR/"
+              <<: *external_table_common
+          - name: fund_hiers_pct_hist
+            description: FUND_HIERS_PCT_HIST loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/FUND_HIERS_PCT_HIST/"
+              <<: *external_table_common
+          - name: global_edw_key_to_iqid
+            description: GLOBAL_EDW_KEY_TO_IQID loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/GLOBAL_EDW_KEY_TO_IQID/"
+              <<: *external_table_common
+          - name: stage
+            description: STAGE loaded from Harbourview EDW
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/STAGE/"
+              <<: *external_table_common

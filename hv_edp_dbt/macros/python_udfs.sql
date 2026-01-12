@@ -1,8 +1,7 @@
 {% macro create_xirr_udf(schema) %}
     CREATE OR REPLACE AGGREGATE FUNCTION {{ target.database }}.{{ schema }}.xirr(
         cashflow FLOAT,
-        cfdate DATE,
-        guess FLOAT DEFAULT -0.01
+        cfdate DATE
     )
     RETURNS FLOAT
     LANGUAGE PYTHON
@@ -13,38 +12,38 @@
     $$
 from pyxirr import xirr
 
+GUESS_DEFAULT = -0.01
 class XirrAggregator:
     def __init__(self):
-        self._state = {
-            "cashflows": [],
-            "dates": [],
-            "guess": -0.01
-        }
+        self._cashflow_by_date = {}
 
-    def accumulate(self, cashflow: float, cfdate, guess: float = -0.01):
-        if cashflow is not None and cfdate is not None:
-            self._state["cashflows"].append(cashflow)
-            self._state["dates"].append(cfdate)
-        self._state["guess"] = guess
+    def accumulate(self, cashflow: float, cashflow_date: str):
+        if cashflow is None or cashflow_date is None:
+            return
+        current = self._cashflow_by_date.get(cashflow_date)
+        if current is None:
+            self._cashflow_by_date[cashflow_date] = float(cashflow)
+        else:
+            self._cashflow_by_date[cashflow_date] = current + float(cashflow)
 
     def merge(self, other):
-        self._state["cashflows"].extend(other["cashflows"])
-        self._state["dates"].extend(other["dates"])
-        if other.get("guess") is not None:
-            self._state["guess"] = other["guess"]
+        other_map = other["_cashflow_by_date"]
+        for date, cashflow in other_map.items():
+            self._cashflow_by_date[date] = self._cashflow_by_date.get(date, 0.0) + cashflow
 
     def finish(self):
-        if not self._state["cashflows"] or not self._state["dates"]:
+        if not self._cashflow_by_date:
             return None
-
+        items = sorted(self._cashflow_by_date.items(), key=lambda t: t[0])
+        dates = [date for date, _ in items]
+        cashflows = [cashflow for _, cashflow in items]
         try:
-            return float(xirr(self._state["dates"], self._state["cashflows"], guess=self._state["guess"]))
+            return float(xirr(dates, cashflows, guess=GUESS_DEFAULT))
         except Exception:
             return None
 
-
     @property
     def aggregate_state(self):
-        return self._state
+        return {"_cashflow_by_date": self._cashflow_by_date}
     $$;
 {% endmacro %}

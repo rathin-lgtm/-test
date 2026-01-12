@@ -4,7 +4,7 @@ WITH fund_hier_ownership as (
         ivo.fund_hier_id,
         ivo.fund_hier,
         max(ivo.hier_percentage) as hier_percentage
-    FROM {{ source('bronze_from_harborview_edw', 'fund_hiers_pct_hist') }} ivo
+    FROM {{ ref('fund_hiers_pct_hist') }} ivo
     WHERE ivo.ownership_quarter_seq = 0 AND ivo.active_ind = 1
     GROUP BY ivo.L29_id, ivo.fund_hier_id, ivo.fund_hier
 ),
@@ -18,7 +18,7 @@ company_metrics as (
         cv.metric_id,
         cv.amount * fh.hier_percentage hier_amount
     FROM fund_hier_ownership fh
-    JOIN {{ source('bronze_from_harborview_edw', 'fact_company_valuation') }} cv ON
+    JOIN {{ ref('fact_company_valuation') }} cv ON
         fh.L29_id = cv.fund_id
     JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency ON
         cv.currency_id = currency.currency_id

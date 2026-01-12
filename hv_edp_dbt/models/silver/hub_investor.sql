@@ -1,5 +1,5 @@
 with investments as (
-    select * from {{ source('bronze_from_harborview_edw', 'dim_investor') }}
+    select * from {{ ref('dim_investor') }}
 )
 
 select distinct {{ hk('investor_name_id') }} as hk_investor,

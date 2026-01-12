@@ -11,7 +11,7 @@ from dagster import (
 
 from hv_edp_dagster.constants import SnowflakeEnv
 from hv_edp_dagster.defs.resources import SnowflakeConfig
-from hv_edp_dagster.snowflake_infra import ALL_TABLES, DATA_LANDING_STAGE, Table
+from hv_edp_dagster.snowflake_infra import ALL_TABLES, Table
 from hv_edp_dagster.utils import execute_sql, select_assets_by_group
 
 
@@ -21,18 +21,18 @@ def get_todays_folder_path() -> str:
 
 def get_files_from_folder(snowflake_config: SnowflakeConfig, table_name: str) -> list[str]:
     full_stage_path = (
-        f"{snowflake_config.database}.{snowflake_config.schema_bronze}.{DATA_LANDING_STAGE.name}"
+        f"{snowflake_config.database}.{snowflake_config.schema_raw}.{snowflake_config.stage}"
     )
     list_sql = f"LIST @{table_name}/{full_stage_path}/{get_todays_folder_path()};"
     results = execute_sql(snowflake_config, list_sql, fetch_results=True)
     if results is None:
         return []
-    return [str(row[0].removeprefix(f"{DATA_LANDING_STAGE.name.lower()}/")) for row in results]
+    return [str(row[0].removeprefix(f"{snowflake_config.stage.lower()}/")) for row in results]
 
 
 def get_processed_files(snowflake_config: SnowflakeConfig, table_name: str) -> list[str]:
     sql = f"""SELECT FILE_NAME FROM
-    {snowflake_config.database}.{snowflake_config.schema_bronze}.{table_name}
+    {snowflake_config.database}.{snowflake_config.schema_raw}.{table_name}
     where FILE_DATE=TO_DATE('{get_todays_folder_path()}', 'YYYY/MM/DD');"""
     results = execute_sql(snowflake_config, sql, fetch_results=True)
     if results is None:
@@ -71,9 +71,7 @@ def create_file_sensor_for_table(tables: list[Table]):
                     tags={"table": table.name},
                 )
             else:
-                yield SkipReason(
-                    f"No new files found in {DATA_LANDING_STAGE.name} stage for {table.name} table"
-                )
+                yield SkipReason(f"No new files found on stage for {table.name} table")
 
         sensors.append(table_file_sensor)
     return sensors

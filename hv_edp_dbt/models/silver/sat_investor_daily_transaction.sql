@@ -9,12 +9,12 @@ WITH base_transactions AS (
         inv_tr.metric_id,
         inv_tr.amount,
         CURRENT_TIMESTAMP() AS load_dt
-    FROM {{ source('bronze_from_harborview_edw', 'fact_investor_transactions') }} AS inv_tr
+    FROM {{ ref('fact_investor_transactions') }} AS inv_tr
     JOIN    {{ ref('link_fund_investor_transaction') }} AS link 
         ON Concat(investor_name_id,date_id,currency_id,fund_id,metric_id,is_transfer,exclude_transaction,monthly_date_id) = link.composite_key
-        LEFT JOIN {{ source('bronze_from_harborview_edw', 'calendar_quarter') }} AS cal_q
+        LEFT JOIN {{ ref('calendar_quarter') }} AS cal_q
         ON inv_tr.date_id = cal_q.quarter_id
-        JOIN {{ source('bronze_from_harborview_edw', 'dim_fund') }} dim_fund
+        JOIN {{ ref('dim_fund') }} dim_fund
         ON inv_tr.fund_id = dim_fund.fund_id 
     WHERE inv_tr.active_ind = 1
     AND inv_tr.exclude_transaction = 0

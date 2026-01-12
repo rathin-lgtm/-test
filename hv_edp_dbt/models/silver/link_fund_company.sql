@@ -1,5 +1,5 @@
 with fact as (
-    select * from {{ source('bronze_from_harborview_edw', 'fact_company_valuation') }}
+    select * from {{ ref('fact_company_valuation') }}
 )
 
 SELECT distinct

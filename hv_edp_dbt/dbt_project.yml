@@ -16,17 +16,33 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+vars:
+  stage_location: ""
+  filtered_fund_ids: []
+  filtered_fund_ids: []
+
 models:
   hv_edp_dbt:
-    +materialized: incremental
+    bronze:
+      +schema: "bronze"
+      +meta:
+        dagster:
+          group:
+            "bronze"
+      deltas:
+        +materialized: incremental
+      full_snapshots:
+        +materialized: table
     silver:
       +schema: "silver"
+      +materialized: incremental
       +meta:
         dagster:
           group:
             "silver"
     gold:
       +schema: "gold"
+      +materialized: incremental
       +meta:
         dagster:
           group:

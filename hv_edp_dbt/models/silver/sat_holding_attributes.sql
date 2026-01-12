@@ -9,8 +9,8 @@ with attributes as (
         holding.active_ind,
         holding.holding_disclosure_level
     FROM
-        {{ source('bronze_from_harborview_edw', 'dim_holdings') }} holding
-    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency
+        {{ ref('dim_holdings') }} holding
+    JOIN {{ ref('currency') }} currency
         ON currency.currency_id = holding.holding_currency_id
     JOIN {{ ref('hub_holding') }} hub
         ON holding.holding_id = hub.holding_id

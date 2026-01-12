@@ -40,8 +40,9 @@ class SnowflakeConfig(ConfigurableResource):
     user: str = Field(description="Snowflake username")
     warehouse: str = Field(description="Snowflake warehouse")
     database: str = Field(description="Snowflake database")
-    schema_bronze: str = Field(description="Snowflake schema bronze")
+    schema_raw: str = Field(description="Snowflake schema raw")
     role: str = Field(description="Snowflake role")
+    stage: str = Field(description="Snowflake stage name")
     private_key_path: str | None = Field(description="Snowflake private key path")
     private_key_password: str | None = Field(description="Snowflake private key passphrase")
     authenticator: str | None = Field(description="Snowflake authenticator")
@@ -52,7 +53,7 @@ class SnowflakeConfig(ConfigurableResource):
         default=SnowflakeConnectionManager()
     )
 
-    @field_validator("account", "user", "warehouse", "database", "schema_bronze", "role")
+    @field_validator("account", "user", "warehouse", "database", "schema_raw", "role")
     @classmethod
     def validate_required_fields(cls, value: str, info: ValidationInfo) -> str:
         if not value or not value.strip():
@@ -78,7 +79,7 @@ class SnowflakeConfig(ConfigurableResource):
             authenticator=self.authenticator,
             warehouse=self.warehouse,
             database=self.database,
-            schema=self.schema_bronze,
+            schema=self.schema_raw,
             role=self.role,
         )
 
@@ -102,11 +103,18 @@ class SnowflakeConfig(ConfigurableResource):
     def clear_shared_connection(self):
         self._connection_manager.clear_shared_connection()
 
+    def get_full_stage_path(self) -> str:
+        return f"@{self.database}.{self.schema_raw}.{self.stage}"
+
 
 class JobConfig(ConfigurableResource):
     full_reload: bool | None = Field(
         default=None, description="Whether to perform a full reload of data"
     )
-    use_shared_stage: bool = Field(
-        default=False, description="Whether to use the shared stage (for personal_dev)"
+    stage_location: str | None = Field(default=None, description="Stage location to use")
+    filtered_fund_ids: list[str] = Field(
+        description="List of fund IDs to filter (for personal dev development)"
+    )
+    filtered_investor_ids: list[str] = Field(
+        description="List of investor (name) IDs to filter (for personal dev development)"
     )

@@ -1,5 +1,5 @@
 with companies as (
-    select * from {{ source('bronze_from_harborview_edw', 'company') }}
+    select * from {{ ref('company') }}
 )
 
 select {{ hk('company_id') }} as hk_company,
