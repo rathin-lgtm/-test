@@ -35,14 +35,14 @@ models:
         +materialized: table
     silver:
       +schema: "silver"
-      +materialized: incremental
+      +materialized: table
       +meta:
         dagster:
           group:
             "silver"
     gold:
       +schema: "gold"
-      +materialized: incremental
+      +materialized: table
       +meta:
         dagster:
           group:

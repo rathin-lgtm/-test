@@ -8,8 +8,8 @@ SNOWFLAKE_WH=KRTSYSNP_WAREHOUSE
 SNOWFLAKE_ROLE=_OKTA-SF_JAMLABS_DEV
 ENVIRONMENT=personal_dev
 DAGSTER_HOME=full path to the root directory (i.e.  C:\Users\panisova\Source\repo\Hvp.Dna.EntRpt.Snowflake), used to store Dagster run information.
-FILTERED_FUND_IDS=fund ids list to filter for (local runs only, i.e. 2215985,2215987,2216055,50688539,37642683)
-FILTERED_INVESTOR_IDS=investor (name) ids list to filter for (local runs only, i.e. 1480545)
+FILTERED_FUND_IDS=fund ids list to filter for (local runs only, i.e. 28885567,2216520,27078919,2216606,50688556)
+FILTERED_INVESTOR_IDS=investor (name) ids list to filter for (local runs only, i.e. 58256296,2215327,28473846,27612261)
 ```
 2) Install Python 3.12 from Software Center
 3) Open a Powershell and navigate to code directory (make sure, that the code directory is located in ThreatLocker Thrusted path).
