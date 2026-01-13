@@ -55,7 +55,7 @@ SNOWFLAKE_CONFIG_DATA = {
     Environments.PERSONAL_DEV: {
         "database": f"HV_EDP_{SnowflakeEnv.SNOWFLAKE_USER.split('@')[0]}_DEV",
         "schema_raw": "PERSONAL_DEV_RAW",
-        "stage": "LANDING",
+        "stage": "STG_EXT_DMZ_KRTSYSNP_EDP",
     },
     Environments.SHARED_DEV: {
         "database": "HV_EDP_DEV",

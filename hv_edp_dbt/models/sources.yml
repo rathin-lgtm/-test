@@ -8,13 +8,13 @@ _external_table_common: &external_table_common
   partitions:
     - name: year
       data_type: string
-      expression: "split_part(METADATA$FILENAME, '/', 3)"
+      expression: "split_part(METADATA$FILENAME, '/', 4)"
     - name: month
       data_type: string
-      expression: "split_part(METADATA$FILENAME, '/', 4)"
+      expression: "split_part(METADATA$FILENAME, '/', 5)"
     - name: day
       data_type: string
-      expression: "split_part(METADATA$FILENAME, '/', 5)"
+      expression: "split_part(METADATA$FILENAME, '/', 6)"
 
 
 sources:

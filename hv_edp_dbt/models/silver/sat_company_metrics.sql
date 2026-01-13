@@ -20,7 +20,7 @@ company_metrics as (
     FROM fund_hier_ownership fh
     JOIN {{ ref('fact_company_valuation') }} cv ON
         fh.L29_id = cv.fund_id
-    JOIN {{ source('bronze_from_harborview_edw', 'currency') }} currency ON
+    JOIN {{ ref('currency') }} currency ON
         cv.currency_id = currency.currency_id
 ),
 daily_metrics as (
