@@ -1,1 +1,1 @@
-{{ load_full_refresh_table('raw_from_harborview_edw', 'block_list_fund', exclude_cols=['value', 'year', 'month', 'day']) }}
+{{ load_full_refresh_table('raw_from_harborview_edw', 'block_list_fund', source_missing_cols=['session_log_key','time_period_key']) }}
