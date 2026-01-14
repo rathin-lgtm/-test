@@ -10,8 +10,8 @@
     investor_name_id in ( {{ investor_ids | join(', ') }} )
 {% endmacro %}
 
-{% macro load_full_refresh_table(source_name, table_name) %}
-    SELECT * EXCLUDE (value, time_period_key, session_log_key, year, month, day), 
+{% macro load_full_refresh_table(source_name, table_name, exclude_cols=['value', 'time_period_key', 'session_log_key', 'year', 'month', 'day']) %}
+    SELECT * EXCLUDE ({{ exclude_cols | join(', ') }}), 
     DATE_FROM_PARTS(year, month, day) as file_date, 
     METADATA$FILENAME as file_name,
     METADATA$FILE_LAST_MODIFIED as file_timestamp
