@@ -181,3 +181,8 @@ sources:
             external:
               location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/STAGE/"
               <<: *external_table_common
+          - name: block_list_fund
+            description: block_list_fund manually loaded from excel file
+            external:
+              location: "{{ var('stage_location') }}/HARBOURVIEW_EDW/BLOCK_LIST_FUND/"
+              <<: *external_table_common
