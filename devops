@@ -1,0 +1,36 @@
+# Pull Request - Quick Template
+
+## Description
+<!-- Brief description of changes -->
+
+**Type:** Bug Fix / Feature / Enhancement / Refactor
+
+**Related Issue:** <!-- Work item number -->
+
+---
+
+## Changes
+- 
+- 
+- 
+
+## Testing
+- [ ] Local testing completed
+- [ ] dbt compile succeeds
+- [ ] dbt tests pass
+- [ ] Python tests pass
+- [ ] SQL linting passes
+
+## Data Impact
+- [ ] No schema changes
+- [ ] Schema changes documented
+- [ ] Migration plan provided
+
+## Deployment
+- [ ] Ready for Dev deployment
+- [ ] UAT deployment planned
+- [ ] Rollback plan documented
+
+---
+
+**Reviewers:** @<!-- reviewer -->
