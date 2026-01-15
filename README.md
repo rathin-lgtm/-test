@@ -1,73 +1,239 @@
-## Local set up (Windows)
+# HV Enterprise Data Platform (EDP)
 
-1) Create .env file in the root directory with the following data:
+A data engineering platform for private equity portfolio analytics, built with **dbt** and **Dagster** on **Snowflake**.
+
+## Architecture Overview
+
 ```
-SNOWFLAKE_USER=your username (email address)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           HARBOURVIEW EDP                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                 │
+│   │   STAGING    │    │    VAULT     │    │    MARTS     │                 │
+│   │   (Bronze)   │───▶│   (Silver)   │───▶│    (Gold)    │                 │
+│   │              │    │              │    │              │                 │
+│   │ • External   │    │ • Hubs       │    │ • Finance    │                 │
+│   │   Tables     │    │ • Links      │    │ • Reporting  │                 │
+│   │ • Base dims  │    │ • Satellites │    │              │                 │
+│   │ • Incr facts │    │              │    │              │                 │
+│   └──────────────┘    └──────────────┘    └──────────────┘                 │
+│         ▲                                                                   │
+│         │                                                                   │
+│   ┌─────┴────────────────────────────────────────────────┐                 │
+│   │              Snowflake External Stage                │                 │
+│   │         (Parquet files from EDW)                     │                 │
+│   └──────────────────────────────────────────────────────┘                 │
+│                                                                             │
+│   ┌──────────────────────────────────────────────────────┐                 │
+│   │                    DAGSTER                           │                 │
+│   │  • Asset orchestration                               │                 │
+│   │  • File sensors                                      │                 │
+│   │  • Infrastructure provisioning                       │                 │
+│   └──────────────────────────────────────────────────────┘                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Data Layers
+
+| Layer | Schema | Description |
+|-------|--------|-------------|
+| **Staging** | `*_RAW` | Raw data from external sources. Minimal transformation. |
+| **Vault** | `*_SILVER` | Data Vault 2.0 model (Hubs, Links, Satellites) |
+| **Marts** | `*_GOLD` | Business-ready analytics tables |
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.12+
+- Access to Snowflake with appropriate roles
+- Git
+
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd hv_edp
+   ```
+
+2. **Create virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   # OR
+   .\venv\Scripts\activate   # Windows PowerShell
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials
+   ```
+
+5. **Install dbt packages**
+   ```bash
+   dbt deps --project-dir dbt
+   ```
+
+6. **Install pre-commit hooks**
+   ```bash
+   pre-commit install
+   ```
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Snowflake Connection
 SNOWFLAKE_ACCOUNT=HVPLP-ACCTCDPNP
+SNOWFLAKE_USER=your.email@company.com
 SNOWFLAKE_WH=KRTSYSNP_WAREHOUSE
 SNOWFLAKE_ROLE=_OKTA-SF_JAMLABS_DEV
+
+# Environment (personal_dev | shared_dev | uat | prod)
 ENVIRONMENT=personal_dev
-DAGSTER_HOME=full path to the root directory (i.e.  C:\Users\panisova\Source\repo\Hvp.Dna.EntRpt.Snowflake), used to store Dagster run information.
-FILTERED_FUND_IDS=fund ids list to filter for (local runs only, i.e. 28885567,2216520,27078919,2216606,50688556)
-FILTERED_INVESTOR_IDS=investor (name) ids list to filter for (local runs only, i.e. 58256296,2215327,28473846,27612261)
-```
-2) Install Python 3.12 from Software Center
-3) Open a Powershell and navigate to code directory (make sure, that the code directory is located in ThreatLocker Thrusted path).
-4) Create a virtual environment:
-```
-py -3.12 -m venv venv
-```
-5) Add this line to the bottom of the file .\venv\Scripts\activate.ps1 (to avoid pre-commit hook being blocked by ThreatLocker):
 
-```$env:PRE_COMMIT_HOME = "$env:VIRTUAL_ENV\pre-commit"```
+# Dagster
+DAGSTER_HOME=/path/to/repo
 
-6) Activate venv:
-```
-.\venv\Scripts\activate.ps1
-```
-7) Install requirements:
-
-```pip install -r .\requirements.txt```
-
-8) Install pre-commit hooks: 
-
-```
-pre-commit install
+# Optional: Filter for faster local runs
+FILTERED_FUND_IDS=28885567,2216520
+FILTERED_INVESTOR_IDS=58256296,2215327
 ```
 
-9) Install dbt deps:
+## Running Locally
+
+### Start Dagster UI
+
+```bash
+dagster dev
+```
+
+Access at: http://127.0.0.1:3000
+
+### Running dbt Directly
+
+```bash
+# Run all models
+dbt run --project-dir dbt
+
+# Run specific layer
+dbt run --project-dir dbt --select staging.*
+dbt run --project-dir dbt --select vault.*
+dbt run --project-dir dbt --select marts.*
+
+# Run tests
+dbt test --project-dir dbt
+
+# Generate docs
+dbt docs generate --project-dir dbt
+dbt docs serve --project-dir dbt
+```
+
+## Development Workflow
+
+### Personal Development Environment
+
+1. Start Dagster: `dagster dev`
+2. Run **provision_infra** job to create your personal database
+3. Run ETL jobs to load data
+4. When done, run **destroy_infra** job to clean up
+
+### Job Configuration
+
+ETL jobs support these options (via Dagster launchpad):
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `full_reload` | `false` | Full refresh all tables |
+| `stage_location` | auto | Override stage path |
+| `filtered_fund_ids` | from env | Filter funds for faster runs |
+| `filtered_investor_ids` | from env | Filter investors for faster runs |
+
+## Project Structure
 
 ```
-dbt deps --project-dir hv_edp_dbt
+hv_edp/
+├── dagster/              # Dagster orchestration
+│   ├── assets/           # Asset definitions
+│   ├── jobs/             # Job definitions
+│   ├── resources/        # Resource configurations
+│   └── sensors/          # File and run sensors
+│
+├── dbt/                  # dbt project
+│   ├── models/
+│   │   ├── staging/      # Bronze layer (raw data)
+│   │   ├── vault/        # Silver layer (Data Vault)
+│   │   └── marts/        # Gold layer (business marts)
+│   ├── macros/           # Reusable SQL logic
+│   ├── tests/            # Data quality tests
+│   └── seeds/            # Static reference data
+│
+├── tests/                # Python unit tests
+└── docs/                 # Documentation
 ```
 
+## Data Vault Model
 
-## Local runs
+### Entities (Hubs)
+- `hub_fund` - Investment funds
+- `hub_investor` - Investors/LPs
+- `hub_portfolio` - Portfolios
+- `hub_company` - Portfolio companies
+- `hub_holding` - Holdings
 
-### Running Dagster
-In the root directory, run: 
+### Relationships (Links)
+- `link_portfolio_fund` - Portfolio ↔ Fund
+- `link_fund_company` - Fund ↔ Company
+- `link_investor_fund` - Investor ↔ Fund
+- `link_fund_investor_transaction` - Transaction relationships
 
-```dagster dev```
+### Descriptors (Satellites)
+- `sat_*_attributes` - Slowly changing descriptive data
+- `sat_*_metrics` - Point-in-time metrics
 
-Dagster will run locally on http://127.0.0.1:3000/
+## Testing
 
-### Configuring personal development environment
+### dbt Tests
+```bash
+# Run all tests
+dbt test --project-dir dbt
 
-1) Run Dagster
-2) Open Dagster UI
-3) Trigger Provision infra job (Jobs -> provision_infra -> Materialize all). A database HV_EDP_{username}_DEV will be created in Snowflake, together with resources, required by the Bronze layer (schema, landing stage, tables, file format).
+# Run tests for specific model
+dbt test --project-dir dbt --select hub_fund
+```
 
-### Running ETL jobs on the personal development environment
+### Python Tests
+```bash
+pytest tests/
+```
 
-ETL jobs have different running modes:
-- **Full reload**: true/false (false by default - only new fresh files data is loaded. If set to true, will clean up bronze data, load all files from landing stage, and re-create silver and gold tables).
-- **Stage location**: String ("@HV_EDP_DEV.DEV_RAW.STG_EXT_DMZ_KRTSYSNP_EDP" by default. Determines a stage where the data is read from).
-- **Filtered fund ids**: For the local runs, a list of fund ids to filter for (makes job runs faster, as it only gets fund ids selected from the raw table). Can be set in .env. 
+## Deployment
 
-To change these settings, click on an arrow to the right from Materialize all, select Open Launchpad and change the job_config options.
+| Environment | Database | Trigger |
+|-------------|----------|---------|
+| `personal_dev` | `HV_EDP_{username}_DEV` | Manual |
+| `shared_dev` | `HV_EDP_DEV` | PR merge to `develop` |
+| `uat` | `HV_EDP_UAT` | PR merge to `release/*` |
+| `prod` | `HV_EDP_PRD` | PR merge to `main` |
 
-### Destroying personal development environment
-1) Run Dagster
-2) Open Dagster UI
-3) Trigger Destroy infra job (Jobs -> destroy_infra -> Materialize all). The database HV_EDP_{username}_DEV will be dropped. 
+## Contributing
 
+1. Create feature branch from `develop`
+2. Make changes
+3. Run tests locally
+4. Submit PR
+5. Ensure CI passes
+6. Get code review
+
+## Support
+
+For questions or issues, contact the Data Engineering team.

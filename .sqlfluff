@@ -1,0 +1,39 @@
+[sqlfluff]
+# SQLFluff configuration for Snowflake/dbt
+dialect = snowflake
+templater = dbt
+exclude_rules = L003, L031, L036
+
+[sqlfluff:rules]
+# Line length
+max_line_length = 100
+
+# Indentation
+tab_space_size = 4
+indent_unit = space
+
+# Capitalization
+capitalisation_policy = consistent
+extended_capitalisation_policy = consistent
+
+[sqlfluff:rules:L010]
+# Keywords
+capitalisation_policy = upper
+
+[sqlfluff:rules:L014]
+# Identifiers
+capitalisation_policy = lower
+
+[sqlfluff:rules:L030]
+# Function names
+capitalisation_policy = upper
+
+[sqlfluff:templater:dbt]
+# dbt project directory
+project_dir = hv_edp_dbt
+profiles_dir = hv_edp_dbt
+
+[sqlfluff:indentation]
+# Indentation settings
+indent_unit = space
+tab_space_size = 4

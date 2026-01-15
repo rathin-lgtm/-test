@@ -1,19 +1,252 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# =============================================================================
+# Azure DevOps Pipeline - HV EDP CI/CD
+# =============================================================================
+# Stages:
+#   1. Validate: Lint, test, and validate changes
+#   2. Deploy Dev: Deploy to shared development environment
+#   3. Deploy UAT: Deploy to UAT (manual approval)
+#   4. Deploy Prod: Deploy to production (manual approval)
+# =============================================================================
 
 trigger:
-- features/_pipeline
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
+      - feature/*
+  paths:
+    exclude:
+      - '*.md'
+      - 'docs/**'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+      - release/*
 
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello!
-  displayName: 'Run a one-line script'
+variables:
+  pythonVersion: '3.12'
+  dbtProjectDir: 'hv_edp_dbt'
+  dagsterProjectDir: 'hv_edp_dagster'
 
-- script: |
-    echo Add other tas ks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+# =============================================================================
+# STAGE 1: VALIDATE
+# =============================================================================
+stages:
+  - stage: Validate
+    displayName: 'Validate & Test'
+    jobs:
+      - job: LintAndTest
+        displayName: 'Lint and Test'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '$(pythonVersion)'
+            displayName: 'Use Python $(pythonVersion)'
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Install dependencies'
+
+          - script: |
+              black --check $(dagsterProjectDir)
+              flake8 $(dagsterProjectDir)
+              isort --check-only $(dagsterProjectDir)
+            displayName: 'Python linting'
+            continueOnError: false
+
+          - script: |
+              dbt deps --project-dir $(dbtProjectDir)
+            displayName: 'Install dbt packages'
+
+          - script: |
+              dbt compile --project-dir $(dbtProjectDir) --target shared_dev
+            displayName: 'dbt compile (validate SQL)'
+            env:
+              SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+              SNOWFLAKE_USER: $(SNOWFLAKE_USER)
+              SNOWFLAKE_WH: $(SNOWFLAKE_WH)
+              SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE)
+              SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+              SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+              ENVIRONMENT: shared_dev
+
+          - script: |
+              sqlfluff lint hv_edp_dbt/models/ hv_edp_dbt/macros/ --dialect=snowflake --templater=dbt
+            displayName: 'SQLFluff lint (SQL quality)'
+            continueOnError: true
+
+          - script: |
+              pytest tests/ -v --junitxml=test-results.xml --cov=hv_edp_dagster --cov-report=xml
+            displayName: 'Run Python tests'
+            continueOnError: true
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: 'coverage.xml'
+            condition: always()
+            continueOnError: true
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFiles: 'test-results.xml'
+              testRunTitle: 'Python Tests'
+            condition: always()
+
+# =============================================================================
+# STAGE 2: DEPLOY TO SHARED DEV
+# =============================================================================
+  - stage: DeployDev
+    displayName: 'Deploy to Dev'
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeploySharedDev
+        displayName: 'Deploy to Shared Dev'
+        environment: 'shared-dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: '$(pythonVersion)'
+
+                - script: |
+                    pip install -r requirements.txt
+                    dbt deps --project-dir $(dbtProjectDir)
+                  displayName: 'Setup'
+
+                - script: |
+                    dbt run --project-dir $(dbtProjectDir) --target shared_dev
+                  displayName: 'dbt run (shared_dev)'
+                  env:
+                    SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+                    SNOWFLAKE_USER: $(SNOWFLAKE_USER)
+                    SNOWFLAKE_WH: $(SNOWFLAKE_WH)
+                    SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE)
+                    SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+                    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+                    ENVIRONMENT: shared_dev
+
+                - script: |
+                    dbt test --project-dir $(dbtProjectDir) --target shared_dev
+                  displayName: 'dbt test (shared_dev)'
+                  env:
+                    SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+                    SNOWFLAKE_USER: $(SNOWFLAKE_USER)
+                    SNOWFLAKE_WH: $(SNOWFLAKE_WH)
+                    SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE)
+                    SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+                    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+                    ENVIRONMENT: shared_dev
+
+# =============================================================================
+# STAGE 3: DEPLOY TO UAT
+# =============================================================================
+  - stage: DeployUAT
+    displayName: 'Deploy to UAT'
+    dependsOn: Validate
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
+    jobs:
+      - deployment: DeployUAT
+        displayName: 'Deploy to UAT'
+        environment: 'uat'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: '$(pythonVersion)'
+
+                - script: |
+                    pip install -r requirements.txt
+                    dbt deps --project-dir $(dbtProjectDir)
+                  displayName: 'Setup'
+
+                - script: |
+                    dbt run --project-dir $(dbtProjectDir) --target uat
+                  displayName: 'dbt run (uat)'
+                  env:
+                    SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+                    SNOWFLAKE_USER: $(SNOWFLAKE_USER_UAT)
+                    SNOWFLAKE_WH: $(SNOWFLAKE_WH)
+                    SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE_UAT)
+                    SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+                    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+                    ENVIRONMENT: uat
+
+                - script: |
+                    dbt test --project-dir $(dbtProjectDir) --target uat
+                  displayName: 'dbt test (uat)'
+                  env:
+                    SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+                    SNOWFLAKE_USER: $(SNOWFLAKE_USER_UAT)
+                    SNOWFLAKE_WH: $(SNOWFLAKE_WH)
+                    SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE_UAT)
+                    SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+                    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+                    ENVIRONMENT: uat
+
+# =============================================================================
+# STAGE 4: DEPLOY TO PRODUCTION
+# =============================================================================
+  - stage: DeployProd
+    displayName: 'Deploy to Production'
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProd
+        displayName: 'Deploy to Production'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: '$(pythonVersion)'
+
+                - script: |
+                    pip install -r requirements.txt
+                    dbt deps --project-dir $(dbtProjectDir)
+                  displayName: 'Setup'
+
+                - script: |
+                    dbt run --project-dir $(dbtProjectDir) --target prod
+                  displayName: 'dbt run (prod)'
+                  env:
+                    SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+                    SNOWFLAKE_USER: $(SNOWFLAKE_USER_PROD)
+                    SNOWFLAKE_WH: $(SNOWFLAKE_WH_PROD)
+                    SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE_PROD)
+                    SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+                    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+                    ENVIRONMENT: prod
+
+                - script: |
+                    dbt test --project-dir $(dbtProjectDir) --target prod
+                  displayName: 'dbt test (prod)'
+                  env:
+                    SNOWFLAKE_ACCOUNT: $(SNOWFLAKE_ACCOUNT)
+                    SNOWFLAKE_USER: $(SNOWFLAKE_USER_PROD)
+                    SNOWFLAKE_WH: $(SNOWFLAKE_WH_PROD)
+                    SNOWFLAKE_ROLE: $(SNOWFLAKE_ROLE_PROD)
+                    SNOWFLAKE_PRIVATE_KEY_PATH: $(SNOWFLAKE_PRIVATE_KEY_PATH)
+                    SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: $(SNOWFLAKE_PRIVATE_KEY_PASSPHRASE)
+                    ENVIRONMENT: prod

@@ -1,43 +1,225 @@
 version: 2
 
-models:
-# ================
-# KURTOSYS GOLD MODELS
-# ================
-  - name: gold_fund_metrics
-    description: "Gold Fund Metrics"
-    columns:
-      - name: as_of_date
-        tests: [not_null]
-  - name: gold_portfolio_metrics
-    description: "Gold Portfolio Metrics"
-    columns:
-      - name: as_of_date
-        tests: [not_null]
-  - name: gold_company_metrics
-    description: "Gold Company Metrics"
-    columns:
-      - name: as_of_date
-        tests: [not_null]
-  - name: gold_holding_metrics
-    description: "Gold Holding Metrics"
-    columns:
-      - name: as_of_date
-        tests: [not_null]
-  - name: gold_investor_performance_metrics
-    description: "Gold Investor Metrics"
-    columns:
-      - name: as_of_date
-        tests: [not_null]
+# =============================================================================
+# GOLD LAYER - Business Marts
+# =============================================================================
+# Business-ready analytics tables optimized for reporting and consumption.
+# These models denormalize the Data Vault for ease of use.
+# 
+# Naming Convention:
+#   - gold_* : Standard analytics tables
+#   - rpt_*  : Report-specific tables (future)
+#   - fct_*  : Fact tables (future)
+# =============================================================================
 
-  - name: gold_investor_transaction_metrics
-    description: "Gold Investor Transaction Metrics"
+models:
+  # ===========================================================================
+  # FUND METRICS
+  # ===========================================================================
+  - name: gold_fund_metrics
+    description: >
+      Fund-level performance metrics for reporting.
+      Combines fund attributes with time-series performance data.
+      
+      **Primary Use Cases:**
+      - Fund performance dashboards
+      - GP reporting
+      - Benchmark comparisons
     columns:
       - name: as_of_date
-        tests: [not_null]
+        description: Reporting date (month-end)
+        data_tests: [not_null]
+      - name: efront_fund_id
+        description: Fund ID in eFront system
+      - name: fund_name
+        description: Fund display name
+      - name: fund_sub_perspective_name
+        description: Sub-perspective classification
+      - name: fund_currency
+        description: Fund base currency
+      - name: metric_currency
+        description: Currency of metric values
+      - name: fund_lock_date
+        description: Accounting lock date
+      - name: fund_lp_nav
+        description: LP Net Asset Value
+      - name: fund_lp_total_value
+        description: LP Total Value (NAV + Distributions)
+      - name: fund_lp_commitments
+        description: LP Total Commitments
+      - name: fund_lp_capital_called
+        description: LP Capital Called to date
+      - name: fund_lp_contributions
+        description: LP Total Contributions
+      - name: fund_lp_distributions
+        description: LP Total Distributions
+      - name: gain_loss
+        description: Total Gain/Loss
+      - name: dpi
+        description: Distributions to Paid-In (DPI) ratio
+      - name: tvpi
+        description: Total Value to Paid-In (TVPI) ratio
+      - name: irr
+        description: Internal Rate of Return (since inception)
+      - name: irr_1_year
+        description: 1-year trailing IRR
+      - name: irr_3_year
+        description: 3-year trailing IRR
+      - name: irr_5_year
+        description: 5-year trailing IRR
+      - name: irr_10_year
+        description: 10-year trailing IRR
+
+  - name: gold_fund_network_path_metrics
+    description: >
+      Fund metrics rolled up through network path hierarchy.
+      Used for complex multi-level fund structures.
+
+  # ===========================================================================
+  # PORTFOLIO METRICS
+  # ===========================================================================
+  - name: gold_portfolio_metrics
+    description: >
+      Portfolio-level performance metrics.
+      Aggregates investment performance by portfolio.
+      
+      **Primary Use Cases:**
+      - Portfolio performance tracking
+      - Investment manager reporting
+      - Vintage year analysis
+    columns:
+      - name: as_of_date
+        description: Reporting date (month-end)
+        data_tests: [not_null]
+      - name: portfolio_id
+        description: Portfolio identifier
+      - name: portfolio_name
+        description: Portfolio display name
+      - name: portfolio_currency
+        description: Portfolio base currency
+      - name: portfolio_vintage_year
+        description: Portfolio vintage year
+      - name: portfolio_tv_f
+        description: Total Value to Funded (TV/F)
+      - name: portfolio_total_value
+        description: Total portfolio value
+      - name: portfolio_nav
+        description: Portfolio NAV
+      - name: portfolio_irr
+        description: Portfolio IRR
+      - name: portfolio_gain_loss
+        description: Portfolio gain/loss
+      - name: portfolio_distributions
+        description: Total distributions
+      - name: portfolio_d_f
+        description: Distributions to Funded (D/F)
+      - name: portfolio_commitments
+        description: Total commitments
+      - name: portfolio_calls
+        description: Total capital calls
 
   - name: gold_portfolio_sub_perspective_metrics
-    description: "Gold Portfolio Sub_perspective Metrics"
+    description: >
+      Portfolio metrics aggregated by sub-perspective view.
+      Supports multiple reporting perspectives on same portfolio data.
     columns:
       - name: as_of_date
-        tests: [not_null]
+        data_tests: [not_null]
+
+  # ===========================================================================
+  # INVESTOR METRICS
+  # ===========================================================================
+  - name: gold_investor_performance_metrics
+    description: >
+      Investor-level performance metrics per fund.
+      LP reporting with IRR, DPI, TVPI calculations.
+      
+      **Primary Use Cases:**
+      - LP statements
+      - Investor relations reporting
+      - Capital account statements
+    columns:
+      - name: as_of_date
+        description: Reporting date
+        data_tests: [not_null]
+      - name: efront_investor_id
+        description: Investor ID in eFront system
+      - name: efront_fund_id
+        description: Fund ID in eFront system
+      - name: investor_name
+        description: Investor display name
+      - name: investor_group_id
+        description: Parent investor group ID
+      - name: investor_group_name
+        description: Parent investor group name
+      - name: investor_region
+        description: Investor geographic region
+      - name: investor_tv_f_sales
+        description: TV/F including sales
+      - name: investor_tv_c
+        description: Total Value / Contributions
+      - name: investor_unfunded
+        description: Unfunded commitment amount
+      - name: investor_distribution
+        description: Total distributions
+      - name: investor_contribution
+        description: Total contributions
+      - name: investor_commitment
+        description: Total commitment
+      - name: investor_irr_sales
+        description: IRR including sales
+      - name: investor_irr_sales_1_year
+        description: 1-year trailing IRR
+      - name: investor_irr_sales_3_year
+        description: 3-year trailing IRR
+      - name: investor_irr_sales_5_year
+        description: 5-year trailing IRR
+      - name: investor_irr_sales_10_year
+        description: 10-year trailing IRR
+
+  - name: gold_investor_transaction_metrics
+    description: >
+      Daily investor transaction details.
+      Granular transaction-level reporting.
+      
+      **Primary Use Cases:**
+      - Transaction ledger reports
+      - Cash flow analysis
+      - Audit trails
+    columns:
+      - name: as_of_date
+        description: Transaction date
+        data_tests: [not_null]
+
+  # ===========================================================================
+  # COMPANY METRICS
+  # ===========================================================================
+  - name: gold_company_metrics
+    description: >
+      Portfolio company performance metrics.
+      Valuation and performance tracking for investments.
+      
+      **Primary Use Cases:**
+      - Company valuation reports
+      - Investment monitoring
+      - Sector analysis
+    columns:
+      - name: as_of_date
+        description: Reporting date
+        data_tests: [not_null]
+
+  # ===========================================================================
+  # HOLDING METRICS
+  # ===========================================================================
+  - name: gold_holding_metrics
+    description: >
+      Position-level holding metrics.
+      Detailed holding valuations and attributes.
+      
+      **Primary Use Cases:**
+      - Position reports
+      - Detailed investment tracking
+    columns:
+      - name: as_of_date
+        description: Reporting date
+        data_tests: [not_null]

@@ -1,0 +1,186 @@
+version: 2
+
+# =============================================================================
+# BRONZE LAYER - Staging Models
+# =============================================================================
+# Raw data loaded from external sources with minimal transformation.
+# Split into:
+#   - full_snapshots: Dimension tables (full refresh)
+#   - deltas: Fact tables (incremental merge)
+# =============================================================================
+
+models:
+  # ===========================================================================
+  # FULL SNAPSHOT MODELS (Dimensions)
+  # ===========================================================================
+  
+  # Calendar & Reference
+  - name: calendar
+    description: Date dimension - latest snapshot from source
+    columns:
+      - name: date_id
+        description: Date key in YYYYMMDD format
+        data_tests: [not_null]
+      - name: file_date
+        description: Date the source file was created
+      - name: file_name
+        description: Source filename for lineage tracking
+
+  - name: calendar_month
+    description: Month dimension - latest snapshot from source
+
+  - name: calendar_quarter
+    description: Quarter dimension - latest snapshot from source
+
+  - name: currency
+    description: Currency reference data
+    columns:
+      - name: currency_id
+        data_tests: [not_null, unique]
+      - name: currency_code
+        description: ISO 4217 currency code
+
+  # Fund Dimensions
+  - name: dim_fund
+    description: >
+      Fund master data including main funds, AIVs, and fund groups.
+      Lock dates and accounting status are tracked here.
+    columns:
+      - name: fund_id
+        description: Unique fund identifier
+        data_tests: [not_null, unique]
+      - name: short_name
+        description: Fund display name
+      - name: type
+        description: Fund type classification
+      - name: currency_id
+        description: Base currency for the fund
+      - name: lock_date
+        description: Lock date for accounting (YYYYMMDD format)
+      - name: aiv_fund_group_id
+        description: Reference to parent AIV fund group
+
+  - name: dim_fund_hierarchy
+    description: Fund hierarchy for rollup calculations
+    columns:
+      - name: fund_hier_id
+        data_tests: [not_null]
+      - name: is_excluded
+        description: Flag to exclude from calculations (0/1)
+
+  - name: dim_fund_sub_perspective
+    description: Sub-perspective view definitions
+
+  - name: dim_fund_sub_perspective_primary_fund
+    description: Primary fund designation per sub-perspective
+
+  # Investor Dimensions
+  - name: dim_investor
+    description: >
+      Investor/Limited Partner master data.
+      Contains investor attributes and group affiliations.
+    columns:
+      - name: investor_name_id
+        description: Unique investor identifier
+        data_tests: [not_null, unique]
+      - name: short_name
+        description: Investor display name
+      - name: parent_group_id
+        description: Parent investor group
+
+  # Portfolio & Investment Dimensions
+  - name: dim_portfolios
+    description: Portfolio master data with fund associations
+    columns:
+      - name: portfolio_id
+        data_tests: [not_null]
+      - name: fund_id
+        data_tests: [not_null]
+
+  - name: dim_holdings
+    description: Holdings/position reference data
+
+  - name: dim_investments
+    description: Investment reference data
+
+  - name: dim_investment_type
+    description: Investment type classification
+
+  # Company Dimensions
+  - name: company
+    description: Company master data
+
+  - name: company_broad
+    description: Company broad categorization
+
+  - name: dim_company_industry_hierarchy
+    description: Industry classification hierarchy (GICS-like)
+
+  # Other Dimensions
+  - name: dim_manager
+    description: Fund manager reference data
+
+  - name: dim_hv_geography_hierarchy
+    description: Geographic classification hierarchy
+
+  - name: dim_type_broad
+    description: Broad type classification
+
+  - name: stage
+    description: Investment stage reference
+
+  - name: global_edw_key_to_iqid
+    description: Cross-system key mapping (EDW to external)
+
+  - name: block_list_fund
+    description: Funds excluded from reporting
+
+  - name: fact_fund_sub_perspective_funds
+    description: Fund to sub-perspective mapping
+
+  - name: fact_fund_sub_perspective_fund_network_paths
+    description: Network path relationships
+
+  - name: fund_hiers_pct_hist
+    description: Historical hierarchy percentages
+
+  # ===========================================================================
+  # DELTA MODELS (Facts - Incremental)
+  # ===========================================================================
+
+  - name: fact_investor_transactions
+    description: >
+      Investor-level financial transactions.
+      Loaded incrementally using merge strategy with soft deletes.
+    columns:
+      - name: date_id
+        description: Transaction date (YYYYMMDD)
+        data_tests: [not_null]
+      - name: investor_id
+        data_tests: [not_null]
+      - name: fund_id
+        data_tests: [not_null]
+      - name: metric_id
+        description: Metric type identifier (see metric_definitions seed)
+      - name: amount
+        description: Transaction amount in fund currency
+      - name: last_operation_ind
+        description: Last CDC operation (I=Insert, U=Update, D=Delete)
+
+  - name: fact_investment_transactions_fund_hierarchy
+    description: Daily investment transactions by fund hierarchy
+
+  - name: fact_investment_transactions_fund_hierarchy_monthly
+    description: Monthly aggregated investment transactions
+
+  - name: fact_investor_ownership
+    description: Investor ownership/NAV facts
+
+  - name: fact_company_valuation
+    description: Company valuation facts
+
+  - name: fact_irr_investment_fund_hierarchy
+    description: Cashflow data for IRR calculations (fund level)
+
+  - name: fact_irr_investor
+    description: Cashflow data for IRR calculations (investor level)

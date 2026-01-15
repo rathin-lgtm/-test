@@ -1,10 +1,12 @@
 name: 'hv_edp_dbt'
 version: '1.0.0'
+config-version: 2
 
 require-dbt-version: ">=1.10.0,<1.11.0"
 
 profile: 'hv_edp_dbt'
 
+# Paths
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -12,39 +14,70 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-clean-targets:         
+clean-targets:
   - "target"
   - "dbt_packages"
 
+# Global variables
 vars:
   stage_location: ""
   filtered_fund_ids: []
-  filtered_fund_ids: []
+  filtered_investor_ids: []
 
+# Model configurations by layer
 models:
   hv_edp_dbt:
+    # ============================================
+    # STAGING LAYER (Bronze)
+    # Raw data from external sources
+    # ============================================
     bronze:
       +schema: "bronze"
       +meta:
         dagster:
-          group:
-            "bronze"
-      deltas:
-        +materialized: incremental
+          group: "bronze"
+      
+      # Full refresh dimension tables
       full_snapshots:
         +materialized: table
+        +tags: ["staging", "full_refresh"]
+      
+      # Incremental fact tables
+      deltas:
+        +materialized: incremental
+        +tags: ["staging", "incremental"]
+
+    # ============================================
+    # VAULT LAYER (Silver)
+    # Data Vault 2.0: Hubs, Links, Satellites
+    # ============================================
     silver:
       +schema: "silver"
       +materialized: table
       +meta:
         dagster:
-          group:
-            "silver"
+          group: "silver"
+      +tags: ["vault"]
+
+    # ============================================
+    # MARTS LAYER (Gold)
+    # Business-ready analytics tables
+    # ============================================
     gold:
       +schema: "gold"
       +materialized: table
       +meta:
         dagster:
-          group:
-            "gold"
-      
+          group: "gold"
+      +tags: ["marts"]
+
+# Seed configurations
+seeds:
+  hv_edp_dbt:
+    +schema: "seeds"
+
+# Snapshot configurations (SCD Type 2)
+snapshots:
+  hv_edp_dbt:
+    +strategy: timestamp
+    +updated_at: updated_at

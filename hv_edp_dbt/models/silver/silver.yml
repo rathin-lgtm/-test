@@ -1,241 +1,460 @@
 version: 2
 
+# =============================================================================
+# SILVER LAYER - Data Vault 2.0 Models
+# =============================================================================
+# Implements Data Vault methodology for flexible, auditable data modeling.
+# 
+# Components:
+#   - HUBS: Business keys (unique identifiers for core entities)
+#   - LINKS: Relationships between entities
+#   - SATELLITES: Descriptive attributes (split by change frequency)
+# =============================================================================
+
 models:
-# ================
-# HUBS
-# ================
+  # ===========================================================================
+  # HUBS - Core Business Entities
+  # ===========================================================================
+  # Hubs contain only the business key, hash key, load timestamp, and source.
+  # They are insert-only and never updated.
+  # ===========================================================================
+
   - name: hub_fund
-    description: "DV Hub for Funds"
+    description: >
+      Hub for investment funds. Contains unique fund identifiers.
+      Includes main funds, AIVs, and fund groups.
     columns:
       - name: hk_fund
-        description: "sha256(upper(trim(fund_id)))"
+        description: Hash key - SHA256(UPPER(TRIM(fund_id)))
         data_tests: [not_null, unique]
       - name: fund_id
+        description: Natural business key from source
         data_tests: [not_null, unique]
+      - name: load_dt
+        description: Timestamp when record was loaded
+      - name: record_source
+        description: Source file for audit trail
 
   - name: hub_investor
-    description: "DV Hub for Investors"
+    description: >
+      Hub for investors/Limited Partners.
+      Tracks unique investor identities across the system.
     columns:
       - name: hk_investor
-        description: "sha256(upper(trim(investor_name_id)))"
+        description: Hash key - SHA256(UPPER(TRIM(investor_name_id)))
         data_tests: [not_null, unique]
       - name: investor_id
+        description: Natural business key (investor_name_id)
         data_tests: [not_null, unique]
+      - name: load_dt
+        description: Timestamp when record was loaded
+      - name: record_source
+        description: Source file for audit trail
 
   - name: hub_portfolio
-    description: "DV Hub for Portfolios"
+    description: >
+      Hub for investment portfolios.
+      Portfolios represent collections of investments within a fund.
     columns:
       - name: hk_portfolio
-        description: "sha256(upper(trim(portfolio_id)))"
+        description: Hash key - SHA256(UPPER(TRIM(portfolio_id)))
         data_tests: [not_null, unique]
       - name: portfolio_id
+        description: Natural business key
         data_tests: [not_null, unique]
-  
+
+  - name: hub_company
+    description: >
+      Hub for portfolio companies.
+      Represents companies that funds invest in.
+    columns:
+      - name: hk_company
+        description: Hash key - SHA256(UPPER(TRIM(company_id)))
+        data_tests: [not_null, unique]
+      - name: company_id
+        description: Natural business key
+        data_tests: [not_null]
+
   - name: hub_holding
-    description: "DV Hub for Holdings"
-    columns: 
+    description: >
+      Hub for holdings/positions.
+      Represents individual investment positions.
+    columns:
       - name: hk_holding
-        description: "sha256(upper(trim(holding_id)))"
+        description: Hash key - SHA256(UPPER(TRIM(holding_id)))
         data_tests: [not_null, unique]
       - name: holding_id
         data_tests: [not_null]
 
   - name: hub_investor_transaction
-    description: "DV Hub for Investor Transactions"
-    columns: 
+    description: >
+      Hub for investor transactions.
+      Each transaction is uniquely identified by composite key.
+    columns:
       - name: hk_investor_transaction
-        description: "sha256(upper(trim(composite_key)))"
+        description: Hash key - SHA256(UPPER(TRIM(composite_key)))
         data_tests: [not_null, unique]
 
-
-# ================
-# LINKS
-# ================
-
+  # ===========================================================================
+  # LINKS - Entity Relationships
+  # ===========================================================================
+  # Links connect hubs and represent relationships between entities.
+  # They are insert-only and contain hash keys to connected hubs.
+  # ===========================================================================
 
   - name: link_portfolio_fund
-    description: "DV Link for Portfolios and Funds"
+    description: >
+      Links portfolios to their parent funds.
+      Many-to-many relationship (portfolio can be in multiple funds).
     columns:
       - name: hk_link
-        description: "sha2(hk_portfolio || hk_fund) "
+        description: Hash key - SHA256(hk_portfolio || hk_fund)
         data_tests: [not_null, unique]
+      - name: hk_portfolio
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_portfolio')
+              field: hk_portfolio
+      - name: hk_fund
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_fund')
+              field: hk_fund
+      - name: portfolio_id
+        description: Business key reference
+      - name: fund_id
+        description: Business key reference
 
   - name: link_fund_company
-    description: "DV Link for Funds and Companies"
+    description: >
+      Links funds to portfolio companies.
+      Represents investment relationships.
     columns:
       - name: hk_link
-        description: "sha2(hk_company || hk_fund) "
+        description: Hash key - SHA256(hk_company || hk_fund)
         data_tests: [not_null, unique]
+      - name: hk_company
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_company')
+              field: hk_company
+      - name: hk_fund
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_fund')
+              field: hk_fund
 
   - name: link_investor_fund
-    description: "DV Link for Investors and Funds"
+    description: >
+      Links investors to funds they invest in.
+      Core relationship for LP reporting.
     columns:
       - name: hk_link
-        description: "sha2(hk_investor || hk_fund)"
-        data_tests: [not_null, unique]
-
-  - name: link_fund_investor_transaction
-    description: "DV Link for Funds and Investor Transactions"
-    columns:
-      - name: hk_link
-        description: "sha2(hk_investor_transaction || hk_fund || hk_investor) "
-        data_tests: [not_null, unique]
-
-
-# ================
-# SATELLITES
-# ================
-
-  - name: sat_fund_attributes
-    description: "Slowly changing descriptive attributes at fund level"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_fund
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
-
-  - name: sat_fund_metrics
-    description: "Snapshot metrics per fund & as_of_date"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_fund
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_fund'), field: hk_fund}
-
-  - name: sat_portfolio_metrics
-    description: "Snapshot metrics per portfolio & as_of_date"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_link
-        data_tests:
-          - not_null
-          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
-
-  - name: sat_portfolio_attributes
-    description: "Slowly changing descriptive attributes at portfolio level"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_link
-        data_tests:
-          - not_null
-          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
-
-  - name: sat_company_attributes
-    description: "Slowly changing descriptive attributes at company level"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_company
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_company'), field: hk_company}
-
-  - name: sat_fund_company_investment_attributes
-    description: "Slowly changing descriptive attributes at company fund level"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_link
-        data_tests:
-          - not_null
-          - relationships: {to: ref('link_fund_company'), field: hk_link}
-
-  - name: sat_company_metrics
-    description: "Snapshot metrics per portfolio & as_of_date"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_company
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_company'), field: hk_company}
-
-  - name: sat_holding_attributes
-    description: "Slowly changing descriptive attributes at holding level"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_holding
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_holding'), field: hk_holding}
-  
-  - name: sat_holding_metrics
-    description: "Snapshot metrics per holding & as_of_date"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_holding
-        data_tests:
-          - not_null
-          - relationships: {to: ref('hub_holding'), field: hk_holding}
-
-  - name: sat_investor_fund_metrics
-    description: "Snapshot of cashflow metrics that represent investor and fund pair per as_of_date"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
-        data_tests: [not_null, unique]
-      - name: hk_link
-        data_tests:
-          - not_null
-          - relationships: {to: ref('link_investor_fund'), field: hk_link}
-
-  - name: sat_investor_attributes
-    description: "Slowly changing descriptive attributes at investor level"
-    columns:
-      - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
+        description: Hash key - SHA256(hk_investor || hk_fund)
         data_tests: [not_null, unique]
       - name: hk_investor
         data_tests:
           - not_null
-          - relationships: {to: ref('hub_investor'), field: hk_investor}
+          - relationships:
+              to: ref('hub_investor')
+              field: hk_investor
+      - name: hk_fund
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_fund')
+              field: hk_fund
+
+  - name: link_fund_investor_transaction
+    description: >
+      Links transactions to funds and investors.
+      Three-way link for transaction context.
+    columns:
+      - name: hk_link
+        description: Hash key - SHA256(hk_investor_transaction || hk_fund || hk_investor)
+        data_tests: [not_null, unique]
+      - name: hk_investor_transaction
+        data_tests:
+          - not_null
+      - name: hk_fund
+        data_tests:
+          - not_null
+      - name: hk_investor
+        data_tests:
+          - not_null
+
+  # ===========================================================================
+  # SATELLITES - Descriptive Attributes
+  # ===========================================================================
+  # Satellites contain descriptive attributes that change over time.
+  # Split by:
+  #   - sat_*_attributes: Slowly changing descriptors
+  #   - sat_*_metrics: Point-in-time numeric measures
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # Fund Satellites
+  # ---------------------------------------------------------------------------
+  - name: sat_fund_attributes
+    description: >
+      Slowly changing fund attributes.
+      Contains fund name, currency, sub-perspective info, lock dates.
+    columns:
+      - name: hk_key
+        description: Row hash for change detection
+        data_tests: [not_null, unique]
+      - name: hk_fund
+        description: Reference to hub_fund
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_fund')
+              field: hk_fund
+      - name: efront_fund_id
+        description: eFront system fund ID
+      - name: fund_name
+        description: Fund display name
+      - name: fund_sub_perspective_name
+        description: Sub-perspective classification
+      - name: fund_currency
+        description: Fund base currency
+      - name: fund_lock_date
+        description: Accounting lock date
+
+  - name: sat_fund_metrics
+    description: >
+      Point-in-time fund performance metrics.
+      Tracked by as_of_date for time-series analysis.
+    columns:
+      - name: hk_key
+        description: Row hash for deduplication
+        data_tests: [not_null, unique]
+      - name: hk_fund
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_fund')
+              field: hk_fund
+      - name: as_of_date
+        description: Reporting date for metrics
+        data_tests: [not_null]
+      - name: metric_currency_code
+        description: Currency of metric values
+      - name: gain_loss
+        description: Gain/loss amount
+      - name: dpi
+        description: Distributions to Paid-In capital ratio
+      - name: tvpi
+        description: Total Value to Paid-In capital ratio
+      - name: irr
+        description: Internal Rate of Return (inception)
+      - name: irr_1_year
+        description: 1-year trailing IRR
+      - name: irr_3_year
+        description: 3-year trailing IRR
+      - name: irr_5_year
+        description: 5-year trailing IRR
+      - name: irr_10_year
+        description: 10-year trailing IRR
+
+  # ---------------------------------------------------------------------------
+  # Investor Satellites
+  # ---------------------------------------------------------------------------
+  - name: sat_investor_attributes
+    description: >
+      Slowly changing investor attributes.
+      Contains investor name, region, group affiliations.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_investor
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_investor')
+              field: hk_investor
+      - name: efront_investor_id
+        description: eFront system investor ID
+      - name: short_name
+        description: Investor display name
+      - name: region
+        description: Geographic region
+
+  - name: sat_investor_fund_metrics
+    description: >
+      Point-in-time investor metrics per fund.
+      Hangs off link_investor_fund.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('link_investor_fund')
+              field: hk_link
+      - name: as_of_date
+        description: Reporting date
+        data_tests: [not_null]
+
+  - name: sat_investor_fund_performance
+    description: >
+      Investor IRR and performance metrics per fund.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('link_investor_fund')
+              field: hk_link
 
   - name: sat_investor_daily_transaction
-    description: "Snapshot metrics per transactions daily"
+    description: >
+      Daily transaction-level investor metrics.
     columns:
       - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
         data_tests: [not_null, unique]
       - name: hk_link
         data_tests:
           - not_null
-          - relationships: {to: ref('link_fund_investor_transaction'), field: hk_link}
-  
-  - name: sat_investor_fund_performance
-    description: 'Snapshot of performance metrics that represent investor and fund pair per as_of_date'
+          - relationships:
+              to: ref('link_fund_investor_transaction')
+              field: hk_link
+
+  # ---------------------------------------------------------------------------
+  # Portfolio Satellites
+  # ---------------------------------------------------------------------------
+  - name: sat_portfolio_attributes
+    description: >
+      Slowly changing portfolio attributes.
     columns:
       - name: hk_key
-        description: "Hashed values for the whole row except load_dt and record_source"
         data_tests: [not_null, unique]
       - name: hk_link
         data_tests:
           - not_null
-          - relationships: {to: ref('link_investor_fund'), field: hk_link}
+          - relationships:
+              to: ref('link_portfolio_fund')
+              field: hk_link
+
+  - name: sat_portfolio_metrics
+    description: >
+      Point-in-time portfolio performance metrics.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('link_portfolio_fund')
+              field: hk_link
 
   - name: sat_portfolio_sub_perspective
-    description: "Portfolio metrics per sub_perspective"
+    description: >
+      Portfolio metrics aggregated by sub-perspective.
     columns:
       - name: hk_key
-        description: "Hashed values for the whole row except load_dt"
         data_tests: [not_null, unique]
       - name: hk_link
         data_tests:
           - not_null
-          - relationships: {to: ref('link_portfolio_fund'), field: hk_link}
+          - relationships:
+              to: ref('link_portfolio_fund')
+              field: hk_link
+
+  # ---------------------------------------------------------------------------
+  # Company Satellites
+  # ---------------------------------------------------------------------------
+  - name: sat_company_attributes
+    description: >
+      Slowly changing company attributes.
+      Industry, geography, stage information.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_company
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_company')
+              field: hk_company
+
+  - name: sat_company_metrics
+    description: >
+      Point-in-time company valuation metrics.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_company
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_company')
+              field: hk_company
+
+  - name: sat_fund_company_investment_attributes
+    description: >
+      Investment-level attributes (fund-company relationship).
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_link
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('link_fund_company')
+              field: hk_link
+
+  # ---------------------------------------------------------------------------
+  # Holding Satellites
+  # ---------------------------------------------------------------------------
+  - name: sat_holding_attributes
+    description: >
+      Slowly changing holding attributes.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_holding
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_holding')
+              field: hk_holding
+
+  - name: sat_holding_metrics
+    description: >
+      Point-in-time holding valuation metrics.
+    columns:
+      - name: hk_key
+        data_tests: [not_null, unique]
+      - name: hk_holding
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('hub_holding')
+              field: hk_holding
+
+  # ---------------------------------------------------------------------------
+  # Other Satellites
+  # ---------------------------------------------------------------------------
+  - name: sat_blocked_funds
+    description: >
+      Reference list of funds excluded from reporting.
+      Used to filter out specific funds from analytics.
+
+  - name: fund_network_path_standalone
+    description: >
+      Standalone fund network path calculations.
+      Used for complex rollup hierarchies.
+
+  - name: investor_fund_performance_irr_intermediate
+    description: >
+      Intermediate IRR calculation results.
+      Used as input to investor performance satellites.
