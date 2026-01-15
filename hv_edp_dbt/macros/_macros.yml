@@ -1,0 +1,225 @@
+version: 2
+
+# =============================================================================
+# MACRO DOCUMENTATION
+# =============================================================================
+# Organized by category:
+#   - Core: Fundamental utility macros
+#   - Staging: Bronze layer data loading
+#   - Metrics: Business calculation logic
+# =============================================================================
+
+macros:
+  # ===========================================================================
+  # CORE UTILITIES (utils.sql)
+  # ===========================================================================
+  - name: to_date
+    description: >
+      Converts YYYYMMDD integer/varchar to DATE type safely.
+      Returns NULL on invalid dates.
+    arguments:
+      - name: col
+        type: string
+        description: Column name containing YYYYMMDD value
+
+  - name: hk
+    description: >
+      Generates a hash key for Data Vault hubs.
+      Uses SHA256(UPPER(TRIM(value))) for consistent hashing.
+    arguments:
+      - name: column
+        type: string
+        description: Column to hash
+
+  - name: append_hk_key_column
+    description: >
+      Adds a row-level hash key (hk_key) for satellite change detection.
+      Hashes all columns except load_dt.
+    arguments:
+      - name: cte_name
+        type: string
+        description: Name of the CTE to add hash key to
+
+  - name: safe_division
+    description: >
+      Performs division with zero-denominator protection.
+      Returns 0 when denominator is 0.
+    arguments:
+      - name: numerators
+        type: array
+        description: List of columns/expressions to sum for numerator
+      - name: denominators
+        type: array
+        description: List of columns/expressions to sum for denominator
+
+  - name: indicator_yes_no
+    description: >
+      Converts 0/1 indicator to Yes/No/Unknown text.
+    arguments:
+      - name: indicator_col
+        type: string
+        description: Column containing 0 or 1
+
+  - name: disclosure_level
+    description: >
+      Converts disclosure level codes to descriptive text.
+      10=All, 20=NAV Only, 30=No Metrics
+
+  # ===========================================================================
+  # STAGING MACROS (bronze_load.sql)
+  # ===========================================================================
+  - name: load_full_refresh_table
+    description: >
+      Loads a full snapshot dimension table from external source.
+      Takes the latest file based on file date and timestamp.
+    arguments:
+      - name: source_name
+        type: string
+        description: dbt source name
+      - name: table_name
+        type: string
+        description: Table within source
+      - name: exclude_cols
+        type: array
+        description: Columns to exclude from output
+      - name: source_missing_cols
+        type: array
+        description: Columns that may not exist in source
+
+  - name: load_delta_table
+    description: >
+      Loads incremental fact data using merge strategy.
+      Supports soft deletes via operation_ind='D'.
+    arguments:
+      - name: source_name
+        type: string
+        description: dbt source name
+      - name: table_name
+        type: string
+        description: Table within source
+      - name: unique_keys
+        type: array
+        description: Columns forming unique key for merge
+      - name: fund_filter
+        type: boolean
+        description: Whether to apply fund ID filter
+      - name: investor_filter
+        type: boolean
+        description: Whether to apply investor ID filter
+
+  - name: filter_fund_ids
+    description: Generates IN clause for filtered fund IDs
+    
+  - name: filter_investor_ids
+    description: Generates IN clause for filtered investor IDs
+
+  - name: filter_new_ingests
+    description: Filters to only new files (for incremental loading)
+
+  # ===========================================================================
+  # IRR CALENDAR (hvw_common.sql)
+  # ===========================================================================
+  - name: irr_calendar
+    description: >
+      Generates IRR calculation calendar with period lookback dates.
+      Used for 1-year, 3-year, 5-year, 10-year IRR calculations.
+      
+      **Output columns:**
+      - rollup_date_id: Transaction date
+      - rollup_to_date_id: Month-end reporting date
+      - Date_fact, Date_Dim: Fact and dimension dates
+      - Date_1_Year through Date_15_Year: Lookback dates
+
+  # ===========================================================================
+  # FUND METRICS (hvw_fund_metric_aggregations.sql)
+  # ===========================================================================
+  - name: fund_rollup
+    description: >
+      Rolling sum for fund metrics partitioned by fund and currency.
+    arguments:
+      - name: col
+        type: string
+        description: Column to sum
+
+  - name: fund_nav
+    description: >
+      Calculates fund NAV using metric ID filters.
+      Applies lock date logic for income/expense inclusion.
+
+  - name: fund_distributions
+    description: Calculates fund distributions by metric IDs
+
+  - name: fund_contributions
+    description: Calculates fund contributions by metric IDs
+
+  - name: fund_commitments
+    description: Calculates fund commitments including adjustments
+
+  - name: fund_irr_amount_filter_inception
+    description: Filters and transforms amounts for inception-to-date IRR
+
+  - name: fund_irr_amount_filter_limited
+    description: Filters amounts for limited period IRR calculations
+
+  - name: fund_irr_cashflow_indicator_filter
+    description: Generates indicator for presence of cashflows in period
+
+  # ===========================================================================
+  # INVESTOR METRICS (hvw_investor_fund_aggregations.sql)
+  # ===========================================================================
+  - name: investor_distribution
+    description: Calculates investor distributions by metric IDs
+
+  - name: investor_contribution_total
+    description: Calculates total investor contributions
+
+  - name: investor_contribution_cap_components
+    description: Calculates capital component contributions
+
+  - name: investor_nav
+    description: Calculates investor NAV with contribution/distribution logic
+
+  - name: investor_nav_in_lock_date
+    description: Calculates investor NAV respecting lock date cutoff
+
+  - name: investor_transfers
+    description: Calculates transfer amounts with date logic
+
+  - name: investor_rollup
+    description: Rolling sum partitioned by investor-fund link
+
+  # ===========================================================================
+  # PORTFOLIO METRICS (hvw_portfolio_metric_aggregations.sql)
+  # ===========================================================================
+  - name: portfolio_distributions
+    description: Calculates portfolio distributions
+
+  - name: portfolio_calls_unlevered
+    description: Calculates unlevered capital calls
+
+  - name: portfolio_debt_borrowed
+    description: Calculates debt borrowed amounts
+
+  - name: portfolio_debt_balance_no_directs
+    description: Calculates debt balance excluding direct investments
+
+  - name: portfolio_nav_no_deb_balance
+    description: Calculates portfolio NAV excluding debt
+
+  - name: portfolio_irr_amount_filter_limited
+    description: Filters amounts for limited period portfolio IRR
+
+  - name: portfolio_irr_amount_filter_inception
+    description: Filters amounts for inception portfolio IRR
+
+  # ===========================================================================
+  # PYTHON UDFs (python_udfs.sql)
+  # ===========================================================================
+  - name: create_xirr_udf
+    description: >
+      Creates Snowflake Python UDF for XIRR (Extended Internal Rate of Return) calculation.
+      Uses pyxirr library. Deployed as pre-hook on models requiring IRR.
+    arguments:
+      - name: schema
+        type: string
+        description: Schema to create UDF in

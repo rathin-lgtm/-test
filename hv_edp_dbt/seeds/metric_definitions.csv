@@ -1,0 +1,35 @@
+metric_id,metric_name,metric_category,description
+6,Cumulative Commitment,COMMITMENT,Total LP commitment amount
+8,Capital Called Add Term,CONTRIBUTION,Additional capital called
+12,Contribution Capital,CONTRIBUTION,Capital contribution (excl interest)
+13,Contribution Interest,CONTRIBUTION,Interest paid on contributions
+14,Contribution Management Fee,CONTRIBUTION,Management fee contribution
+15,Contribution Transfer In,CONTRIBUTION,Transfer in contribution
+16,Contribution Other,CONTRIBUTION,Other contribution types
+17,Contribution Advance,CONTRIBUTION,Advance contribution
+18,Contribution Bridge,CONTRIBUTION,Bridge financing contribution
+40,Distribution Return of Capital,DISTRIBUTION,Return of capital distribution
+41,Distribution Gain,DISTRIBUTION,Gain distribution
+42,Distribution Income,DISTRIBUTION,Income distribution
+43,Distribution Return of Capital FX,DISTRIBUTION,ROC distribution (FX adjusted)
+44,Distribution Gain FX,DISTRIBUTION,Gain distribution (FX adjusted)
+45,Distribution Interest Income,DISTRIBUTION,Interest income distribution
+46,Distribution Dividend,DISTRIBUTION,Dividend distribution
+47,Distribution Other,DISTRIBUTION,Other distribution types
+48,Distribution Management Fee Return,DISTRIBUTION,Management fee refund
+49,Distribution Carried Interest,DISTRIBUTION,Carried interest distribution
+83,NAV Unrealized Gain,NAV,Unrealized gain component of NAV
+84,NAV Unrealized Loss,NAV,Unrealized loss component of NAV
+85,NAV FX Gain,NAV,Foreign exchange gain
+86,NAV Management Fee Accrual,NAV,Management fee accrual
+87,NAV Interest Accrual,NAV,Interest accrual
+164,Transfer NAV,NAV,NAV transfer amount
+185,Contribution Partnership Expense,CONTRIBUTION,Partnership expense contribution
+214,Contribution Recycled,CONTRIBUTION,Recycled capital contribution
+215,Contribution Recallable,CONTRIBUTION,Recallable capital contribution
+217,IRR Contribution,IRR,Contribution amount for IRR calc
+218,IRR Distribution,IRR,Distribution amount for IRR calc
+227,IRR End NAV,IRR,Ending NAV for IRR calc
+319,Commitment Adjustment Positive,COMMITMENT,Positive commitment adjustment
+320,Commitment Adjustment Negative,COMMITMENT,Negative commitment adjustment
+321,Commitment Transfer,COMMITMENT,Commitment transfer amount
